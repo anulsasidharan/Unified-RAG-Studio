@@ -1,1 +1,108 @@
-UNIFIED_RAG_STUDIO.pdf
+# ============================================================
+# Internal docs (not for public repo)
+# ============================================================
+docs/internal/
+prompt_history/
+
+# ============================================================
+# Node / Next.js
+# ============================================================
+node_modules/
+.next/
+.next
+out/
+dist/
+build/
+.npm
+.yarn-integrity
+.pnp
+.pnp.js
+*.tsbuildinfo
+next-env.d.ts
+.turbo/
+
+# ============================================================
+# Python
+# ============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+*.egg
+MANIFEST
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.log
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ============================================================
+# Environment & Secrets
+# ============================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ============================================================
+# Docker
+# ============================================================
+.dockerignore
+
+# ============================================================
+# IDEs & Editors
+# ============================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ============================================================
+# Databases & Data
+# ============================================================
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+redis-data/
+qdrant-data/
+minio-data/
+mlflow-data/
+
+# ============================================================
+# Logs
+# ============================================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ============================================================
+# Build artifacts
+# ============================================================
+*.tgz
+*.tar.gz
