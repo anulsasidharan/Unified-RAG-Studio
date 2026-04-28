@@ -1,0 +1,437 @@
+{
+  "version": "1.0.0",
+  "description": "Vector store catalog for RAG Studio. Covers managed, self-hosted, and embedded options.",
+  "stores": [
+    {
+      "id": "qdrant",
+      "name": "Qdrant",
+      "type": "self-hosted",
+      "description": "High-performance open-source vector database written in Rust. Supports payload filtering, sparse+dense hybrid search, and named vectors. RAG Studio's default.",
+      "bestFor": [
+        "Default choice for RAG Studio",
+        "Self-hosted deployments",
+        "Hybrid dense+sparse search",
+        "Advanced filtering"
+      ],
+      "pros": [
+        "Free, open-source (Apache 2.0)",
+        "Extremely fast Rust implementation",
+        "Advanced filtering with payload indexes",
+        "Hybrid search (dense + BM42 sparse)",
+        "Managed cloud option available",
+        "Docker Compose friendly"
+      ],
+      "cons": [
+        "Requires self-hosting (unless using Qdrant Cloud)",
+        "Less ecosystem adoption than Pinecone",
+        "Limited SLAs on self-hosted"
+      ],
+      "pricing": {
+        "selfHosted": "free",
+        "managedCloud": "starts at $25/month",
+        "storagePerGB": 0.0,
+        "queryPerMillion": 0.0
+      },
+      "cloudNative": {
+        "aws": false,
+        "gcp": false,
+        "azure": false,
+        "ownCloud": true
+      },
+      "features": {
+        "hybridSearch": true,
+        "sparseVectors": true,
+        "multiVectors": true,
+        "payloadFiltering": true,
+        "quantization": true,
+        "collections": true
+      },
+      "maxVectors": "unlimited",
+      "supportedMetrics": ["cosine", "euclidean", "dot"],
+      "embeddedMode": true
+    },
+    {
+      "id": "pinecone",
+      "name": "Pinecone",
+      "type": "managed",
+      "description": "Fully managed vector database. Zero infrastructure management, auto-scaling, and enterprise SLAs. The most popular managed option.",
+      "bestFor": [
+        "Zero-infrastructure setups",
+        "Enterprise production workloads",
+        "Teams wanting fully managed solutions",
+        "AWS and GCP-native workflows"
+      ],
+      "pros": [
+        "Fully managed — zero ops overhead",
+        "Auto-scaling with no downtime",
+        "Enterprise SLAs and security",
+        "Fastest time-to-production",
+        "Serverless tier for low-traffic apps"
+      ],
+      "cons": [
+        "Vendor lock-in risk",
+        "Can be expensive at scale",
+        "Data leaves your infrastructure",
+        "Limited query-time filtering vs Qdrant"
+      ],
+      "pricing": {
+        "freeStorageGBs": 1,
+        "storagePerGB": 0.096,
+        "queryPerMillion": 8.00,
+        "serverlessTier": "pay-per-use"
+      },
+      "cloudNative": {
+        "aws": true,
+        "gcp": true,
+        "azure": false,
+        "ownCloud": false
+      },
+      "features": {
+        "hybridSearch": true,
+        "sparseVectors": true,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": false,
+        "namespaces": true
+      },
+      "maxVectors": "unlimited",
+      "supportedMetrics": ["cosine", "euclidean", "dot"],
+      "embeddedMode": false
+    },
+    {
+      "id": "weaviate",
+      "name": "Weaviate",
+      "type": "self-hosted",
+      "description": "Open-source vector database with a GraphQL API and native support for BM25 hybrid search, multi-tenancy, and generative search modules.",
+      "bestFor": [
+        "GraphQL fans",
+        "Multi-tenant RAG applications",
+        "Hybrid keyword + vector search",
+        "When generative search modules are needed"
+      ],
+      "pros": [
+        "Open-source (BSD 3-Clause)",
+        "GraphQL API — expressive queries",
+        "Native BM25 hybrid search",
+        "Multi-tenancy built-in",
+        "Modular architecture (vectorizers, readers)"
+      ],
+      "cons": [
+        "GraphQL adds complexity for simple use cases",
+        "Heavier resource footprint than Qdrant",
+        "Steeper learning curve",
+        "Slower than Qdrant for pure vector search"
+      ],
+      "pricing": {
+        "selfHosted": "free",
+        "managedCloud": "starts at $25/month",
+        "storagePerGB": 0.0,
+        "queryPerMillion": 0.0
+      },
+      "cloudNative": {
+        "aws": true,
+        "gcp": true,
+        "azure": true,
+        "ownCloud": true
+      },
+      "features": {
+        "hybridSearch": true,
+        "sparseVectors": true,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": false,
+        "multiTenancy": true
+      },
+      "maxVectors": "unlimited",
+      "supportedMetrics": ["cosine", "dot", "hamming"],
+      "embeddedMode": true
+    },
+    {
+      "id": "chroma",
+      "name": "Chroma",
+      "type": "embedded",
+      "description": "AI-native open-source embedding database designed for prototyping. Runs embedded in Python with zero configuration.",
+      "bestFor": [
+        "Rapid prototyping",
+        "Jupyter notebooks",
+        "Local development",
+        "Small-scale demos"
+      ],
+      "pros": [
+        "Zero configuration — pip install and go",
+        "Python-first API",
+        "Embedded mode (no server needed)",
+        "Great for notebooks and demos",
+        "Free and open-source"
+      ],
+      "cons": [
+        "Not production-ready for large datasets",
+        "No advanced filtering or RBAC",
+        "Limited scalability",
+        "Not recommended for > 1M vectors"
+      ],
+      "pricing": {
+        "selfHosted": "free",
+        "storagePerGB": 0.0,
+        "queryPerMillion": 0.0
+      },
+      "cloudNative": {
+        "aws": false,
+        "gcp": false,
+        "azure": false,
+        "ownCloud": false
+      },
+      "features": {
+        "hybridSearch": false,
+        "sparseVectors": false,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": false,
+        "embeddedMode": true
+      },
+      "maxVectors": "~1M practical limit",
+      "supportedMetrics": ["cosine", "l2", "ip"],
+      "embeddedMode": true
+    },
+    {
+      "id": "faiss",
+      "name": "FAISS",
+      "type": "embedded",
+      "description": "Facebook AI Similarity Search. High-performance in-process library for billion-scale similarity search. Not a database — no persistence layer.",
+      "bestFor": [
+        "Research and experimentation",
+        "Batch similarity computation",
+        "In-memory search at scale",
+        "When you manage your own persistence"
+      ],
+      "pros": [
+        "Blazing fast — optimized SIMD kernels",
+        "Billion-scale vector support",
+        "CPU and GPU modes",
+        "Rich index types (IVF, HNSW, PQ)",
+        "Free, open-source (MIT)"
+      ],
+      "cons": [
+        "Not a database — no persistence (you must save/load indexes)",
+        "No filtering capabilities",
+        "No server mode or REST API",
+        "Requires manual index management",
+        "Not suitable for production without a wrapper"
+      ],
+      "pricing": {
+        "selfHosted": "free",
+        "storagePerGB": 0.0,
+        "queryPerMillion": 0.0
+      },
+      "cloudNative": {
+        "aws": false,
+        "gcp": false,
+        "azure": false,
+        "ownCloud": false
+      },
+      "features": {
+        "hybridSearch": false,
+        "sparseVectors": false,
+        "multiVectors": false,
+        "payloadFiltering": false,
+        "quantization": true,
+        "gpuSupport": true
+      },
+      "maxVectors": "billions",
+      "supportedMetrics": ["l2", "ip"],
+      "embeddedMode": true
+    },
+    {
+      "id": "opensearch",
+      "name": "OpenSearch",
+      "type": "self-hosted",
+      "description": "Open-source fork of Elasticsearch with native k-NN vector search. Combines full-text and vector search in a single system with AWS OpenSearch Service managed option.",
+      "bestFor": [
+        "Already using OpenSearch/Elasticsearch",
+        "Hybrid full-text + vector search",
+        "AWS-native deployments",
+        "Large-scale managed deployments"
+      ],
+      "pros": [
+        "Combine BM25 full-text + vector search natively",
+        "Massive ecosystem and tooling",
+        "AWS OpenSearch Service managed option",
+        "Mature, battle-tested platform",
+        "Rich query DSL"
+      ],
+      "cons": [
+        "Heavy resource footprint",
+        "Complex configuration vs pure vector DBs",
+        "Slower vector search than Qdrant/Pinecone",
+        "Not optimized for pure vector workloads"
+      ],
+      "pricing": {
+        "selfHosted": "free",
+        "awsManagedService": "~$0.10/hour per node",
+        "storagePerGB": 0.025,
+        "queryPerMillion": 0.0
+      },
+      "cloudNative": {
+        "aws": true,
+        "gcp": false,
+        "azure": false,
+        "ownCloud": true
+      },
+      "features": {
+        "hybridSearch": true,
+        "sparseVectors": false,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": false,
+        "fullTextSearch": true
+      },
+      "maxVectors": "unlimited",
+      "supportedMetrics": ["cosine", "l2", "dot"],
+      "embeddedMode": false
+    },
+    {
+      "id": "vertex-ai-vector-search",
+      "name": "Vertex AI Vector Search",
+      "type": "managed",
+      "description": "Google's managed vector search built on ScaNN technology. Native GCP integration with Vertex AI, BigQuery, and Gemini models.",
+      "bestFor": [
+        "GCP-native architectures",
+        "Vertex AI RAG pipelines",
+        "BigQuery integration",
+        "Large-scale enterprise GCP"
+      ],
+      "pros": [
+        "Native GCP IAM integration",
+        "Vertex AI ecosystem (no extra API calls)",
+        "Managed, auto-scaling",
+        "Enterprise SLAs",
+        "Free tier for small indexes"
+      ],
+      "cons": [
+        "GCP vendor lock-in",
+        "Slower iteration than Qdrant for development",
+        "Higher cost at small scale",
+        "Limited filtering options"
+      ],
+      "pricing": {
+        "storagePerGB": 0.096,
+        "queryPerMillion": 2.50,
+        "freeTierNodes": 1
+      },
+      "cloudNative": {
+        "aws": false,
+        "gcp": true,
+        "azure": false,
+        "ownCloud": false
+      },
+      "features": {
+        "hybridSearch": false,
+        "sparseVectors": false,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": true,
+        "bqIntegration": true
+      },
+      "maxVectors": "unlimited",
+      "supportedMetrics": ["cosine", "dot", "l2"],
+      "embeddedMode": false
+    },
+    {
+      "id": "azure-ai-search",
+      "name": "Azure AI Search",
+      "type": "managed",
+      "description": "Microsoft's managed search service with vector, hybrid, and semantic search capabilities. Deep Azure OpenAI Service integration.",
+      "bestFor": [
+        "Azure-native architectures",
+        "Azure OpenAI integration",
+        "Enterprise Microsoft shops",
+        "Hybrid vector + BM25 + semantic search"
+      ],
+      "pros": [
+        "Native Azure IAM and RBAC",
+        "Azure OpenAI integration (same API call)",
+        "Managed, enterprise SLAs",
+        "Integrated semantic reranking",
+        "BM25 + vector hybrid search built-in"
+      ],
+      "cons": [
+        "Azure vendor lock-in",
+        "Complex pricing model",
+        "Overkill for simple vector-only workloads",
+        "Slower than Qdrant for pure vector search"
+      ],
+      "pricing": {
+        "basicTier": "$0.101/hour",
+        "storagePerGB": 0.25,
+        "queryPerMillion": 0.0,
+        "semanticSearchPerMonth": 0.0
+      },
+      "cloudNative": {
+        "aws": false,
+        "gcp": false,
+        "azure": true,
+        "ownCloud": false
+      },
+      "features": {
+        "hybridSearch": true,
+        "sparseVectors": false,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": false,
+        "semanticSearch": true,
+        "fullTextSearch": true
+      },
+      "maxVectors": "unlimited",
+      "supportedMetrics": ["cosine", "euclidean", "dot"],
+      "embeddedMode": false
+    },
+    {
+      "id": "pgvector",
+      "name": "pgvector",
+      "type": "self-hosted",
+      "description": "PostgreSQL extension for vector similarity search. If you're already using Postgres, add vector capabilities without a new infrastructure component.",
+      "bestFor": [
+        "Existing Postgres users",
+        "Small to medium datasets (< 5M vectors)",
+        "Transactional + vector queries in one system",
+        "Simplicity over performance"
+      ],
+      "pros": [
+        "Leverage existing Postgres infrastructure",
+        "ACID transactions with vector data",
+        "SQL + vector in one query",
+        "No new service to manage",
+        "Open-source (PostgreSQL License)"
+      ],
+      "cons": [
+        "Slower than dedicated vector DBs at scale",
+        "No advanced ANN (approximate nearest neighbor) indexes at large scale",
+        "Limited to Postgres row limit for efficiency",
+        "Not recommended for > 5M vectors"
+      ],
+      "pricing": {
+        "selfHosted": "free (included with Postgres)",
+        "storagePerGB": 0.0,
+        "queryPerMillion": 0.0
+      },
+      "cloudNative": {
+        "aws": true,
+        "gcp": true,
+        "azure": true,
+        "ownCloud": true
+      },
+      "features": {
+        "hybridSearch": false,
+        "sparseVectors": false,
+        "multiVectors": false,
+        "payloadFiltering": true,
+        "quantization": false,
+        "transactions": true,
+        "sqlInterface": true
+      },
+      "maxVectors": "~5M practical limit",
+      "supportedMetrics": ["cosine", "l2", "ip"],
+      "embeddedMode": false
+    }
+  ]
+}

@@ -1,0 +1,100 @@
+{
+  "version": "1.0.0",
+  "description": "Reranker model catalog for RAG Studio. Rerankers re-score retrieved documents for higher precision.",
+  "models": [
+    {
+      "id": "cohere-rerank-v3",
+      "name": "Rerank v3",
+      "provider": "cohere",
+      "costPer1KQueries": 1.00,
+      "maxDocuments": 1000,
+      "maxDocumentLength": 4096,
+      "speed": "fast",
+      "quality": "excellent",
+      "openSource": false,
+      "description": "Cohere's state-of-the-art reranker. Best-in-class precision improvement, managed API with low latency.",
+      "bestFor": [
+        "production-rag",
+        "high-precision",
+        "enterprise",
+        "managed-service"
+      ],
+      "languageSupport": ["en", "multilingual-limited"],
+      "typicalPrecisionGain": 0.15,
+      "latencyMs": 150,
+      "supportsMetadataFilter": false
+    },
+    {
+      "id": "bge-reranker-large",
+      "name": "BGE Reranker Large",
+      "provider": "huggingface",
+      "costPer1KQueries": 0.0,
+      "maxDocuments": 100,
+      "maxDocumentLength": 512,
+      "speed": "medium",
+      "quality": "excellent",
+      "openSource": true,
+      "modelCard": "BAAI/bge-reranker-large",
+      "description": "BAAI's open-source BGE reranker. Competitive with commercial rerankers, fully self-hostable and free.",
+      "bestFor": [
+        "open-source",
+        "self-hosted",
+        "privacy-sensitive",
+        "cost-zero"
+      ],
+      "languageSupport": ["en"],
+      "typicalPrecisionGain": 0.12,
+      "latencyMs": 300,
+      "selfHosted": true,
+      "supportsMetadataFilter": false
+    },
+    {
+      "id": "cross-encoder-ms-marco",
+      "name": "Cross-Encoder MS-MARCO",
+      "provider": "huggingface",
+      "costPer1KQueries": 0.0,
+      "maxDocuments": 50,
+      "maxDocumentLength": 512,
+      "speed": "slow",
+      "quality": "good",
+      "openSource": true,
+      "modelCard": "cross-encoder/ms-marco-MiniLM-L-6-v2",
+      "description": "Lightweight cross-encoder trained on MS MARCO passage ranking. Good precision gains with minimal compute.",
+      "bestFor": [
+        "lightweight",
+        "low-resource",
+        "open-source",
+        "prototyping"
+      ],
+      "languageSupport": ["en"],
+      "typicalPrecisionGain": 0.08,
+      "latencyMs": 500,
+      "selfHosted": true,
+      "supportsMetadataFilter": false
+    },
+    {
+      "id": "flashrank",
+      "name": "FlashRank",
+      "provider": "prithivida",
+      "costPer1KQueries": 0.0,
+      "maxDocuments": 200,
+      "maxDocumentLength": 512,
+      "speed": "very-fast",
+      "quality": "good",
+      "openSource": true,
+      "modelCard": "prithivida/flashrank",
+      "description": "Ultra-lightweight reranker optimised for speed. Runs on CPU, <4MB model size. Ideal for edge or resource-constrained deployments.",
+      "bestFor": [
+        "edge-deployment",
+        "resource-constrained",
+        "cpu-only",
+        "ultra-low-latency"
+      ],
+      "languageSupport": ["en"],
+      "typicalPrecisionGain": 0.06,
+      "latencyMs": 50,
+      "selfHosted": true,
+      "supportsMetadataFilter": false
+    }
+  ]
+}

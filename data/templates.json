@@ -1,0 +1,537 @@
+{
+  "version": "1.0.0",
+  "description": "Pre-configured RAG pipeline templates for common use cases. Each template has a complete PipelineConfiguration.",
+  "templates": [
+    {
+      "id": "faq-chatbot",
+      "name": "FAQ Chatbot",
+      "description": "A cost-optimized RAG pipeline for answering frequently asked questions from a knowledge base. Optimized for fast, accurate, and affordable responses at high volume.",
+      "useCase": "Customer FAQ, Help Center, Support Bot",
+      "complexity": "beginner",
+      "estimatedMonthlyCost": "$5-20",
+      "tags": ["customer-support", "cost-optimized", "beginner-friendly", "high-throughput"],
+      "providerLogos": ["openai"],
+      "config": {
+        "id": "template-faq-chatbot",
+        "name": "FAQ Chatbot",
+        "description": "Cost-optimized FAQ pipeline using fast, affordable models",
+        "cloudProvider": "multi-cloud",
+        "stages": {
+          "dataIngestion": {
+            "sourceType": "file-upload",
+            "fileTypes": ["pdf", "docx", "txt", "md"],
+            "preprocessing": {
+              "stripHtml": true,
+              "normalizeWhitespace": true,
+              "extractMetadata": true
+            },
+            "metadata": {
+              "includeSource": true,
+              "includePageNumber": false
+            }
+          },
+          "chunking": {
+            "strategy": "recursive-character",
+            "chunkSize": 512,
+            "chunkOverlap": 50,
+            "separators": ["\n\n", "\n", ". ", " ", ""]
+          },
+          "embedding": {
+            "model": "text-embedding-3-small",
+            "provider": "openai",
+            "dimensions": 1536,
+            "batchSize": 100
+          },
+          "vectorStore": {
+            "provider": "qdrant",
+            "indexName": "faq-index",
+            "configuration": {
+              "metric": "cosine"
+            }
+          },
+          "retrieval": {
+            "strategy": "similarity",
+            "topK": 5,
+            "scoreThreshold": 0.7
+          },
+          "reranking": {
+            "enabled": false
+          },
+          "generation": {
+            "model": "gpt-4o-mini",
+            "provider": "openai",
+            "temperature": 0.3,
+            "maxTokens": 512,
+            "systemPrompt": "You are a helpful assistant. Answer the user's question based only on the provided context. If the answer is not in the context, say so clearly. Be concise and accurate.",
+            "outputFormat": "text"
+          },
+          "routing": {
+            "enabled": false
+          },
+          "memory": {
+            "type": "none"
+          },
+          "evaluation": {
+            "enabled": true,
+            "metrics": ["faithfulness", "answer_relevance"],
+            "testSetSize": 50
+          }
+        },
+        "metadata": {
+          "version": "1.0.0",
+          "source": "template",
+          "createdAt": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "documentation-qa",
+      "name": "Documentation Q&A",
+      "description": "High-accuracy pipeline for technical documentation. Uses hybrid search and reranking for precise retrieval of technical terms and concepts.",
+      "useCase": "Developer Portals, API Docs, Internal Wikis, Technical Manuals",
+      "complexity": "intermediate",
+      "estimatedMonthlyCost": "$30-100",
+      "tags": ["technical-docs", "high-accuracy", "hybrid-search", "developer-tools"],
+      "providerLogos": ["openai", "cohere"],
+      "config": {
+        "id": "template-documentation-qa",
+        "name": "Documentation Q&A",
+        "description": "High-accuracy technical documentation retrieval with hybrid search and reranking",
+        "cloudProvider": "multi-cloud",
+        "stages": {
+          "dataIngestion": {
+            "sourceType": "file-upload",
+            "fileTypes": ["md", "mdx", "pdf", "html", "docx"],
+            "preprocessing": {
+              "stripHtml": true,
+              "normalizeWhitespace": true,
+              "extractMetadata": true
+            },
+            "metadata": {
+              "includeSource": true,
+              "includePageNumber": true,
+              "includeSectionHeader": true
+            }
+          },
+          "chunking": {
+            "strategy": "markdown-header",
+            "chunkSize": 1024,
+            "chunkOverlap": 100,
+            "headersToSplitOn": [["#", "h1"], ["##", "h2"], ["###", "h3"]]
+          },
+          "embedding": {
+            "model": "text-embedding-3-large",
+            "provider": "openai",
+            "dimensions": 3072,
+            "batchSize": 50
+          },
+          "vectorStore": {
+            "provider": "qdrant",
+            "indexName": "docs-index",
+            "configuration": {
+              "metric": "cosine"
+            }
+          },
+          "retrieval": {
+            "strategy": "hybrid",
+            "topK": 8,
+            "scoreThreshold": 0.5,
+            "hybridSearch": {
+              "alpha": 0.6
+            }
+          },
+          "reranking": {
+            "enabled": true,
+            "model": "cohere-rerank-v3",
+            "topN": 5
+          },
+          "generation": {
+            "model": "gpt-4o",
+            "provider": "openai",
+            "temperature": 0.1,
+            "maxTokens": 2048,
+            "systemPrompt": "You are a technical documentation assistant. Answer questions accurately based on the provided documentation context. Include code examples when relevant. Always cite the source section. If the information is not in the context, say so.",
+            "outputFormat": "markdown"
+          },
+          "routing": {
+            "enabled": false
+          },
+          "memory": {
+            "type": "conversation-buffer",
+            "windowSize": 10,
+            "sessionPersistence": true
+          },
+          "evaluation": {
+            "enabled": true,
+            "metrics": ["faithfulness", "answer_relevance", "context_precision"],
+            "testSetSize": 100
+          }
+        },
+        "metadata": {
+          "version": "1.0.0",
+          "source": "template",
+          "createdAt": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "code-assistant",
+      "name": "Code Assistant",
+      "description": "RAG pipeline optimized for code repositories. Uses code-aware chunking to preserve function and class boundaries, with Claude Sonnet for superior code understanding.",
+      "useCase": "Codebase Q&A, Code Review Assistant, Developer Tools",
+      "complexity": "intermediate",
+      "estimatedMonthlyCost": "$40-150",
+      "tags": ["code", "developer-tools", "code-aware-chunking", "anthropic"],
+      "providerLogos": ["anthropic", "openai"],
+      "config": {
+        "id": "template-code-assistant",
+        "name": "Code Assistant",
+        "description": "Code repository RAG with code-aware chunking and Claude for best code understanding",
+        "cloudProvider": "multi-cloud",
+        "stages": {
+          "dataIngestion": {
+            "sourceType": "file-upload",
+            "fileTypes": ["py", "js", "ts", "java", "go", "rs", "cpp", "md"],
+            "preprocessing": {
+              "stripHtml": false,
+              "normalizeWhitespace": false,
+              "extractMetadata": true
+            },
+            "metadata": {
+              "includeSource": true,
+              "includePageNumber": false,
+              "includeLanguage": true
+            }
+          },
+          "chunking": {
+            "strategy": "code-aware",
+            "chunkSize": 1024,
+            "chunkOverlap": 0,
+            "language": "auto-detect"
+          },
+          "embedding": {
+            "model": "text-embedding-3-large",
+            "provider": "openai",
+            "dimensions": 3072,
+            "batchSize": 50
+          },
+          "vectorStore": {
+            "provider": "qdrant",
+            "indexName": "code-index",
+            "configuration": {
+              "metric": "cosine"
+            }
+          },
+          "retrieval": {
+            "strategy": "similarity",
+            "topK": 6,
+            "scoreThreshold": 0.6
+          },
+          "reranking": {
+            "enabled": false
+          },
+          "generation": {
+            "model": "claude-sonnet-4-6",
+            "provider": "anthropic",
+            "temperature": 0.2,
+            "maxTokens": 4096,
+            "systemPrompt": "You are an expert software engineer and code assistant. Answer questions about the codebase accurately based on the provided code context. When explaining code, provide clear explanations and examples. Always reference specific file names and line numbers when relevant.",
+            "outputFormat": "markdown"
+          },
+          "routing": {
+            "enabled": false
+          },
+          "memory": {
+            "type": "conversation-buffer",
+            "windowSize": 5,
+            "sessionPersistence": false
+          },
+          "evaluation": {
+            "enabled": true,
+            "metrics": ["faithfulness", "answer_relevance"],
+            "testSetSize": 50
+          }
+        },
+        "metadata": {
+          "version": "1.0.0",
+          "source": "template",
+          "createdAt": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "multilingual-support",
+      "name": "Multilingual Support",
+      "description": "RAG pipeline for multilingual content and users. Uses Cohere's multilingual embedding model and GPT-4o for cross-lingual retrieval and generation.",
+      "useCase": "Global Customer Support, Multilingual Knowledge Base, International Products",
+      "complexity": "intermediate",
+      "estimatedMonthlyCost": "$25-80",
+      "tags": ["multilingual", "global", "cohere", "cross-lingual"],
+      "providerLogos": ["cohere", "openai"],
+      "config": {
+        "id": "template-multilingual-support",
+        "name": "Multilingual Support",
+        "description": "Cross-lingual RAG using Cohere multilingual embeddings and GPT-4o",
+        "cloudProvider": "multi-cloud",
+        "stages": {
+          "dataIngestion": {
+            "sourceType": "file-upload",
+            "fileTypes": ["pdf", "docx", "txt", "html"],
+            "preprocessing": {
+              "stripHtml": true,
+              "normalizeWhitespace": true,
+              "extractMetadata": true
+            },
+            "metadata": {
+              "includeSource": true,
+              "includeLanguage": true
+            }
+          },
+          "chunking": {
+            "strategy": "recursive-character",
+            "chunkSize": 512,
+            "chunkOverlap": 50,
+            "separators": ["\n\n", "\n", ". ", "。", " ", ""]
+          },
+          "embedding": {
+            "model": "cohere-embed-multilingual-v3",
+            "provider": "cohere",
+            "dimensions": 1024,
+            "batchSize": 96
+          },
+          "vectorStore": {
+            "provider": "qdrant",
+            "indexName": "multilingual-index",
+            "configuration": {
+              "metric": "cosine"
+            }
+          },
+          "retrieval": {
+            "strategy": "hybrid",
+            "topK": 6,
+            "scoreThreshold": 0.5,
+            "hybridSearch": {
+              "alpha": 0.5
+            }
+          },
+          "reranking": {
+            "enabled": false
+          },
+          "generation": {
+            "model": "gpt-4o",
+            "provider": "openai",
+            "temperature": 0.3,
+            "maxTokens": 1024,
+            "systemPrompt": "You are a multilingual support assistant. Answer in the same language as the user's question. Base your answer only on the provided context. If the answer is not available, say so in the user's language.",
+            "outputFormat": "text"
+          },
+          "routing": {
+            "enabled": false
+          },
+          "memory": {
+            "type": "conversation-buffer",
+            "windowSize": 8,
+            "sessionPersistence": true
+          },
+          "evaluation": {
+            "enabled": true,
+            "metrics": ["faithfulness", "answer_relevance"],
+            "testSetSize": 50
+          }
+        },
+        "metadata": {
+          "version": "1.0.0",
+          "source": "template",
+          "createdAt": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "legal-research",
+      "name": "Legal Research",
+      "description": "High-precision RAG pipeline for legal document analysis. Uses semantic chunking, MMR retrieval, and Claude Opus for nuanced legal reasoning with citations.",
+      "useCase": "Contract Analysis, Legal Research, Compliance QA, Case Law Retrieval",
+      "complexity": "advanced",
+      "estimatedMonthlyCost": "$100-500",
+      "tags": ["legal", "high-precision", "citations", "anthropic", "semantic-chunking"],
+      "providerLogos": ["anthropic", "openai", "cohere"],
+      "config": {
+        "id": "template-legal-research",
+        "name": "Legal Research",
+        "description": "High-precision legal document analysis with semantic chunking, MMR, reranking, and Claude Opus",
+        "cloudProvider": "multi-cloud",
+        "stages": {
+          "dataIngestion": {
+            "sourceType": "file-upload",
+            "fileTypes": ["pdf", "docx", "txt"],
+            "preprocessing": {
+              "stripHtml": true,
+              "normalizeWhitespace": true,
+              "extractMetadata": true
+            },
+            "metadata": {
+              "includeSource": true,
+              "includePageNumber": true,
+              "includeDocumentTitle": true
+            }
+          },
+          "chunking": {
+            "strategy": "semantic",
+            "chunkSize": 1024,
+            "chunkOverlap": 100,
+            "breakpointThreshold": 0.95
+          },
+          "embedding": {
+            "model": "text-embedding-3-large",
+            "provider": "openai",
+            "dimensions": 3072,
+            "batchSize": 50
+          },
+          "vectorStore": {
+            "provider": "qdrant",
+            "indexName": "legal-index",
+            "configuration": {
+              "metric": "cosine"
+            }
+          },
+          "retrieval": {
+            "strategy": "mmr",
+            "topK": 10,
+            "scoreThreshold": 0.6,
+            "fetchK": 30,
+            "lambdaMult": 0.7
+          },
+          "reranking": {
+            "enabled": true,
+            "model": "cohere-rerank-v3",
+            "topN": 6
+          },
+          "generation": {
+            "model": "claude-opus-4-7",
+            "provider": "anthropic",
+            "temperature": 0.0,
+            "maxTokens": 4096,
+            "systemPrompt": "You are a legal research assistant. Provide precise, well-reasoned answers based strictly on the provided legal documents. Always cite specific sections, clauses, or page numbers. Distinguish clearly between what is stated in the documents and any legal interpretation. Never speculate beyond the provided text.",
+            "outputFormat": "markdown"
+          },
+          "routing": {
+            "enabled": false
+          },
+          "memory": {
+            "type": "conversation-buffer",
+            "windowSize": 10,
+            "sessionPersistence": true
+          },
+          "evaluation": {
+            "enabled": true,
+            "metrics": ["faithfulness", "answer_relevance", "context_precision", "context_recall"],
+            "testSetSize": 100
+          }
+        },
+        "metadata": {
+          "version": "1.0.0",
+          "source": "template",
+          "createdAt": "2025-01-01T00:00:00Z"
+        }
+      }
+    },
+    {
+      "id": "customer-support",
+      "name": "Customer Support",
+      "description": "Conversational RAG pipeline for customer support with memory. Balances accuracy and cost with conversation history tracking.",
+      "useCase": "E-commerce Support, SaaS Help Desk, Product Support, Ticketing Systems",
+      "complexity": "beginner",
+      "estimatedMonthlyCost": "$10-40",
+      "tags": ["customer-support", "conversational", "memory", "cost-balanced"],
+      "providerLogos": ["openai"],
+      "config": {
+        "id": "template-customer-support",
+        "name": "Customer Support",
+        "description": "Conversational customer support RAG with session memory and fast inference",
+        "cloudProvider": "multi-cloud",
+        "stages": {
+          "dataIngestion": {
+            "sourceType": "file-upload",
+            "fileTypes": ["pdf", "docx", "txt", "html"],
+            "preprocessing": {
+              "stripHtml": true,
+              "normalizeWhitespace": true,
+              "extractMetadata": true
+            },
+            "metadata": {
+              "includeSource": true,
+              "includePageNumber": false
+            }
+          },
+          "chunking": {
+            "strategy": "paragraph-based",
+            "chunkSize": 256,
+            "chunkOverlap": 30,
+            "separator": "\n\n"
+          },
+          "embedding": {
+            "model": "text-embedding-3-small",
+            "provider": "openai",
+            "dimensions": 1536,
+            "batchSize": 100
+          },
+          "vectorStore": {
+            "provider": "qdrant",
+            "indexName": "support-index",
+            "configuration": {
+              "metric": "cosine"
+            }
+          },
+          "retrieval": {
+            "strategy": "similarity",
+            "topK": 4,
+            "scoreThreshold": 0.65
+          },
+          "reranking": {
+            "enabled": true,
+            "model": "flashrank",
+            "topN": 3
+          },
+          "generation": {
+            "model": "gpt-4o-mini",
+            "provider": "openai",
+            "temperature": 0.4,
+            "maxTokens": 768,
+            "systemPrompt": "You are a friendly and helpful customer support agent. Answer the customer's question based on the provided knowledge base. Be empathetic, clear, and actionable. If you cannot find the answer in the context, politely acknowledge this and suggest contacting human support.",
+            "outputFormat": "text"
+          },
+          "routing": {
+            "enabled": true,
+            "rules": [
+              {
+                "condition": "queryComplexity == 'simple'",
+                "model": "gpt-4o-mini",
+                "description": "Simple greetings and basic questions"
+              },
+              {
+                "condition": "queryComplexity == 'complex'",
+                "model": "gpt-4o",
+                "description": "Complex troubleshooting and escalations"
+              }
+            ]
+          },
+          "memory": {
+            "type": "conversation-buffer",
+            "windowSize": 6,
+            "sessionPersistence": true
+          },
+          "evaluation": {
+            "enabled": true,
+            "metrics": ["faithfulness", "answer_relevance"],
+            "testSetSize": 50
+          }
+        },
+        "metadata": {
+          "version": "1.0.0",
+          "source": "template",
+          "createdAt": "2025-01-01T00:00:00Z"
+        }
+      }
+    }
+  ]
+}
