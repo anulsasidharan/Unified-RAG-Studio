@@ -1,0 +1,26 @@
+{
+  "name": "rag-studio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Unified RAG Development Platform — Designer Mode + Autopilot Mode",
+  "workspaces": [
+    "apps/web",
+    "apps/api"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "build": "npm run build --workspace=apps/web",
+    "lint": "npm run lint --workspace=apps/web",
+    "type-check": "npm run type-check --workspace=apps/web",
+    "test": "npm run test --workspace=apps/web"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/rag-studio.git"
+  },
+  "license": "MIT"
+}
