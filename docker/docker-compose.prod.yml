@@ -1,0 +1,125 @@
+# RAG Studio — Production Override
+# Merges with docker-compose.yml:
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
+#
+# Changes from base:
+#   - Pre-built images from GHCR (no on-host builds)
+#   - Resource limits (CPU + memory) to protect host
+#   - always restart policy
+#   - No dev bind-mounts
+#   - Reduced exposed ports (internal services not exposed to host)
+
+name: rag-studio
+
+services:
+
+  web:
+    image: ghcr.io/${GITHUB_REPOSITORY:-yourusername/rag-studio}-web:${IMAGE_TAG:-latest}
+    build: !reset null   # Do not build on prod host — use pre-built image
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    restart: always
+
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY:-yourusername/rag-studio}-api:${IMAGE_TAG:-latest}
+    build: !reset null
+    environment:
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    restart: always
+    ports: !reset
+      - "8000:8000"   # Keep API accessible behind nginx; remove if nginx-only
+
+  worker:
+    image: ghcr.io/${GITHUB_REPOSITORY:-yourusername/rag-studio}-api:${IMAGE_TAG:-latest}
+    build: !reset null
+    command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=4
+    environment:
+      - APP_ENV=production
+      - LOG_LEVEL=INFO
+    deploy:
+      resources:
+        limits:
+          cpus: "4.0"
+          memory: 4G
+        reservations:
+          cpus: "1.0"
+          memory: 1G
+    restart: always
+
+  db:
+    ports: !reset []   # No host exposure in production — access via internal network only
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+    restart: always
+
+  redis:
+    ports: !reset []
+    command: >
+      redis-server
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      --requirepass ${REDIS_PASSWORD:-changeme}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+    restart: always
+
+  vector-db:
+    ports: !reset []
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+    restart: always
+
+  mlflow:
+    ports: !reset []   # Access through nginx or internal only
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    restart: always
+
+  minio:
+    ports: !reset
+      - "9000:9000"   # Keep S3 API; console disabled in prod
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1G
+    restart: always
+
+  nginx:
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    restart: always
