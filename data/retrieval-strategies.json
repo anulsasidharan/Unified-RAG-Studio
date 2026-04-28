@@ -1,0 +1,308 @@
+{
+  "version": "1.0.0",
+  "description": "Retrieval strategy catalog for RAG Studio. Defines how documents are retrieved from the vector store.",
+  "strategies": [
+    {
+      "id": "similarity",
+      "name": "Similarity Search",
+      "description": "Retrieves the top-K documents with the highest cosine (or dot product) similarity to the query embedding. The simplest and fastest retrieval method.",
+      "bestFor": [
+        "Most RAG use cases",
+        "Fast retrieval",
+        "When documents are well-chunked",
+        "Default starting point"
+      ],
+      "pros": [
+        "Simple, well-understood semantics",
+        "Fastest retrieval method",
+        "Works out of the box with any vector store",
+        "Predictable behavior"
+      ],
+      "cons": [
+        "May return redundant, similar documents",
+        "Does not penalise duplicate information",
+        "Pure semantic match — misses keyword matches",
+        "Sensitive to embedding quality"
+      ],
+      "implementationComplexity": "low",
+      "defaultConfig": {
+        "topK": 5,
+        "scoreThreshold": null
+      },
+      "parameters": [
+        {
+          "name": "topK",
+          "type": "integer",
+          "min": 1,
+          "max": 20,
+          "default": 5,
+          "description": "Number of documents to retrieve"
+        },
+        {
+          "name": "scoreThreshold",
+          "type": "float",
+          "min": 0.0,
+          "max": 1.0,
+          "default": null,
+          "description": "Minimum similarity score to include a document (null = no threshold)"
+        }
+      ]
+    },
+    {
+      "id": "mmr",
+      "name": "Maximum Marginal Relevance (MMR)",
+      "description": "Balances relevance and diversity. Iteratively selects documents that are relevant to the query but dissimilar to already-selected documents. Reduces redundancy in retrieved context.",
+      "bestFor": [
+        "Documents with high semantic overlap",
+        "When diverse perspectives are needed",
+        "Long answer generation",
+        "Summarization tasks"
+      ],
+      "pros": [
+        "Reduces redundant context passed to LLM",
+        "Improves coverage of different aspects",
+        "Better for complex multi-part questions",
+        "Reduces hallucination from repetitive context"
+      ],
+      "cons": [
+        "Slower than simple similarity (iterative selection)",
+        "Lambda parameter requires tuning",
+        "May miss the single most relevant document",
+        "More complex to implement and explain"
+      ],
+      "implementationComplexity": "medium",
+      "defaultConfig": {
+        "topK": 5,
+        "fetchK": 20,
+        "lambdaMult": 0.5
+      },
+      "parameters": [
+        {
+          "name": "topK",
+          "type": "integer",
+          "min": 1,
+          "max": 20,
+          "default": 5,
+          "description": "Final number of documents to return"
+        },
+        {
+          "name": "fetchK",
+          "type": "integer",
+          "min": 5,
+          "max": 100,
+          "default": 20,
+          "description": "Number of documents to fetch before MMR selection"
+        },
+        {
+          "name": "lambdaMult",
+          "type": "float",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.5,
+          "description": "0 = maximum diversity, 1 = maximum relevance"
+        }
+      ]
+    },
+    {
+      "id": "hybrid",
+      "name": "Hybrid Search",
+      "description": "Combines dense semantic search with sparse keyword search (BM25). Merges results using Reciprocal Rank Fusion or weighted scoring. Best of both worlds.",
+      "bestFor": [
+        "Technical documentation with specific terminology",
+        "Product catalogs with model numbers",
+        "Legal documents with exact phrase matching",
+        "When keyword and semantic signals both matter"
+      ],
+      "pros": [
+        "Catches both semantic meaning AND exact keywords",
+        "Significantly better recall for specific terms",
+        "More robust than pure vector search",
+        "Industry standard for production RAG"
+      ],
+      "cons": [
+        "Requires sparse index (BM25) in addition to dense",
+        "More complex infrastructure",
+        "Alpha parameter requires tuning",
+        "Slower than pure vector search"
+      ],
+      "implementationComplexity": "high",
+      "defaultConfig": {
+        "topK": 5,
+        "alpha": 0.5
+      },
+      "parameters": [
+        {
+          "name": "topK",
+          "type": "integer",
+          "min": 1,
+          "max": 20,
+          "default": 5,
+          "description": "Number of documents to return after fusion"
+        },
+        {
+          "name": "alpha",
+          "type": "float",
+          "min": 0.0,
+          "max": 1.0,
+          "default": 0.5,
+          "description": "0 = pure keyword (BM25), 1 = pure semantic (vector)"
+        }
+      ]
+    },
+    {
+      "id": "parent-child",
+      "name": "Parent-Child Retrieval",
+      "description": "Indexes small child chunks for precision retrieval, but returns their larger parent chunks to the LLM for richer context. Combines retrieval precision with generation context.",
+      "bestFor": [
+        "Long documents with dense information",
+        "When small chunks miss context",
+        "Legal and research documents",
+        "When faithfulness is critical"
+      ],
+      "pros": [
+        "High precision retrieval (small chunks)",
+        "Rich context for generation (large parent chunks)",
+        "Reduces hallucination by providing more context",
+        "Better answer completeness"
+      ],
+      "cons": [
+        "Requires a two-tier index (child + parent)",
+        "More complex to set up and maintain",
+        "Larger context windows needed for the LLM",
+        "Higher token cost for generation"
+      ],
+      "implementationComplexity": "high",
+      "defaultConfig": {
+        "childChunkSize": 256,
+        "parentChunkSize": 1024,
+        "topK": 3
+      },
+      "parameters": [
+        {
+          "name": "childChunkSize",
+          "type": "integer",
+          "min": 64,
+          "max": 512,
+          "default": 256,
+          "description": "Token size for child chunks (retrieved)"
+        },
+        {
+          "name": "parentChunkSize",
+          "type": "integer",
+          "min": 512,
+          "max": 4096,
+          "default": 1024,
+          "description": "Token size for parent chunks (returned to LLM)"
+        },
+        {
+          "name": "topK",
+          "type": "integer",
+          "min": 1,
+          "max": 10,
+          "default": 3,
+          "description": "Number of parent chunks to return"
+        }
+      ]
+    },
+    {
+      "id": "multi-query",
+      "name": "Multi-Query Retrieval",
+      "description": "Uses an LLM to generate multiple query variants from the user's original question. Retrieves documents for each variant and takes the union. Improves recall for ambiguous queries.",
+      "bestFor": [
+        "Ambiguous or complex queries",
+        "When users phrase questions poorly",
+        "Research and exploratory questions",
+        "When recall is more important than precision"
+      ],
+      "pros": [
+        "Dramatically improves recall for complex queries",
+        "Handles rephrasing and synonym variations",
+        "Finds relevant docs the original query missed",
+        "Good for open-ended research questions"
+      ],
+      "cons": [
+        "Adds LLM call latency (extra round trip per query)",
+        "Increases cost (LLM + more vector searches)",
+        "May retrieve noisy or tangentially related docs",
+        "Requires deduplication logic"
+      ],
+      "implementationComplexity": "high",
+      "defaultConfig": {
+        "numQueries": 3,
+        "topK": 5
+      },
+      "parameters": [
+        {
+          "name": "numQueries",
+          "type": "integer",
+          "min": 2,
+          "max": 5,
+          "default": 3,
+          "description": "Number of query variants to generate"
+        },
+        {
+          "name": "topK",
+          "type": "integer",
+          "min": 3,
+          "max": 15,
+          "default": 5,
+          "description": "Documents to retrieve per query variant"
+        }
+      ]
+    },
+    {
+      "id": "ensemble",
+      "name": "Ensemble (RRF)",
+      "description": "Runs multiple retrieval strategies in parallel and combines results using Reciprocal Rank Fusion (RRF). Each strategy contributes to the final ranking. Best recall at cost of latency.",
+      "bestFor": [
+        "High-stakes, precision-critical applications",
+        "When no single strategy is clearly best",
+        "Research and complex knowledge bases",
+        "When evaluation shows mixed retrieval quality"
+      ],
+      "pros": [
+        "Best possible recall — captures docs any single strategy misses",
+        "Robust to individual strategy weaknesses",
+        "No single point of failure in retrieval",
+        "Proven in production at large scale"
+      ],
+      "cons": [
+        "Highest latency of all strategies",
+        "Most expensive (multiple searches)",
+        "Complex to configure and tune",
+        "Requires multiple strategy implementations"
+      ],
+      "implementationComplexity": "high",
+      "defaultConfig": {
+        "strategies": ["similarity", "hybrid"],
+        "topK": 5,
+        "rrfK": 60
+      },
+      "parameters": [
+        {
+          "name": "strategies",
+          "type": "array",
+          "options": ["similarity", "mmr", "hybrid", "bm25"],
+          "default": ["similarity", "hybrid"],
+          "description": "Retrieval strategies to ensemble"
+        },
+        {
+          "name": "topK",
+          "type": "integer",
+          "min": 1,
+          "max": 20,
+          "default": 5,
+          "description": "Final number of documents after RRF fusion"
+        },
+        {
+          "name": "rrfK",
+          "type": "integer",
+          "min": 1,
+          "max": 100,
+          "default": 60,
+          "description": "RRF k constant (higher = more smoothing)"
+        }
+      ]
+    }
+  ]
+}

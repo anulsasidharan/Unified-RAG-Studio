@@ -1,0 +1,153 @@
+{
+  "version": "1.0.0",
+  "description": "Cloud provider catalog for RAG Studio. Used by Designer and Autopilot to filter cloud-specific recommendations.",
+  "providers": [
+    {
+      "id": "aws",
+      "name": "Amazon Web Services",
+      "shortName": "AWS",
+      "logo": "/logos/aws.svg",
+      "description": "The world's largest cloud provider. Deep ecosystem, most mature managed services, dominant in enterprise.",
+      "bestFor": [
+        "Enterprise workloads",
+        "Maximum service breadth",
+        "US-based teams",
+        "Existing AWS infrastructure"
+      ],
+      "strengths": [
+        "Largest global infrastructure (30+ regions)",
+        "Bedrock for native LLM access (Claude, Titan, Llama)",
+        "ECS/EKS for container orchestration",
+        "SageMaker for ML pipelines",
+        "OpenSearch for hybrid search",
+        "S3 as the industry-standard object store"
+      ],
+      "nativeServices": {
+        "llm": ["Amazon Bedrock (Claude, Titan, Llama 3, Mistral, Cohere)"],
+        "vectorStore": ["Amazon OpenSearch", "Amazon MemoryDB (pgvector)"],
+        "objectStorage": ["Amazon S3"],
+        "containerOrchestration": ["Amazon ECS", "Amazon EKS"],
+        "monitoring": ["Amazon CloudWatch", "AWS X-Ray"],
+        "secretsManagement": ["AWS Secrets Manager"],
+        "computeOptions": ["EC2", "Lambda", "Fargate", "SageMaker"]
+      },
+      "ragStudioDefaults": {
+        "vectorStore": "opensearch",
+        "objectStorage": "s3",
+        "deployment": "ecs"
+      },
+      "compliance": ["SOC 2", "ISO 27001", "HIPAA", "FedRAMP", "GDPR"],
+      "pricingTier": "enterprise"
+    },
+    {
+      "id": "gcp",
+      "name": "Google Cloud Platform",
+      "shortName": "GCP",
+      "logo": "/logos/gcp.svg",
+      "description": "Google's cloud platform. Best-in-class AI/ML tooling with Vertex AI, Gemini models, and massive data processing capabilities.",
+      "bestFor": [
+        "AI/ML-heavy workloads",
+        "Large-scale data pipelines",
+        "Gemini model integration",
+        "Teams already using Google Workspace"
+      ],
+      "strengths": [
+        "Vertex AI — unified AI platform (training, serving, RAG)",
+        "Gemini 1.5 Pro/Flash with 1M context natively",
+        "Vertex AI Vector Search (ScaNN-based)",
+        "BigQuery for large-scale analytics",
+        "Google Kubernetes Engine (GKE) — most polished K8s",
+        "Cloud Run for serverless containers"
+      ],
+      "nativeServices": {
+        "llm": ["Vertex AI Gemini 1.5 Pro/Flash", "Vertex AI Model Garden (Llama, Mistral)"],
+        "vectorStore": ["Vertex AI Vector Search", "AlloyDB (pgvector)"],
+        "objectStorage": ["Google Cloud Storage (GCS)"],
+        "containerOrchestration": ["Google Kubernetes Engine (GKE)", "Cloud Run"],
+        "monitoring": ["Cloud Monitoring", "Cloud Trace"],
+        "secretsManagement": ["Secret Manager"],
+        "computeOptions": ["Compute Engine", "Cloud Functions", "Cloud Run", "Vertex AI"]
+      },
+      "ragStudioDefaults": {
+        "vectorStore": "vertex-ai-vector-search",
+        "objectStorage": "gcs",
+        "deployment": "cloud-run"
+      },
+      "compliance": ["SOC 2", "ISO 27001", "HIPAA", "FedRAMP", "GDPR"],
+      "pricingTier": "enterprise"
+    },
+    {
+      "id": "azure",
+      "name": "Microsoft Azure",
+      "shortName": "Azure",
+      "logo": "/logos/azure.svg",
+      "description": "Microsoft's cloud platform. Best enterprise integration (Microsoft 365, Teams, Active Directory) and Azure OpenAI Service for GPT-4o/Claude access.",
+      "bestFor": [
+        "Microsoft enterprise shops",
+        "Azure OpenAI requirement",
+        "EU data residency",
+        "Existing Microsoft 365/Teams users"
+      ],
+      "strengths": [
+        "Azure OpenAI Service — GPT-4o, o1, Embeddings natively",
+        "Azure AI Search — hybrid vector + BM25 + semantic reranking",
+        "Entra ID (AAD) for enterprise identity",
+        "Azure Kubernetes Service (AKS)",
+        "Azure Blob Storage with Lifecycle Policies",
+        "EU-based regions for GDPR compliance"
+      ],
+      "nativeServices": {
+        "llm": ["Azure OpenAI (GPT-4o, o1, Embeddings)", "Azure AI Foundry (Llama, Mistral, Phi)"],
+        "vectorStore": ["Azure AI Search", "Azure Cosmos DB (vector search)"],
+        "objectStorage": ["Azure Blob Storage"],
+        "containerOrchestration": ["Azure Kubernetes Service (AKS)", "Azure Container Apps"],
+        "monitoring": ["Azure Monitor", "Application Insights"],
+        "secretsManagement": ["Azure Key Vault"],
+        "computeOptions": ["Virtual Machines", "Azure Functions", "Container Apps", "AKS"]
+      },
+      "ragStudioDefaults": {
+        "vectorStore": "azure-ai-search",
+        "objectStorage": "azure-blob",
+        "deployment": "aks"
+      },
+      "compliance": ["SOC 2", "ISO 27001", "HIPAA", "FedRAMP", "GDPR", "EU Data Boundary"],
+      "pricingTier": "enterprise"
+    },
+    {
+      "id": "multi-cloud",
+      "name": "Multi-Cloud",
+      "shortName": "Multi-Cloud",
+      "logo": "/logos/multi-cloud.svg",
+      "description": "Cloud-agnostic architecture using best-of-breed services from multiple providers. Maximum flexibility, portability, and no vendor lock-in.",
+      "bestFor": [
+        "Avoiding vendor lock-in",
+        "Best-of-breed service selection",
+        "Disaster recovery across providers",
+        "Organizations with existing multi-cloud strategy"
+      ],
+      "strengths": [
+        "Zero vendor lock-in — switch providers anytime",
+        "Mix best services: Bedrock LLMs + GCP BigQuery + Azure AI Search",
+        "Regulatory flexibility — store data in jurisdiction-appropriate regions",
+        "Leverage competitive pricing across providers",
+        "Open-source-first: Qdrant, self-hosted models, MinIO"
+      ],
+      "nativeServices": {
+        "llm": ["OpenAI API", "Anthropic API", "Cohere API", "Ollama (self-hosted)"],
+        "vectorStore": ["Qdrant (self-hosted or cloud)", "Pinecone", "Weaviate"],
+        "objectStorage": ["MinIO (S3-compatible)", "Backblaze B2", "Cloudflare R2"],
+        "containerOrchestration": ["Kubernetes (any)", "Docker Compose"],
+        "monitoring": ["Prometheus + Grafana", "OpenTelemetry"],
+        "secretsManagement": ["HashiCorp Vault", "Doppler"],
+        "computeOptions": ["Any VPS", "Bare metal", "On-premise"]
+      },
+      "ragStudioDefaults": {
+        "vectorStore": "qdrant",
+        "objectStorage": "minio",
+        "deployment": "docker-compose"
+      },
+      "compliance": ["Configurable per region"],
+      "pricingTier": "flexible"
+    }
+  ]
+}
