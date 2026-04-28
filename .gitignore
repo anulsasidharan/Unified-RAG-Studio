@@ -69,6 +69,17 @@ secrets/
 # ============================================================
 .dockerignore
 
+# Docker volume data directories (created by docker compose)
+postgres-data/
+redis-data/
+qdrant-data/
+mlflow-data/
+minio-data/
+
+# Docker override files with local customisations
+docker-compose.local.yml
+docker-compose.override.yml
+
 # ============================================================
 # IDEs & Editors
 # ============================================================
