@@ -54,6 +54,10 @@ coverage.xml
 pip-log.txt
 pip-delete-this-directory.txt
 
+# SQLite test database (created by pytest)
+test.db
+*.db-journal
+
 # ============================================================
 # Environment & Secrets
 # ============================================================
