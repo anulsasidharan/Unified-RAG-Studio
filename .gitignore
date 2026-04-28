@@ -113,6 +113,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # ============================================================
+# GitHub Actions / CI
+# ============================================================
+# Local act runner cache (https://github.com/nektos/act)
+.act/
+
+# Playwright test results and reports
+apps/web/playwright-report/
+apps/web/test-results/
+
+# ============================================================
 # Build artifacts
 # ============================================================
 *.tgz
