@@ -22,6 +22,7 @@ class RAGBaseModel(BaseModel):
         alias_generator=to_camel,
         populate_by_name=True,   # accept snake_case in Python code
         use_enum_values=True,    # serialise enums as their string values
+        from_attributes=True,    # ORM → schema conversion via model_validate(orm_obj)
     )
 
 
