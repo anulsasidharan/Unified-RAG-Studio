@@ -7,6 +7,7 @@ and deterministic.
 
 import io
 import json
+import sys
 import textwrap
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -291,10 +292,10 @@ def test_docx_loader_from_bytes(simple_docx_bytes):
 
 @pytest.mark.unit
 def test_url_loader_returns_extracted_text():
-    with (
-        patch("app.core.ingestion.loaders.trafilatura.fetch_url", return_value="<html>raw</html>"),
-        patch("app.core.ingestion.loaders.trafilatura.extract", return_value="Extracted body text."),
-    ):
+    mock_traf = MagicMock()
+    mock_traf.fetch_url.return_value = "<html>raw</html>"
+    mock_traf.extract.return_value = "Extracted body text."
+    with patch.dict(sys.modules, {"trafilatura": mock_traf}):
         loader = URLLoader()
         docs = loader.load("https://example.com")
 
@@ -306,7 +307,9 @@ def test_url_loader_returns_extracted_text():
 
 @pytest.mark.unit
 def test_url_loader_returns_empty_on_fetch_failure():
-    with patch("app.core.ingestion.loaders.trafilatura.fetch_url", return_value=None):
+    mock_traf = MagicMock()
+    mock_traf.fetch_url.return_value = None
+    with patch.dict(sys.modules, {"trafilatura": mock_traf}):
         loader = URLLoader()
         docs = loader.load("https://unreachable.example")
 
@@ -315,10 +318,10 @@ def test_url_loader_returns_empty_on_fetch_failure():
 
 @pytest.mark.unit
 def test_url_loader_returns_empty_when_extraction_yields_nothing():
-    with (
-        patch("app.core.ingestion.loaders.trafilatura.fetch_url", return_value="<html></html>"),
-        patch("app.core.ingestion.loaders.trafilatura.extract", return_value=None),
-    ):
+    mock_traf = MagicMock()
+    mock_traf.fetch_url.return_value = "<html></html>"
+    mock_traf.extract.return_value = None
+    with patch.dict(sys.modules, {"trafilatura": mock_traf}):
         loader = URLLoader()
         docs = loader.load("https://example.com")
 
@@ -760,10 +763,10 @@ def test_ingestion_service_load_removes_source_when_disabled(tmp_path):
 
 @pytest.mark.unit
 def test_ingestion_service_load_url():
-    with (
-        patch("app.core.ingestion.loaders.trafilatura.fetch_url", return_value="<html>x</html>"),
-        patch("app.core.ingestion.loaders.trafilatura.extract", return_value="URL body text."),
-    ):
+    mock_traf = MagicMock()
+    mock_traf.fetch_url.return_value = "<html>x</html>"
+    mock_traf.extract.return_value = "URL body text."
+    with patch.dict(sys.modules, {"trafilatura": mock_traf}):
         svc = IngestionService()
         docs = svc.load(IngestionSource(source_type="url", url="https://example.com"))
 

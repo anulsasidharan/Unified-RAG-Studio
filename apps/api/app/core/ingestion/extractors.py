@@ -5,8 +5,8 @@ produce a metadata dict. These dicts are merged into Document.metadata
 by IngestionService after loading and preprocessing.
 """
 
-import re
 from pathlib import Path
+import re
 from typing import Any
 
 import structlog
@@ -31,6 +31,7 @@ def _safe_str(value: Any) -> str | None:
 def extract_pdf_metadata(source: "str | bytes") -> dict[str, Any]:
     """Extract PDF document information: title, author, creation date, page count."""
     import io
+
     from pypdf import PdfReader
 
     try:
@@ -59,6 +60,7 @@ def extract_pdf_metadata(source: "str | bytes") -> dict[str, Any]:
 def extract_docx_metadata(source: "str | bytes") -> dict[str, Any]:
     """Extract DOCX core properties: title, author, description, dates."""
     import io
+
     import docx  # python-docx
 
     try:
@@ -68,12 +70,16 @@ def extract_docx_metadata(source: "str | bytes") -> dict[str, Any]:
             else docx.Document(str(source))
         )
         props = doc.core_properties
+        # OOXML may expose dc:description; stubs only list a subset — use getattr.
+        summary = getattr(props, "description", None)
+        if summary is None:
+            summary = getattr(props, "comments", None)
         return {
             k: v
             for k, v in {
                 "title": _safe_str(props.title),
                 "author": _safe_str(props.author),
-                "description": _safe_str(props.description),
+                "description": _safe_str(summary),
                 "created_at": str(props.created) if props.created else None,
                 "modified_at": str(props.modified) if props.modified else None,
                 "paragraph_count": len(doc.paragraphs),
