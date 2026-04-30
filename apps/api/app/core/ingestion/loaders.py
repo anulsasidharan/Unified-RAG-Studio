@@ -5,15 +5,15 @@ a list of LangChain Documents with pre-populated metadata. The LoaderFactory
 selects the correct loader based on file extension or source type.
 """
 
+from abc import ABC, abstractmethod
 import csv
 import io
 import json
-from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -248,7 +248,7 @@ class URLLoader(DocumentLoader):
     """Fetches a URL and extracts the main body text using trafilatura."""
 
     def load(self, source: "str | Path | bytes", **kwargs: Any) -> list[Document]:
-        import trafilatura
+        import trafilatura  # pyright: ignore[reportMissingImports]
 
         url = str(source)
         downloaded = trafilatura.fetch_url(url)
