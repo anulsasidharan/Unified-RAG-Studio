@@ -31,6 +31,7 @@ langgraph==0.1.1
 # ─── Embeddings ───────────────────────────────────────────────
 sentence-transformers==3.0.0
 tiktoken==0.7.0
+cohere>=4.40                     # Required by langchain-community CohereEmbeddings
 
 # ─── RAG evaluation ───────────────────────────────────────────
 ragas==0.1.9
