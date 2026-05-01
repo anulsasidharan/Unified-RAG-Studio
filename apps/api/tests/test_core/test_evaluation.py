@@ -67,6 +67,7 @@ def test_resolve_ragas_unknown_raises():
 
 @pytest.mark.unit
 def test_build_dataset_empty_context_placeholder():
+    pytest.importorskip("datasets")
     ds = build_dataset(
         questions=["q"],
         answers=["a"],
@@ -158,6 +159,7 @@ def test_evaluate_empty_batch():
 
 @pytest.mark.unit
 def test_evaluate_mocked_ragas():
+    pytest.importorskip("ragas")
     mock = _MockRagasResult(
         faithfulness=0.85,
         answer_relevancy=0.75,

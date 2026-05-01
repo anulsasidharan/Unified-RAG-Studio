@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from datasets import Dataset
+from typing import TYPE_CHECKING
 
 from app.schemas.evaluation import EvaluationMetrics
+
+if TYPE_CHECKING:
+    from datasets import Dataset
 
 # Default RAGAS metric set (v0.1.x)
 _DEFAULT_METRIC_NAMES = (
@@ -65,6 +68,8 @@ def build_dataset(
     ground_truths: list[str],
 ) -> Dataset:
     """Build a RAGAS-compatible ``Dataset`` (column names match RAGAS defaults)."""
+    from datasets import Dataset as HFDataset
+
     if not (len(questions) == len(answers) == len(contexts) == len(ground_truths)):
         raise ValueError("questions, answers, contexts, ground_truths must have equal length")
     # Ensure each context list is non-empty for downstream metrics
@@ -74,7 +79,7 @@ def build_dataset(
             safe_ctx.append(["(no context retrieved)"])
         else:
             safe_ctx.append(row)
-    return Dataset.from_dict(
+    return HFDataset.from_dict(
         {
             "question": questions,
             "answer": answers,
