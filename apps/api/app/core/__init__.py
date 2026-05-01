@@ -1,1 +1,1 @@
-"""Core RAG pipeline services — ingestion, chunking, embedding, retrieval, generation."""
+"""Core RAG pipeline services — ingestion, chunking, embedding, vector store, retrieval, generation."""
