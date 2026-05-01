@@ -7,6 +7,9 @@ is set to distinguish indexing (search_document) from querying (search_query),
 which improves retrieval quality on Cohere's v3 models.
 """
 
+import importlib
+from typing import Protocol
+
 import structlog
 
 from .strategies import Embedding, EmbeddingConfig, TextEmbedder
@@ -23,15 +26,25 @@ _MODEL_MAP: dict[str, str] = {
 _DEFAULT_BATCH_SIZE = 96
 
 
+class _CohereEmbeddingsClient(Protocol):
+    """LangChain CohereEmbeddings surface used by this wrapper."""
+
+    def embed_documents(self, texts: list[str]) -> list[Embedding]: ...
+
+    def embed_query(self, text: str) -> Embedding: ...
+
+
 class CohereEmbedder(TextEmbedder):
     """Wraps Cohere's Embed v3 API via langchain-community."""
 
     def _resolve_model(self, catalog_id: str) -> str:
         return _MODEL_MAP.get(catalog_id, catalog_id)
 
-    def _build_client(self, config: EmbeddingConfig) -> object:
-        from langchain_community.embeddings import CohereEmbeddings
+    def _build_client(self, config: EmbeddingConfig) -> _CohereEmbeddingsClient:
         from app.config import get_settings
+
+        emb_mod = importlib.import_module("langchain_community.embeddings")
+        CohereEmbeddings = getattr(emb_mod, "CohereEmbeddings")
 
         return CohereEmbeddings(
             model=self._resolve_model(config.model),

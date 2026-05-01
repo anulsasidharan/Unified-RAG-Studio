@@ -1,12 +1,19 @@
 """Project ORM model — top-level container for pipeline configurations."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.build_history import AutopilotBuild
+    from app.models.pipeline_config import PipelineConfig
 
 
 class Project(Base, TimestampMixin):
@@ -26,12 +33,12 @@ class Project(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Relationships populated once the related models are imported
-    pipeline_configs: Mapped[list["PipelineConfig"]] = relationship(  # noqa: F821
+    pipeline_configs: Mapped[list[PipelineConfig]] = relationship(
         "PipelineConfig",
         back_populates="project",
         cascade="all, delete-orphan",
     )
-    autopilot_builds: Mapped[list["AutopilotBuild"]] = relationship(  # noqa: F821
+    autopilot_builds: Mapped[list[AutopilotBuild]] = relationship(
         "AutopilotBuild",
         back_populates="project",
         cascade="all, delete-orphan",

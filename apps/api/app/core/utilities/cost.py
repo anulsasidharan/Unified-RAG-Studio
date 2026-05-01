@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from functools import lru_cache
+from numbers import Real
 from pathlib import Path
 
 from app.config import Settings, get_settings
@@ -62,6 +63,19 @@ def _models_block(pricing: dict[str, object], section: str) -> dict[str, object]
     return _dig(_dig(pricing, section), "models")
 
 
+def _json_float(mapping: dict[str, object], key: str, default: float) -> float:
+    """Coerce a pricing/assumptions JSON value to float (invalid → default)."""
+    v = mapping.get(key, default)
+    if isinstance(v, Real):
+        return float(v)
+    if isinstance(v, str):
+        try:
+            return float(v.strip())
+        except (TypeError, ValueError, OverflowError):
+            return default
+    return default
+
+
 @dataclass
 class _Totals:
     embedding: float = 0.0
@@ -82,9 +96,10 @@ class CostEstimator:
         doc_n = float(body.documents_count)
         doc_tokens = float(body.avg_document_tokens)
 
-        ass = dict(self._p.get("assumptions", {}) if isinstance(self._p.get("assumptions"), dict) else {})
-        avg_in_ass = float(ass.get("avgInputTokensPerQuery", 500))
-        avg_out_ass = float(ass.get("avgOutputTokensPerQuery", 300))
+        _raw_ass = self._p.get("assumptions")
+        ass: dict[str, object] = {**_raw_ass} if isinstance(_raw_ass, dict) else {}
+        avg_in_ass = _json_float(ass, "avgInputTokensPerQuery", 500.0)
+        avg_out_ass = _json_float(ass, "avgOutputTokensPerQuery", 300.0)
 
         stages = body.config.stages
         chunk_sz = float(stages.chunking.chunk_size)

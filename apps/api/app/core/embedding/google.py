@@ -5,6 +5,9 @@ langchain-google-genai package. The Gemini Embeddings API is used rather
 than Vertex AI, so only a google_api_key is required (no service account).
 """
 
+import importlib
+from typing import Protocol
+
 import structlog
 
 from .strategies import Embedding, EmbeddingConfig, TextEmbedder
@@ -19,15 +22,25 @@ _MODEL_MAP: dict[str, str] = {
 _DEFAULT_BATCH_SIZE = 100
 
 
+class _GoogleGenerativeAIEmbeddingsClient(Protocol):
+    """LangChain GoogleGenerativeAIEmbeddings surface used by this wrapper."""
+
+    def embed_documents(self, texts: list[str]) -> list[Embedding]: ...
+
+    def embed_query(self, text: str) -> Embedding: ...
+
+
 class GoogleEmbedder(TextEmbedder):
     """Wraps Google's text-embedding-004 via langchain-google-genai."""
 
     def _resolve_model(self, catalog_id: str) -> str:
         return _MODEL_MAP.get(catalog_id, catalog_id)
 
-    def _build_client(self, config: EmbeddingConfig) -> object:
-        from langchain_google_genai import GoogleGenerativeAIEmbeddings
+    def _build_client(self, config: EmbeddingConfig) -> _GoogleGenerativeAIEmbeddingsClient:
         from app.config import get_settings
+
+        genai_mod = importlib.import_module("langchain_google_genai")
+        GoogleGenerativeAIEmbeddings = getattr(genai_mod, "GoogleGenerativeAIEmbeddings")
 
         return GoogleGenerativeAIEmbeddings(
             model=self._resolve_model(config.model),

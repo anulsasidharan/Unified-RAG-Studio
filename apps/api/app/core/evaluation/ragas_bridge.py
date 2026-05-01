@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING
 
 from app.schemas.evaluation import EvaluationMetrics
@@ -44,18 +45,13 @@ def resolve_ragas_metric_names(requested: list[str] | None) -> list[str]:
 
 def load_ragas_metrics(pipeline_names: list[str]) -> list[object]:
     """Import RAGAS metric singletons for the given pipeline metric names."""
-    from ragas.metrics import (
-        answer_relevancy,
-        context_precision,
-        context_recall,
-        faithfulness,
-    )
+    metrics_mod = importlib.import_module("ragas.metrics")
 
     _map = {
-        "faithfulness": faithfulness,
-        "answer_relevance": answer_relevancy,
-        "context_precision": context_precision,
-        "context_recall": context_recall,
+        "faithfulness": getattr(metrics_mod, "faithfulness"),
+        "answer_relevance": getattr(metrics_mod, "answer_relevancy"),
+        "context_precision": getattr(metrics_mod, "context_precision"),
+        "context_recall": getattr(metrics_mod, "context_recall"),
     }
     return [_map[n] for n in pipeline_names]
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import importlib
+
 from langchain_core.language_models.chat_models import BaseChatModel
 import structlog
 
@@ -53,7 +55,8 @@ def _common_kwargs(cfg: GenerationRuntimeConfig) -> dict:
 
 
 def _openai_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
-    from langchain_openai import ChatOpenAI
+    openai_mod = importlib.import_module("langchain_openai")
+    ChatOpenAI = getattr(openai_mod, "ChatOpenAI")
 
     kw = _common_kwargs(cfg)
     kw["api_key"] = settings.openai_api_key or None
@@ -64,7 +67,8 @@ def _openai_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
 
 
 def _anthropic_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
-    from langchain_anthropic import ChatAnthropic
+    anthropic_mod = importlib.import_module("langchain_anthropic")
+    ChatAnthropic = getattr(anthropic_mod, "ChatAnthropic")
 
     kw = _common_kwargs(cfg)
     kw["api_key"] = settings.anthropic_api_key or None
@@ -73,7 +77,8 @@ def _anthropic_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseCha
 
 
 def _google_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
-    from langchain_google_genai import ChatGoogleGenerativeAI
+    genai_mod = importlib.import_module("langchain_google_genai")
+    ChatGoogleGenerativeAI = getattr(genai_mod, "ChatGoogleGenerativeAI")
 
     kw: dict = {
         "model": cfg.model,
@@ -89,8 +94,9 @@ def _google_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
 
 def _cohere_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     try:
-        from langchain_community.chat_models import ChatCohere
-    except ImportError as exc:  # pragma: no cover — env guard
+        lcm = importlib.import_module("langchain_community.chat_models")
+        ChatCohere = getattr(lcm, "ChatCohere")
+    except (ImportError, AttributeError) as exc:  # pragma: no cover — env guard
         raise ValueError(
             "Cohere chat requires langchain-community. Install apps/api requirements."
         ) from exc
@@ -102,7 +108,8 @@ def _cohere_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
 
 
 def _mistral_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
-    from langchain_openai import ChatOpenAI
+    openai_mod = importlib.import_module("langchain_openai")
+    ChatOpenAI = getattr(openai_mod, "ChatOpenAI")
 
     if not settings.mistral_api_key:
         logger.warning("mistral_api_key_missing", model=cfg.model)
@@ -114,7 +121,8 @@ def _mistral_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatM
 
 
 def _openai_compatible_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
-    from langchain_openai import ChatOpenAI
+    openai_mod = importlib.import_module("langchain_openai")
+    ChatOpenAI = getattr(openai_mod, "ChatOpenAI")
 
     if not settings.openai_compatible_base_url or not settings.openai_compatible_api_key:
         raise ValueError(

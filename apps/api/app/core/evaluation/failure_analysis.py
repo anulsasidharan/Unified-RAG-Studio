@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from math import isnan
+from numbers import Real
 
 import structlog
 
@@ -14,9 +15,16 @@ logger = structlog.get_logger(__name__)
 def _safe_float(v: object) -> float | None:
     if v is None:
         return None
+    conv: Real | str
+    if isinstance(v, Real):
+        conv = v
+    elif isinstance(v, str):
+        conv = v
+    else:
+        return None
     try:
-        x = float(v)
-    except (TypeError, ValueError):
+        x = float(conv)
+    except (TypeError, ValueError, OverflowError):
         return None
     if isnan(x):
         return None

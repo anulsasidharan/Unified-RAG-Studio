@@ -2,7 +2,8 @@
 
 import asyncio
 import logging
-from typing import Annotated
+from collections.abc import Awaitable
+from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
@@ -70,7 +71,10 @@ async def ready(
             decode_responses=True,
             max_connections=5,
         )
-        pong = await asyncio.wait_for(redis_client.ping(), timeout=2.0)
+        pong = await asyncio.wait_for(
+            cast(Awaitable[bool], redis_client.ping()),
+            timeout=2.0,
+        )
         checks["redis"] = {"ok": pong is True}
     except Exception as exc:  # noqa: BLE001
         checks["redis"] = {"ok": False, "detail": str(exc)}
