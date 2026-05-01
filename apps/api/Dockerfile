@@ -4,6 +4,9 @@
 # bookworm = stable Debian 12; explicit tag tracks security rebuilds from Docker Library
 FROM python:3.11-slim-bookworm AS builder
 
+# Install uv package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /build
 
 # Install build tools; dist-upgrade patches glibc/openssl etc. reported by image scanners
@@ -17,19 +20,16 @@ RUN apt-get update \
 
 # Copy and install dependencies first (cache layer)
 COPY requirements.txt .
-# Refresh bootstrapping packages (base image may ship vulnerable wheel / jaraco.context — see pip audit / Trivy)
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --upgrade \
-        "setuptools>=78.1.0" \
-        "wheel>=0.46.2" \
-        "jaraco.context>=6.1.0" && \
-    pip install --no-cache-dir --prefix=/install -r requirements.txt
+RUN uv pip install --system --no-cache --prefix=/install -r requirements.txt
 
 
 # ─────────────────────────────────────────────────────────────
 # Stage 2 · Development — hot-reload, debug tools
 # ─────────────────────────────────────────────────────────────
 FROM python:3.11-slim-bookworm AS development
+
+# Install uv package manager
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
@@ -46,11 +46,7 @@ COPY --from=builder /install /usr/local
 
 # Copy dev requirements and install
 COPY requirements-dev.txt .
-RUN pip install --no-cache-dir --upgrade \
-        "setuptools>=78.1.0" \
-        "wheel>=0.46.2" \
-        "jaraco.context>=6.1.0" && \
-    pip install --no-cache-dir -r requirements-dev.txt
+RUN uv pip install --system --no-cache -r requirements-dev.txt
 
 # Source code is bind-mounted in dev (see docker-compose.dev.yml)
 # This COPY is here so the image can also run standalone
@@ -83,12 +79,6 @@ RUN apt-get update \
 
 # Copy only installed packages from builder (no dev tools)
 COPY --from=builder /install /usr/local
-
-# Align system site-packages with patched bootstrapping wheels (still as root)
-RUN pip install --no-cache-dir --upgrade \
-        "setuptools>=78.1.0" \
-        "wheel>=0.46.2" \
-        "jaraco.context>=6.1.0"
 
 # Copy application source
 COPY --chown=appuser:appuser . .
