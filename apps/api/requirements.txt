@@ -35,6 +35,8 @@ cohere>=4.40                     # Required by langchain-community CohereEmbeddi
 
 # ─── RAG evaluation ───────────────────────────────────────────
 ragas==0.1.9
+pandas>=2.0.0                    # RAGAS result.to_pandas + evaluation tests
+datasets>=2.14.0                 # HuggingFace Dataset for RAGAS evaluate()
 
 # ─── Experiment tracking ──────────────────────────────────────
 mlflow==2.13.0
