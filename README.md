@@ -35,6 +35,7 @@ RAG Studio is a **unified platform** for building production-ready Retrieval-Aug
 - [Docker Compose](https://docs.docker.com/compose/) ≥ 2.20
 - [Node.js](https://nodejs.org/) ≥ 18 (for local frontend dev)
 - [Python](https://www.python.org/) ≥ 3.11 (for local backend dev)
+- [uv](https://docs.astral.sh/uv/) (Python package manager)
 
 ### 1 — Clone & configure
 
@@ -107,8 +108,8 @@ npm run dev
 
 ```bash
 cd apps/api
-python -m venv .venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
+uv pip install -r requirements.txt
 uvicorn app.main:app --reload
 # → http://localhost:8000
 ```
