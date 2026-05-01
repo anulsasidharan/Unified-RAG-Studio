@@ -221,7 +221,10 @@ jobs:
       - name: Stop services
         if: always()
         run: |
-          docker compose -f docker/docker-compose.yml down -v
+          docker compose \
+            -f docker/docker-compose.yml \
+            -f docker/docker-compose.dev.yml \
+            down -v
           kill $API_PID $WEB_PID 2>/dev/null || true
 
   # ──────────────────────────────────────────────────────────────

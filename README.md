@@ -48,7 +48,10 @@ cp .env.example .env
 ### 2 — Start all services
 
 ```bash
-docker compose -f docker/docker-compose.yml up -d
+docker compose \
+  -f docker/docker-compose.yml \
+  -f docker/docker-compose.build.yml \
+  up --build -d
 ```
 
 This starts 8 services: `web` (Next.js), `api` (FastAPI), `db` (PostgreSQL), `redis`, `vector-db` (Qdrant), `mlflow`, `minio`, `worker` (Celery).
