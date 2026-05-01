@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 import uuid
 
 from langchain_core.documents import Document
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import (
+    Condition,
     Distance,
     FieldCondition,
     Filter,
@@ -46,6 +47,23 @@ def _payload_key(filter_key: str) -> str:
     return f"metadata.{filter_key}"
 
 
+def _match_value_scalar(v: str | int | float | bool) -> str | int | bool:
+    """Map filter values to Qdrant ``MatchValue.value`` (``ValueVariants``: str | int | bool).
+
+    ``MatchValue`` rejects ``float`` at validation time; whole-number floats become ``int``,
+    other floats become ``str`` (fractional numeric equality vs payload is best-effort).
+    """
+    if isinstance(v, bool):
+        return v
+    if isinstance(v, int):
+        return v
+    if isinstance(v, str):
+        return v
+    if isinstance(v, float):
+        return int(v) if v.is_integer() else str(v)
+    raise TypeError(f"unsupported scalar filter value type: {type(v)!r}")
+
+
 def _json_safe_metadata(meta: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for k, v in meta.items():
@@ -61,21 +79,29 @@ def _json_safe_metadata(meta: dict[str, Any]) -> dict[str, Any]:
 def _build_qdrant_filter(filters: list[VectorSearchFilter] | None) -> Filter | None:
     if not filters:
         return None
-    must: list[FieldCondition] = []
+    must: list[Condition] = []
     for f in filters:
         key = _payload_key(f.key)
         op = f.operator.lower().strip()
         if op == "eq":
-            must.append(FieldCondition(key=key, match=MatchValue(value=f.value)))  # type: ignore[arg-type]
+            if isinstance(f.value, list):
+                continue
+            must.append(
+                FieldCondition(key=key, match=MatchValue(value=_match_value_scalar(f.value)))
+            )
         elif op == "in" and isinstance(f.value, list):
-            must.append(FieldCondition(key=key, match=MatchAny(any=list(f.value))))  # type: ignore[arg-type]
+            must.append(FieldCondition(key=key, match=MatchAny(any=list(f.value))))
         elif op == "contains" and isinstance(f.value, str):
             must.append(FieldCondition(key=key, match=MatchText(text=f.value)))
         elif op in ("ne", "nin"):
             # Qdrant must_not; simplified: skip complex nested for P2-4
             continue
         else:
-            must.append(FieldCondition(key=key, match=MatchValue(value=f.value)))  # type: ignore[arg-type]
+            if isinstance(f.value, list):
+                continue
+            must.append(
+                FieldCondition(key=key, match=MatchValue(value=_match_value_scalar(f.value)))
+            )
     if not must:
         return None
     return Filter(must=must)
@@ -127,7 +153,11 @@ class QdrantVectorStore(VectorStoreClient):
         if not pairs:
             return
         points = [self._to_point(doc, vec) for doc, vec in pairs]
-        await self._client.upsert(collection_name=self._collection, points=points)
+        # Stubs use List[Union[PointStruct, pb2.PointStruct]]; list is invariant.
+        await self._client.upsert(
+            collection_name=self._collection,
+            points=cast(Any, points),
+        )
         logger.info("qdrant_upsert_complete", collection=self._collection, points=len(points))
 
     async def search(
