@@ -16,3 +16,10 @@
 | P2-7 · Evaluation Engine | `feature/p2-evaluation-engine` | ✅ done |
 | P2-8 · Celery Worker & Task Queue | `feature/p2-celery-worker` | ✅ done |
 | P2-9 · Health & Utility Endpoints | `feature/p2-health-endpoints` | ✅ done |
+
+## Phase 3 — Frontend foundation
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P3-1 · shadcn/ui Component Library Setup | `feature/p3-shadcn-components` | ✅ done |
+| P3-2 · Zustand State Stores | `feature/p3-zustand-stores` | ✅ done |
