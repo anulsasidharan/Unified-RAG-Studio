@@ -7,11 +7,13 @@ helpers for A/B comparison and synthetic test rows.
 from __future__ import annotations
 
 import asyncio
+import importlib
 import time
-from typing import TYPE_CHECKING
+from typing import Any
 
 import structlog
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from pydantic import SecretStr
 
 from app.config import Settings, get_settings
 
@@ -24,9 +26,6 @@ from .ragas_bridge import (
 )
 from .strategies import EvaluationEngineResult, EvaluationExample
 
-if TYPE_CHECKING:
-    from ragas.run_config import RunConfig
-
 logger = structlog.get_logger(__name__)
 
 
@@ -37,16 +36,18 @@ class EvaluationEngine:
         self._settings = settings or get_settings()
 
     def _build_models(self) -> tuple[ChatOpenAI, OpenAIEmbeddings]:
-        key = self._settings.openai_api_key or None
-        llm = ChatOpenAI(
-            model=self._settings.evaluation_llm_model,
-            temperature=0.0,
-            api_key=key,
-        )
-        emb = OpenAIEmbeddings(
-            model=self._settings.evaluation_embedding_model,
-            api_key=key,
-        )
+        key = SecretStr(self._settings.openai_api_key) if self._settings.openai_api_key else None
+        llm_kw: dict[str, Any] = {
+            "model": self._settings.evaluation_llm_model,
+            "temperature": 0.0,
+            "api_key": key,
+        }
+        emb_kw: dict[str, Any] = {
+            "model": self._settings.evaluation_embedding_model,
+            "api_key": key,
+        }
+        llm = ChatOpenAI(**llm_kw)
+        emb = OpenAIEmbeddings(**emb_kw)
         return llm, emb
 
     def evaluate(
@@ -56,7 +57,7 @@ class EvaluationEngine:
         metric_names: list[str] | None = None,
         with_failure_analysis: bool = True,
         raise_exceptions: bool = False,
-        run_config: RunConfig | None = None,
+        run_config: Any | None = None,
     ) -> EvaluationEngineResult:
         """Run RAGAS on the batch; attach average wall-clock latency per query."""
         if not examples:
@@ -77,8 +78,7 @@ class EvaluationEngine:
 
         resolved = resolve_ragas_metric_names(metric_names)
 
-        from ragas import evaluate as ragas_evaluate
-        from ragas.run_config import RunConfig as RC
+        ragas_evaluate = importlib.import_module("ragas").evaluate
 
         ds = build_dataset(
             questions=[e.question for e in examples],
@@ -88,7 +88,7 @@ class EvaluationEngine:
         )
         metrics = load_ragas_metrics(resolved)
         llm, emb = self._build_models()
-        rc = run_config if run_config is not None else RC()
+        rc = run_config
 
         t0 = time.perf_counter()
         result = ragas_evaluate(
@@ -149,7 +149,7 @@ class EvaluationEngine:
         metric_names: list[str] | None = None,
         with_failure_analysis: bool = True,
         raise_exceptions: bool = False,
-        run_config: RunConfig | None = None,
+        run_config: Any | None = None,
     ) -> EvaluationEngineResult:
         """Async wrapper (thread offload) for FastAPI handlers."""
         return await asyncio.to_thread(
