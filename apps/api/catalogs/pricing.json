@@ -1,0 +1,290 @@
+{
+  "version": "1.0.0",
+  "description": "Pricing reference for RAG Studio cost calculator. All prices in USD. Updated 2025-Q1.",
+  "assumptions": {
+    "queriesPerMonth": 100000,
+    "avgInputTokensPerQuery": 500,
+    "avgOutputTokensPerQuery": 300,
+    "avgChunkSizeTokens": 512,
+    "avgDocumentSizeTokens": 5000,
+    "avgChunksRetrievedPerQuery": 5
+  },
+  "embedding": {
+    "description": "Cost per 1 million tokens for embedding generation",
+    "unit": "USD per 1M tokens",
+    "models": {
+      "text-embedding-3-small": {
+        "costPer1MTokens": 0.02,
+        "provider": "openai"
+      },
+      "text-embedding-3-large": {
+        "costPer1MTokens": 0.13,
+        "provider": "openai"
+      },
+      "text-embedding-ada-002": {
+        "costPer1MTokens": 0.10,
+        "provider": "openai"
+      },
+      "cohere-embed-v3": {
+        "costPer1MTokens": 0.10,
+        "provider": "cohere"
+      },
+      "cohere-embed-multilingual-v3": {
+        "costPer1MTokens": 0.10,
+        "provider": "cohere"
+      },
+      "google-textembedding-gecko": {
+        "costPer1MTokens": 0.00001,
+        "provider": "google"
+      },
+      "bge-large-en": {
+        "costPer1MTokens": 0.0,
+        "provider": "huggingface",
+        "notes": "Free to use (open-source). Infrastructure cost applies for self-hosting."
+      },
+      "e5-large-v2": {
+        "costPer1MTokens": 0.0,
+        "provider": "huggingface",
+        "notes": "Free to use (open-source). Infrastructure cost applies for self-hosting."
+      },
+      "all-minilm-l6-v2": {
+        "costPer1MTokens": 0.0,
+        "provider": "huggingface",
+        "notes": "Free to use (open-source). Infrastructure cost applies for self-hosting."
+      },
+      "nomic-embed-text": {
+        "costPer1MTokens": 0.0,
+        "provider": "nomic",
+        "notes": "Free to use (open-source). Infrastructure cost applies for self-hosting."
+      }
+    }
+  },
+  "generation": {
+    "description": "Cost per 1 million tokens for LLM generation (input and output priced separately)",
+    "unit": "USD per 1M tokens",
+    "models": {
+      "gpt-4o": {
+        "inputCostPer1MTokens": 2.50,
+        "outputCostPer1MTokens": 10.00,
+        "provider": "openai",
+        "contextWindow": 128000
+      },
+      "gpt-4o-mini": {
+        "inputCostPer1MTokens": 0.15,
+        "outputCostPer1MTokens": 0.60,
+        "provider": "openai",
+        "contextWindow": 128000
+      },
+      "claude-opus-4-7": {
+        "inputCostPer1MTokens": 15.00,
+        "outputCostPer1MTokens": 75.00,
+        "provider": "anthropic",
+        "contextWindow": 200000,
+        "promptCachingDiscount": 0.90
+      },
+      "claude-sonnet-4-6": {
+        "inputCostPer1MTokens": 3.00,
+        "outputCostPer1MTokens": 15.00,
+        "provider": "anthropic",
+        "contextWindow": 200000,
+        "promptCachingDiscount": 0.90
+      },
+      "gemini-1.5-pro": {
+        "inputCostPer1MTokens": 1.25,
+        "outputCostPer1MTokens": 5.00,
+        "provider": "google",
+        "contextWindow": 1000000,
+        "notes": "Prices for prompts up to 128K tokens. Higher context = 2.50/10.00."
+      },
+      "gemini-1.5-flash": {
+        "inputCostPer1MTokens": 0.075,
+        "outputCostPer1MTokens": 0.30,
+        "provider": "google",
+        "contextWindow": 1000000
+      },
+      "llama-3-70b": {
+        "inputCostPer1MTokens": 0.59,
+        "outputCostPer1MTokens": 0.79,
+        "provider": "meta",
+        "contextWindow": 8192,
+        "notes": "Prices via hosted inference (Together AI / Groq). Self-hosting is free."
+      },
+      "mistral-large": {
+        "inputCostPer1MTokens": 2.00,
+        "outputCostPer1MTokens": 6.00,
+        "provider": "mistral",
+        "contextWindow": 32768
+      },
+      "command-r-plus": {
+        "inputCostPer1MTokens": 2.50,
+        "outputCostPer1MTokens": 10.00,
+        "provider": "cohere",
+        "contextWindow": 128000
+      }
+    }
+  },
+  "reranking": {
+    "description": "Cost for reranking retrieved documents per query",
+    "unit": "USD per 1,000 queries",
+    "models": {
+      "cohere-rerank-v3": {
+        "costPer1KQueries": 1.00,
+        "provider": "cohere",
+        "notes": "Cost is per search with up to 100 documents. Over 100 docs = additional cost."
+      },
+      "bge-reranker-large": {
+        "costPer1KQueries": 0.0,
+        "provider": "huggingface",
+        "notes": "Free (open-source). Infrastructure cost applies for self-hosting."
+      },
+      "cross-encoder-ms-marco": {
+        "costPer1KQueries": 0.0,
+        "provider": "huggingface",
+        "notes": "Free (open-source). Infrastructure cost applies for self-hosting."
+      },
+      "flashrank": {
+        "costPer1KQueries": 0.0,
+        "provider": "prithivida",
+        "notes": "Free (open-source). Runs on CPU — virtually zero infrastructure cost."
+      }
+    }
+  },
+  "vectorStorage": {
+    "description": "Monthly cost for storing vectors in the vector database",
+    "unit": "USD per GB per month",
+    "providers": {
+      "qdrant": {
+        "selfHosted": {
+          "costPerGBPerMonth": 0.0,
+          "notes": "Infrastructure cost only (compute + disk). Typically $0.05-0.20/GB/month on cloud VMs."
+        },
+        "managedCloud": {
+          "costPerGBPerMonth": 0.025,
+          "minimumPerMonth": 25.00
+        }
+      },
+      "pinecone": {
+        "serverless": {
+          "costPerGBPerMonth": 0.096,
+          "costPerReadUnit": 0.000000008,
+          "costPerWriteUnit": 0.0000000008
+        },
+        "podBased": {
+          "costPerGBPerMonth": 0.096,
+          "minimumPerMonth": 70.00
+        }
+      },
+      "weaviate": {
+        "selfHosted": {
+          "costPerGBPerMonth": 0.0,
+          "notes": "Infrastructure cost only."
+        },
+        "managedCloud": {
+          "costPerGBPerMonth": 0.022,
+          "minimumPerMonth": 25.00
+        }
+      },
+      "chroma": {
+        "selfHosted": {
+          "costPerGBPerMonth": 0.0,
+          "notes": "Free and open-source."
+        }
+      },
+      "faiss": {
+        "selfHosted": {
+          "costPerGBPerMonth": 0.0,
+          "notes": "In-memory — compute/RAM cost applies."
+        }
+      },
+      "opensearch": {
+        "selfHosted": {
+          "costPerGBPerMonth": 0.0
+        },
+        "awsManaged": {
+          "costPerGBPerMonth": 0.10,
+          "instanceCostPerHour": 0.10
+        }
+      },
+      "vertex-ai-vector-search": {
+        "managed": {
+          "costPerGBPerMonth": 0.096,
+          "queryUnitCostPer1M": 2.50
+        }
+      },
+      "azure-ai-search": {
+        "basicTier": {
+          "costPerHour": 0.101,
+          "storageGB": 2,
+          "additionalStoragePerGB": 0.25
+        },
+        "standardTier": {
+          "costPerHour": 0.336,
+          "storageGB": 25,
+          "additionalStoragePerGB": 0.10
+        }
+      },
+      "pgvector": {
+        "selfHosted": {
+          "costPerGBPerMonth": 0.0,
+          "notes": "Included with Postgres. Storage cost applies."
+        },
+        "awsRds": {
+          "costPerGBPerMonth": 0.115,
+          "instanceCostPerHour": 0.023
+        }
+      }
+    }
+  },
+  "costCalculatorFormulas": {
+    "description": "Formulas used by the cost calculator to estimate per-query and per-month costs",
+    "embeddingCostPerQuery": {
+      "formula": "(avgChunksRetrievedPerQuery * avgChunkSizeTokens / 1000000) * embeddingCostPer1MTokens",
+      "description": "Cost to embed the query (query tokens * embedding price)"
+    },
+    "generationCostPerQuery": {
+      "formula": "(contextTokens * inputCostPer1MTokens / 1000000) + (avgOutputTokens * outputCostPer1MTokens / 1000000)",
+      "contextTokens": "avgChunksRetrievedPerQuery * avgChunkSizeTokens + avgInputTokensPerQuery",
+      "description": "Cost for LLM call: (retrieved context + user query) * input price + output * output price"
+    },
+    "rerankingCostPerQuery": {
+      "formula": "(costPer1KQueries / 1000) * (1 if enabled else 0)",
+      "description": "Cost per query for reranking (if enabled)"
+    },
+    "storageCostPerMonth": {
+      "formula": "totalVectorStorageGB * costPerGBPerMonth",
+      "totalVectorStorageGB": "(totalDocumentTokens / avgChunkSizeTokens * embeddingDimensions * 4 bytes) / 1073741824",
+      "description": "Monthly cost to store all document vectors. 4 bytes per float32 dimension."
+    },
+    "totalCostPerQuery": {
+      "formula": "embeddingCostPerQuery + generationCostPerQuery + rerankingCostPerQuery",
+      "description": "Total variable cost per user query"
+    },
+    "totalCostPerMonth": {
+      "formula": "totalCostPerQuery * queriesPerMonth + storageCostPerMonth",
+      "description": "Total monthly cost = per-query costs at scale + fixed storage cost"
+    }
+  },
+  "benchmarks": {
+    "description": "Reference cost points for Designer mode comparison widget",
+    "budgetOptimized": {
+      "label": "Budget-Optimized",
+      "costPer1KQueries": 0.015,
+      "components": "text-embedding-3-small + qdrant + similarity + gpt-4o-mini"
+    },
+    "balanced": {
+      "label": "Industry Average",
+      "costPer1KQueries": 0.050,
+      "components": "text-embedding-3-large + qdrant + hybrid + gpt-4o-mini"
+    },
+    "highQuality": {
+      "label": "Premium (High-Quality)",
+      "costPer1KQueries": 0.150,
+      "components": "text-embedding-3-large + pinecone + hybrid + reranking + gpt-4o"
+    },
+    "enterprisePremium": {
+      "label": "Enterprise Premium",
+      "costPer1KQueries": 0.500,
+      "components": "text-embedding-3-large + pinecone + hybrid + cohere-rerank + claude-opus"
+    }
+  }
+}

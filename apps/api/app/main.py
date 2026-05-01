@@ -2,14 +2,14 @@
 
 import logging
 import time
+import uuid
 from contextlib import asynccontextmanager
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-
 from app.config import get_settings
+from app.metadata import API_SEMVER
 
 # ─── Structured logging setup ────────────────────────────────────────────────
 
@@ -61,7 +61,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="RAG Studio API",
         description="Unified RAG Development Platform — Designer Mode + Autopilot Mode",
-        version="1.0.0",
+        version=API_SEMVER,
         docs_url="/docs" if not settings.is_production else None,
         redoc_url="/redoc" if not settings.is_production else None,
         openapi_url="/openapi.json" if not settings.is_production else None,
@@ -81,10 +81,11 @@ def create_app() -> FastAPI:
     @app.middleware("http")
     async def request_logging_middleware(request: Request, call_next):
         start = time.perf_counter()
-        request_id = request.headers.get("X-Request-ID", "")
+        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
         structlog.contextvars.bind_contextvars(request_id=request_id)
 
         response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
 
         duration_ms = round((time.perf_counter() - start) * 1000, 2)
         logger.info(
@@ -98,20 +99,13 @@ def create_app() -> FastAPI:
         return response
 
     # ── Routes ───────────────────────────────────────────────
+    from app.routers.health import router as health_router
     from app.routers.jobs import router as jobs_router
+    from app.routers.utilities import router as utilities_router
 
+    app.include_router(health_router)
+    app.include_router(utilities_router)
     app.include_router(jobs_router)
-
-    @app.get("/health", tags=["health"], include_in_schema=False)
-    async def health() -> JSONResponse:
-        """Basic liveness probe — returns 200 when the process is up."""
-        return JSONResponse({"status": "ok", "version": "1.0.0"})
-
-    # TODO(P2-9): import and register full routers here once built:
-    # from app.routers import health, designer, autopilot, projects, templates, evaluation, deployment
-    # app.include_router(health.router, prefix="/health")
-    # app.include_router(designer.router, prefix="/api/designer")
-    # ...
 
     return app
 

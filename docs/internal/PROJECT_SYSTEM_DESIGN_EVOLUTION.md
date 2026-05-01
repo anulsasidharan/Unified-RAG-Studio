@@ -1551,3 +1551,74 @@ graph TD
 - **Operational defaults** — ``task_track_started``, ``task_acks_late``, ``worker_prefetch_multiplier=1`` trade a little latency for fair dispatch and crash safety.
 
 ---
+
+## Phase P2-9 · Health & Utility Endpoints
+
+**What changed:** Exposed **explicit health** routes (root liveness, `/health/live`, readiness with dependency checks), added **request-ID middleware** (echo or generate `X-Request-ID` for logs and responses), and introduced a **utilities** router for service info, **pipeline JSON validation** (`PipelineConfigurationSchema`), and a **catalog-driven cost preview** (`pricing.json` bundled under `apps/api/catalogs/` for Docker-friendly paths with optional `PRICING_CATALOG_PATH` override).
+
+### Design Level 18 — Edge observability and helpers
+
+```mermaid
+graph LR
+    subgraph CLIENTS["Clients · LB · k8s"]
+        HC["Health checks"]
+        UI["Designer shell (future)"]
+    end
+
+    subgraph API["FastAPI · apps/api"]
+        MW["Middleware\nX-Request-ID + latency log"]
+        H["GET /health\nGET /health/live\nGET /health/ready"]
+        U["GET /api/utilities/info\nPOST validate-pipeline\nPOST cost"]
+    end
+
+    subgraph DEPS["Probed dependencies"]
+        PG[("PostgreSQL")]
+        RD["Redis"]
+        QD["Qdrant"]
+    end
+
+    subgraph CAT["catalogs/pricing.json"]
+        PR["CostEstimator\n(formula-aligned)"]
+    end
+
+    HC --> MW
+    UI --> MW
+    MW --> H
+    MW --> U
+    H -->|"ready"| PG
+    H -->|"ready"| RD
+    H -->|"ready"| QD
+    U --> PR
+```
+
+### Design Level 18b — Readiness vs eager dependencies
+
+```mermaid
+flowchart TD
+    RQ["GET /health/ready"]
+    T{"APP_ENV == test?"}
+    SK["Return 200 + skipped probes"]
+    DB["async SQL SELECT 1"]
+    RC["Redis PING (ephemeral client)"]
+    QC["Qdrant get_collections (ephemeral client)"]
+    OK{"all ok?"}
+    Y["200 JSON checks map"]
+    N["503 JSON not_ready"]
+
+    RQ --> T
+    T -->|yes| SK
+    T -->|no| DB
+    DB --> RC
+    RC --> QC
+    QC --> OK
+    OK -->|yes| Y
+    OK -->|no| N
+```
+
+**Key decisions:**
+- **No eager ``Depends(get_redis)`` on readiness** — avoids connecting before test-mode bypass and keeps probes from mutating singleton pools during startup turbulence.
+- **Utilities validation returns 200** with Pydantic error details — consistent contract for Designer import UX versus transport-level **422**.
+- **Cost path is stateless** — reads JSON catalogue only; aligns with Phase 4’s eventual ``POST /api/designer/cost`` reuse of ``CostRequest`` / ``CostEstimateSchema``.
+- **`API_SEMVER` single source** — health, OpenAPI metadata, and `/info` stay aligned (`app/metadata.py`).
+
+---

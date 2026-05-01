@@ -15,4 +15,4 @@
 | P2-6 · Generation Service | `feature/p2-generation-service` | ✅ done |
 | P2-7 · Evaluation Engine | `feature/p2-evaluation-engine` | ✅ done |
 | P2-8 · Celery Worker & Task Queue | `feature/p2-celery-worker` | ✅ done |
-| P2-9 · Health & Utility Endpoints | `feature/p2-health-endpoints` | ⬜ pending |
+| P2-9 · Health & Utility Endpoints | `feature/p2-health-endpoints` | ✅ done |

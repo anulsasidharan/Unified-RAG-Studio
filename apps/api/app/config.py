@@ -72,6 +72,9 @@ class Settings(BaseSettings):
     default_page_size: int = 20
     max_page_size: int = 100
 
+    # ── Pricing catalog (P2-9 cost estimator) ────────────────
+    pricing_catalog_path: str = ""
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"

@@ -3000,3 +3000,89 @@ Optional local ``celerybeat-schedule`` files if beat is enabled later; current d
 
 ---
 
+## P2-9 · Health & Utility Endpoints
+
+### Probes and middleware
+
+**Q230: Why split ``/health``, ``/health/live``, and ``/health/ready``?**
+
+Legacy callers and Docker ``HEALTHCHECK`` continue to hit ``GET /health`` for a trivial liveness JSON. ``/live`` is an explicit **liveness** shim (process up). ``/ready`` runs **readiness** probes: today it checks PostgreSQL, Redis, and Qdrant with short timeouts and returns **503** if any check fails so Kubernetes or load balancers can stop routing traffic before the app is wired to its dependencies.
+
+---
+
+**Q231: Why does ``/health/ready`` skip Redis and Qdrant when ``APP_ENV=test``?**
+
+Pytest sets ``APP_ENV=test`` and must not block on daemons that CI may not start. If readiness used shared ``Depends(get_redis)`` providers, FastAPI would **resolve dependencies before the route body**, potentially opening TCP connections or hanging. The handler short-circuits in test mode after the DB session resolves (SQLite in tests), returning ``200`` with a ``skipped`` explanation.
+
+---
+
+**Q232: Why open ephemeral Redis/Qdrant clients inside ``/ready`` instead of reusing ``get_redis``?**
+
+Module-level singletons are convenient for request paths that always need cache/vector access, but readiness must avoid side effects during test collection and must not poison a shared pool when a probe fails mid-startup. Fresh, small clients with ``aclose()`` / ``close()`` in ``finally`` isolate probe traffic.
+
+---
+
+**Q233: What behaviour do you expect for ``X-Request-ID``?**
+
+If the inbound request already sets ``X-Request-ID``, middleware preserves it, binds it into ``structlog`` context for the request log line, and echoes it on the response. If absent, middleware generates a UUID v4, binds it, and sets the response header so downstream gateways and support tickets can correlate logs.
+
+---
+
+### Utilities surface
+
+**Q234: Which utility routes exist and what are they for?**
+
+| Route | Role |
+|-------|------|
+| ``GET /api/utilities/info`` | Service name, semver, ``APP_ENV``, Python version for dashboards and support |
+| ``POST /api/utilities/validate-pipeline`` | Run ``PipelineConfigurationSchema.model_validate`` without persisting — returns ``valid`` + Pydantic ``errors`` list (HTTP **200** even when invalid so UIs can render field messages) |
+| ``POST /api/utilities/cost`` | Accepts ``CostRequest`` (same shape as future ``POST /api/designer/cost``), returns ``CostEstimateSchema`` |
+
+---
+
+**Q235: Why return HTTP 200 on validation failure instead of 422?**
+
+Designer flows often want a **single response shape** (`valid` + structured errors) across paste/import UX without treating validation as an exceptional HTTP layer. APIs that prefer strict FastAPI behaviour can still POST the same body to a future strict endpoint; this utility is explicitly tolerant.
+
+---
+
+### Cost estimation
+
+**Q236: Where does pricing data load from?**
+
+``load_pricing`` tries, in order: ``Settings.pricing_catalog_path`` (``PRICING_CATALOG_PATH``) if set, then ``apps/api/catalogs/pricing.json`` (bundled for Docker build context), then repo-root ``data/pricing.json``. Missing files raise ``PricingLoadError`` mapped to **503** on ``/cost``.
+
+---
+
+**Q237: How does ``CostEstimator`` relate to ``costCalculatorFormulas`` in ``pricing.json``?**
+
+Per-query **embedding** uses ``(topK * chunkSize / 1e6) * embeddingCostPer1M`` (pipeline ``retrieval.top_k`` and ``chunking.chunk_size``). **Generation** mirrors ``contextTokens`` = retrieved context tokens + avg input tokens from assumptions plus output token pricing. **Reranking** adds ``costPer1KQueries / 1000`` when reranking is enabled. **Monthly** aggregates per-query totals times ``queriesPerMonth`` plus **storage** from vector dimensions and token/chunk estimates, priced via managed-cloud or serverless rows when present, and optional Pinecone **read-unit** style charges surfaced under ``retrieval_ops``.
+
+---
+
+**Q238: Does the estimator amortise one-off corpus indexing separately?**
+
+The shipped formulas in ``pricing.json`` express monthly variable traffic plus storage without a discrete “bulk re-embed cadence”; the implementation follows that split so Phase 4 designer polish can refine amortisation assumptions without breaking the catalogue contract.
+
+---
+
+**Q239: Where is ``API_SEMVER`` defined and why extract it from ``main.py``?**
+
+``app/metadata.py`` exports ``API_SEMVER`` consumed by FastAPI ``version=``, ``/health``, ``/health/ready``, and ``/api/utilities/info`` so probes and docs never drift.
+
+---
+
+### Operations
+
+**Q240: Should production readiness require Redis **and** Qdrant strictly?**
+
+Current policy: **all** probes must succeed before ``200``. That matches “full stack warming” deployments. SaaS tenants that treat Redis/Qdrant as optional could split readiness tiers later (database-only readiness vs extended checks).
+
+---
+
+**Q241: Did P2-9 require `.gitignore` updates?**
+
+No new generated artefacts landed in the repo root; ``catalogs/pricing.json`` is committed intentionally so the slim ``apps/api`` Docker context stays self-contained.
+
+---
+
