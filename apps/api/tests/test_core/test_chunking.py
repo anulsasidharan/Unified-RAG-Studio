@@ -5,6 +5,7 @@ ChunkQualityScorer. External dependencies (sentence-transformers, LangChain
 splitters) are mocked where needed to keep tests fast and deterministic.
 """
 
+import importlib
 import re
 from unittest.mock import MagicMock, patch
 
@@ -480,7 +481,8 @@ def test_code_aware_chunker_auto_detects_python(code_doc):
 
     # Should detect Python from file_extension="py"
     call_args = MockSplitter.from_language.call_args
-    from langchain_text_splitters import Language
+    lcts = importlib.import_module("langchain_text_splitters")
+    Language = getattr(lcts, "Language")
 
     assert call_args[1]["language"] == Language.PYTHON
 
@@ -495,7 +497,8 @@ def test_code_aware_chunker_explicit_language():
 
         CodeAwareChunker().chunk([doc], ChunkingConfig(language="go"))
 
-    from langchain_text_splitters import Language
+    lcts = importlib.import_module("langchain_text_splitters")
+    Language = getattr(lcts, "Language")
 
     call_args = MockSplitter.from_language.call_args
     assert call_args[1]["language"] == Language.GO

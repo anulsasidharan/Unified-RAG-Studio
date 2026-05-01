@@ -17,6 +17,7 @@ Cache key derivation:
 
 import hashlib
 import struct
+from typing import Protocol
 
 import structlog
 
@@ -25,6 +26,12 @@ from .strategies import Embedding, EmbeddingConfig, TextEmbedder
 logger = structlog.get_logger(__name__)
 
 _KEY_PREFIX = "emb:"
+
+
+class _RedisLike(Protocol):
+    def get(self, key: str, /) -> object: ...
+
+    def setex(self, key: str, time: int, value: bytes, /) -> object: ...
 
 
 def _cache_key(text: str, config: EmbeddingConfig) -> str:
@@ -61,10 +68,10 @@ class EmbeddingCache:
     def __init__(self, ttl_seconds: int = 86_400) -> None:
         self._ttl = ttl_seconds
         self._memory: dict[str, Embedding] = {}
-        self._redis: object | None = None
+        self._redis: _RedisLike | None = None
         self._redis_checked = False
 
-    def _get_redis(self) -> object | None:
+    def _get_redis(self) -> _RedisLike | None:
         """Return a live Redis client or None if unavailable."""
         if self._redis_checked:
             return self._redis
@@ -90,8 +97,8 @@ class EmbeddingCache:
         if r is not None:
             try:
                 raw = r.get(key)
-                if raw is not None:
-                    return _unpack(raw)
+                if isinstance(raw, (bytes, bytearray)):
+                    return _unpack(bytes(raw))
             except Exception:
                 pass
 

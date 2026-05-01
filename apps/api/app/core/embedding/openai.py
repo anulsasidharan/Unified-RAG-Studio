@@ -5,6 +5,9 @@ The v3 models accept a `dimensions` parameter for Matryoshka dimensionality redu
 ada-002 does not and that parameter is silently ignored.
 """
 
+import importlib
+from typing import Any, Protocol
+
 import structlog
 
 from .strategies import Embedding, EmbeddingConfig, TextEmbedder
@@ -16,14 +19,24 @@ _DIMENSIONS_SUPPORTED = {"text-embedding-3-small", "text-embedding-3-large"}
 _DEFAULT_BATCH_SIZE = 100
 
 
+class _OpenAIEmbeddingsClient(Protocol):
+    """LangChain OpenAIEmbeddings surface used by this wrapper."""
+
+    def embed_documents(self, texts: list[str]) -> list[Embedding]: ...
+
+    def embed_query(self, text: str) -> Embedding: ...
+
+
 class OpenAIEmbedder(TextEmbedder):
     """Wraps OpenAI's embedding API via langchain-openai."""
 
-    def _build_client(self, config: EmbeddingConfig) -> object:
-        from langchain_openai import OpenAIEmbeddings
+    def _build_client(self, config: EmbeddingConfig) -> _OpenAIEmbeddingsClient:
         from app.config import get_settings
 
-        kwargs: dict = {
+        openai_mod = importlib.import_module("langchain_openai")
+        OpenAIEmbeddings = getattr(openai_mod, "OpenAIEmbeddings")
+
+        kwargs: dict[str, Any] = {
             "model": config.model,
             "openai_api_key": get_settings().openai_api_key,
         }

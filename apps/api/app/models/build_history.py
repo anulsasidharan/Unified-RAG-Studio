@@ -1,13 +1,20 @@
 """AutopilotBuild ORM model — tracks Autopilot build runs and agent decisions."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.evaluation_run import EvaluationRun
+    from app.models.project import Project
 
 
 class AutopilotBuild(Base, TimestampMixin):
@@ -46,8 +53,8 @@ class AutopilotBuild(Base, TimestampMixin):
         nullable=True,
     )
 
-    project: Mapped["Project"] = relationship("Project", back_populates="autopilot_builds")  # noqa: F821
-    evaluations: Mapped[list["EvaluationRun"]] = relationship(  # noqa: F821
+    project: Mapped[Project] = relationship("Project", back_populates="autopilot_builds")
+    evaluations: Mapped[list[EvaluationRun]] = relationship(
         "EvaluationRun",
         back_populates="build",
     )

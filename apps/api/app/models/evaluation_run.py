@@ -1,13 +1,20 @@
 """EvaluationRun ORM model — RAGAS evaluation results per pipeline config."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.build_history import AutopilotBuild
+    from app.models.pipeline_config import PipelineConfig
 
 
 class EvaluationRun(Base, TimestampMixin):
@@ -47,5 +54,5 @@ class EvaluationRun(Base, TimestampMixin):
         nullable=True,
     )
 
-    config: Mapped["PipelineConfig"] = relationship("PipelineConfig", back_populates="evaluations")  # noqa: F821
-    build: Mapped["AutopilotBuild | None"] = relationship("AutopilotBuild", back_populates="evaluations")  # noqa: F821
+    config: Mapped[PipelineConfig] = relationship("PipelineConfig", back_populates="evaluations")
+    build: Mapped[AutopilotBuild | None] = relationship("AutopilotBuild", back_populates="evaluations")

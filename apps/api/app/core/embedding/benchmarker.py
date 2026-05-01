@@ -15,10 +15,11 @@ Metrics collected per configuration:
 
 import time
 from dataclasses import dataclass
+from typing import cast
 
 import structlog
 
-from .strategies import Embedding, EmbeddingConfig
+from .strategies import EmbeddingConfig
 
 logger = structlog.get_logger(__name__)
 
@@ -91,11 +92,14 @@ class EmbeddingBenchmarker:
             embedder = EmbedderFactory.from_provider(config.provider)
 
             start = time.perf_counter()
-            embeddings: list[Embedding] = embedder.embed_documents(texts, config)
+            embeddings = cast(
+                list[list[float]], embedder.embed_documents(texts, config)
+            )
             elapsed = time.perf_counter() - start
 
             n = len(texts)
-            actual_dims = len(embeddings[0]) if embeddings else config.dimensions
+            sample = embeddings[0] if embeddings else []
+            actual_dims = len(sample) if sample else config.dimensions
 
             return BenchmarkResult(
                 provider=config.provider,
@@ -105,7 +109,7 @@ class EmbeddingBenchmarker:
                 total_time_s=round(elapsed, 4),
                 texts_per_second=round(n / elapsed, 2) if elapsed > 0 else 0.0,
                 avg_latency_ms=round((elapsed / n) * 1000, 2) if n > 0 else 0.0,
-                embedding_sample=embeddings[0] if embeddings else [],
+                embedding_sample=list(sample),
             )
 
         except Exception as exc:

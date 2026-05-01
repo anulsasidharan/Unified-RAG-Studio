@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock, MagicMock
 
 from langchain_core.documents import Document
@@ -27,7 +28,7 @@ from app.schemas.pipeline import (
 
 
 @pytest.fixture
-async def qdrant_memory() -> AsyncQdrantClient:
+async def qdrant_memory() -> AsyncIterator[AsyncQdrantClient]:
     client = AsyncQdrantClient(location=":memory:")
     yield client
     await client.close()

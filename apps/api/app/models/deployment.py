@@ -1,13 +1,19 @@
 """Deployment ORM model — cloud deployment lifecycle for a pipeline config."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.pipeline_config import PipelineConfig
 
 
 class Deployment(Base, TimestampMixin):
@@ -45,4 +51,4 @@ class Deployment(Base, TimestampMixin):
         nullable=True,
     )
 
-    config: Mapped["PipelineConfig"] = relationship("PipelineConfig", back_populates="deployments")  # noqa: F821
+    config: Mapped[PipelineConfig] = relationship("PipelineConfig", back_populates="deployments")

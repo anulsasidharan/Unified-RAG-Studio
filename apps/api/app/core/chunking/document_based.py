@@ -4,6 +4,8 @@ MarkdownHeaderChunker   — splits on ATX header boundaries (# ## ###)
 HTMLSectionChunker      — splits on HTML heading element (h1–h4) boundaries
 """
 
+import importlib
+
 import structlog
 from langchain_core.documents import Document
 
@@ -31,10 +33,11 @@ class MarkdownHeaderChunker(TextChunker):
     """
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
-        from langchain_text_splitters import MarkdownHeaderTextSplitter
+        lcts = importlib.import_module("langchain_text_splitters")
+        mhts = getattr(lcts, "MarkdownHeaderTextSplitter")
 
         headers = config.headers_to_split_on or _DEFAULT_HEADERS
-        splitter = MarkdownHeaderTextSplitter(
+        splitter = mhts(
             headers_to_split_on=headers,
             return_each_line=config.return_each_line,
         )

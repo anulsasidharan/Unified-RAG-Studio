@@ -10,6 +10,7 @@ Algorithm:
 7. Oversized chunks are further split with RecursiveCharacterTextSplitter.
 """
 
+import importlib
 import re
 from typing import Any
 
@@ -41,9 +42,15 @@ class SemanticChunker(TextChunker):
 
     def _get_model(self, model_name: str) -> Any:
         if model_name not in self._model_cache:
-            from sentence_transformers import SentenceTransformer
-
-            self._model_cache[model_name] = SentenceTransformer(model_name)
+            try:
+                st_mod = importlib.import_module("sentence_transformers")
+            except ImportError as exc:
+                raise ImportError(
+                    "SemanticChunker requires sentence-transformers (pin: sentence-transformers==3.0.0). "
+                    "Install dependencies: pip install -r requirements.txt"
+                ) from exc
+            transformer_cls = getattr(st_mod, "SentenceTransformer")
+            self._model_cache[model_name] = transformer_cls(model_name)
         return self._model_cache[model_name]
 
     @staticmethod
@@ -98,9 +105,9 @@ class SemanticChunker(TextChunker):
             final_chunks: list[str] = []
             for chunk_text in raw_chunks:
                 if len(chunk_text) > config.chunk_size * 4:
-                    from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-                    splitter = RecursiveCharacterTextSplitter(
+                    lcts = importlib.import_module("langchain_text_splitters")
+                    RCTS = getattr(lcts, "RecursiveCharacterTextSplitter")
+                    splitter = RCTS(
                         chunk_size=config.chunk_size,
                         chunk_overlap=config.chunk_overlap,
                     )

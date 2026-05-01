@@ -8,6 +8,8 @@ Supported languages: python, js, ts, java, go, rust, cpp.
 Language is auto-detected from file extension metadata when config.language="auto".
 """
 
+import importlib
+
 import structlog
 from langchain_core.documents import Document
 
@@ -35,7 +37,8 @@ _EXTENSION_TO_LANG: dict[str, str] = {
 
 def _get_lc_language(lang: str):
     """Map an internal language name to a LangChain Language enum member."""
-    from langchain_text_splitters import Language
+    lcts = importlib.import_module("langchain_text_splitters")
+    Language = getattr(lcts, "Language")
 
     _MAP = {
         "python": Language.PYTHON,
@@ -73,7 +76,8 @@ class CodeAwareChunker(TextChunker):
     """
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
-        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        lcts = importlib.import_module("langchain_text_splitters")
+        rcts = getattr(lcts, "RecursiveCharacterTextSplitter")
 
         result: list[Chunk] = []
 
@@ -84,7 +88,7 @@ class CodeAwareChunker(TextChunker):
             lang_str = _detect_language(doc, config.language)
             lc_lang = _get_lc_language(lang_str)
 
-            splitter = RecursiveCharacterTextSplitter.from_language(
+            splitter = rcts.from_language(
                 language=lc_lang,
                 chunk_size=config.chunk_size,
                 chunk_overlap=config.chunk_overlap,

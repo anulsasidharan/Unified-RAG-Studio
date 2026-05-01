@@ -1,5 +1,8 @@
 """HTTP surface for enqueueing background jobs and inspecting Celery task state."""
 
+from typing import Any, Protocol, cast
+
+from celery.result import AsyncResult
 from fastapi import APIRouter
 from pydantic import Field
 
@@ -17,6 +20,16 @@ from app.worker.tasks import run_deployment, run_evaluation, run_pipeline_build
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 
+class _CeleryTaskWithDelay(Protocol):
+    """Celery ``@app.task`` objects expose ``delay``; decorators erase that for static analysis."""
+
+    def delay(self, *args: Any, **kwargs: Any) -> AsyncResult: ...
+
+
+def _as_celery_task(fn: object) -> _CeleryTaskWithDelay:
+    return cast(_CeleryTaskWithDelay, fn)
+
+
 class BuildBody(RAGBaseModel):
     """Optional body for enqueueing a rebuild with future flags."""
 
@@ -25,14 +38,14 @@ class BuildBody(RAGBaseModel):
 
 @router.post("/build/{build_id}", response_model=SubmitBuildJobResponse)
 async def enqueue_pipeline_build(build_id: str, _body: BuildBody | None = None) -> SubmitBuildJobResponse:
-    async_result = run_pipeline_build.delay(build_id)
+    async_result = _as_celery_task(run_pipeline_build).delay(build_id)
     return SubmitBuildJobResponse(task_id=async_result.id, build_id=build_id)
 
 
 @router.post("/evaluation", response_model=SubmitEvaluationJobResponse)
 async def enqueue_evaluation(body: SubmitEvaluationJobRequest) -> SubmitEvaluationJobResponse:
     payloads = [ex.model_dump(mode="python") for ex in body.examples]
-    async_result = run_evaluation.delay(
+    async_result = _as_celery_task(run_evaluation).delay(
         body.evaluation_run_id,
         payloads,
         metric_names=body.metric_names,
@@ -42,7 +55,7 @@ async def enqueue_evaluation(body: SubmitEvaluationJobRequest) -> SubmitEvaluati
 
 @router.post("/deployment/{deployment_id}", response_model=SubmitDeploymentJobResponse)
 async def enqueue_deployment(deployment_id: str) -> SubmitDeploymentJobResponse:
-    async_result = run_deployment.delay(deployment_id)
+    async_result = _as_celery_task(run_deployment).delay(deployment_id)
     return SubmitDeploymentJobResponse(task_id=async_result.id, deployment_id=deployment_id)
 
 

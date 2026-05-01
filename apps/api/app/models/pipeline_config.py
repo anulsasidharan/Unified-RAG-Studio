@@ -1,12 +1,20 @@
 """PipelineConfig ORM model — persisted RAG pipeline configuration."""
 
+from __future__ import annotations
+
 import uuid
+from typing import TYPE_CHECKING
 
 from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from app.models.deployment import Deployment
+    from app.models.evaluation_run import EvaluationRun
+    from app.models.project import Project
 
 
 class PipelineConfig(Base, TimestampMixin):
@@ -31,13 +39,13 @@ class PipelineConfig(Base, TimestampMixin):
     source: Mapped[str | None] = mapped_column(String(32), nullable=True)
     build_id: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    project: Mapped["Project"] = relationship("Project", back_populates="pipeline_configs")  # noqa: F821
-    evaluations: Mapped[list["EvaluationRun"]] = relationship(  # noqa: F821
+    project: Mapped[Project] = relationship("Project", back_populates="pipeline_configs")
+    evaluations: Mapped[list[EvaluationRun]] = relationship(
         "EvaluationRun",
         back_populates="config",
         cascade="all, delete-orphan",
     )
-    deployments: Mapped[list["Deployment"]] = relationship(  # noqa: F821
+    deployments: Mapped[list[Deployment]] = relationship(
         "Deployment",
         back_populates="config",
         cascade="all, delete-orphan",

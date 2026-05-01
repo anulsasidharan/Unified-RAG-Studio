@@ -1,6 +1,7 @@
 """Shared pytest fixtures for the RAG Studio API test suite."""
 
 import os
+from collections.abc import AsyncIterator, Iterator
 
 # Environment must be established before importing the app stack (cached Settings + Celery).
 os.environ.setdefault("APP_ENV", "test")
@@ -28,14 +29,14 @@ def override_settings():
 
 
 @pytest.fixture
-def sync_client() -> TestClient:
+def sync_client() -> Iterator[TestClient]:
     """Synchronous test client — for simple route tests."""
     with TestClient(app) as client:
         yield client
 
 
 @pytest.fixture
-async def async_client() -> AsyncClient:
+async def async_client() -> AsyncIterator[AsyncClient]:
     """Async test client — for async route + dependency tests."""
     async with AsyncClient(
         transport=ASGITransport(app=app),
