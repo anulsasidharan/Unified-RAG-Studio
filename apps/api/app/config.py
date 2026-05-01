@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     cohere_api_key: str = ""
     google_api_key: str = ""
+    mistral_api_key: str = ""
+    # Together / vLLM / local Llama — OpenAI-compatible chat completions
+    openai_compatible_base_url: str = ""
+    openai_compatible_api_key: str = ""
 
     # ── Experiment tracking ───────────────────────────────────
     mlflow_tracking_uri: str = "http://localhost:5000"
