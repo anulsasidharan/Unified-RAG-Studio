@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     openai_compatible_base_url: str = ""
     openai_compatible_api_key: str = ""
 
+    # RAGAS evaluation (P2-7) — uses OpenAI-compatible LangChain models
+    evaluation_llm_model: str = "gpt-4o-mini"
+    evaluation_embedding_model: str = "text-embedding-3-small"
+
     # ── Experiment tracking ───────────────────────────────────
     mlflow_tracking_uri: str = "http://localhost:5000"
 
