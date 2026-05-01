@@ -1,6 +1,6 @@
 # RAG Studio — Development Override
-# Merges with docker-compose.yml:
-#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d
+# Merges with docker-compose.yml (and docker-compose.build.yml if you build locally):
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.build.yml -f docker/docker-compose.dev.yml up --build -d
 #
 # Changes from base:
 #   - Source code bind-mounted for hot-reload
@@ -14,6 +14,8 @@ services:
 
   web:
     build:
+      context: ../apps/web
+      dockerfile: Dockerfile
       target: development
     command: npm run dev
     environment:
@@ -31,6 +33,8 @@ services:
 
   api:
     build:
+      context: ../apps/api
+      dockerfile: Dockerfile
       target: development
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/app
     environment:
@@ -45,7 +49,11 @@ services:
       - "5678:5678"             # debugpy remote debugger port
 
   worker:
-    command: celery -A app.worker.celery_app worker --loglevel=debug --concurrency=1
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+      target: development
+    command: celery -A app.worker:celery_app worker --loglevel=debug --concurrency=1
     environment:
       - APP_ENV=development
       - LOG_LEVEL=DEBUG

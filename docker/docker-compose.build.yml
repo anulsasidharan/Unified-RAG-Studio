@@ -1,0 +1,26 @@
+# RAG Studio — Local image build (optional merge layer)
+#
+# Compose base deliberately omits `build:` so production overrides need no `!reset`.
+# Merge when building locally without GHCR images:
+#
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.build.yml up --build -d
+#
+
+name: rag-studio
+
+services:
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile
+
+  worker:
+    build:
+      context: ../apps/api
+      dockerfile: Dockerfile

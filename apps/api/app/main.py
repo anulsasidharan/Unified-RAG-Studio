@@ -98,6 +98,10 @@ def create_app() -> FastAPI:
         return response
 
     # ── Routes ───────────────────────────────────────────────
+    from app.routers.jobs import router as jobs_router
+
+    app.include_router(jobs_router)
+
     @app.get("/health", tags=["health"], include_in_schema=False)
     async def health() -> JSONResponse:
         """Basic liveness probe — returns 200 when the process is up."""

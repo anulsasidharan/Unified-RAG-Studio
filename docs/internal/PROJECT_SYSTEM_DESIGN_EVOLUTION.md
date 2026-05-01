@@ -1355,7 +1355,7 @@ sequenceDiagram
     GS-->>R: GenerationResult(text, usage metadata)
 ```
 
-### Design Level 15c — Full RAG core chain (P2-1 … P2-7)
+### Design Level 15c — Full RAG core chain (P2-1 … P2-8 orchestration hooks)
 
 ```mermaid
 graph LR
@@ -1365,6 +1365,8 @@ graph LR
     VS6 --> RT6["RetrievalService\nP2-5"]
     RT6 --> GEN6["GenerationService\nP2-6"]
     GEN6 --> EV6["EvaluationEngine\n✅ P2-7"]
+    GEN6 -. optional async .-> Q8["Celery Workers\n✅ P2-8"]
+    EV6 -. async eval jobs .-> Q8
 ```
 
 **Key decisions:**
@@ -1451,6 +1453,101 @@ graph LR
 **Key decisions:**
 - **Secrets in Settings only** — evaluation uses the same ``OPENAI_API_KEY`` pattern as embeddings/generation for RAGAS defaults.
 - **Lazy RAGAS import** — keeps test collection light and enables ``patch("ragas.evaluate")``.
-- **Explicit ``pandas`` / ``datasets``** in ``requirements.txt** so ``Result.to_pandas()`` and HF ``Dataset`` construction are reproducible in CI.
+- **Explicit ``pandas`` / ``datasets``** in ``requirements.txt`` so ``Result.to_pandas()`` and HF ``Dataset`` construction are reproducible in CI.
+
+---
+
+## Phase P2-8 · Celery Worker & Task Queue
+
+**What changed:** Implemented an **always-on Celery fleet** wired to Redis (broker **and** result backend) beside FastAPI. A dedicated ``worker`` Compose service consumes tasks that mutate long-lived rows in PostgreSQL via **sync** SQLAlchemy (``psycopg`` rewriting from ``database_url_sync``, mirroring FastAPI's ``asyncpg`` URL). Tasks cover **stub Autopilot builds** (`AutopilotBuild` stage progression pending LangGraph), **offline RAGAS evaluation persistence** (`EvaluationRun` hydrated from inline example payloads today), and **stub cloud deployments** (`Deployment` endpoints). Provisional REST routes under ``/api/jobs/*`` enqueue work and expose ``GET /api/jobs/tasks/{task_id}`` for polling ``AsyncResult`` metadata ahead of SSE in Phase 7.
+
+### Design Level 17 — Service topology with queue plane
+
+```mermaid
+graph TB
+    subgraph CLIENT["Clients"]
+        WEB["Designer / Autopilot UI\n(Phase 7+)"]
+    end
+
+    subgraph EDGE["HTTP · FastAPI"]
+        API["apps/api · Uvicorn\nAsyncSession · async Redis · Qdrant"]
+        JR["POST /api/jobs/*\nGET /api/jobs/tasks/{id}"]
+    end
+
+    subgraph QUEUE["Celery control plane"]
+        BR["Redis broker lists"]
+        RES["Redis result keys"]
+        WRK["worker container(s)\nconcurrency=N"]
+    end
+
+    subgraph DATA["Stateful stores"]
+        PG["PostgreSQL\nORM rows"]
+        RAPI["Redis cache\n(shared with broker host)"]
+    end
+
+    WEB --> API
+    API --> JR
+    JR -->|publish task| BR
+    BR --> WRK
+    WRK --> PG
+    WRK -->|state + return values| RES
+    API --> PG
+    API --> RAPI
+    JR -. read AsyncResult .-> RES
+```
+
+### Design Level 17b — Job enqueue lifecycle
+
+```mermaid
+sequenceDiagram
+    participant UI as Client / Tester
+    participant API as FastAPI /jobs router
+    participant RD as Redis broker
+    participant CW as Celery worker
+    participant DB as PostgreSQL
+
+    UI->>API: POST /api/jobs/evaluation (+ examples[])
+    API->>RD: run_evaluation.delay(...)
+    RD-->>API: enqueue OK
+    API-->>UI: JSON {taskId,...}
+    CW->>RD: fetch body
+    CW->>DB: sync_session_scope UPDATE evaluation_runs
+    CW->>RD: STORE result blob
+    UI->>API: GET /api/jobs/tasks/{taskId}
+    API->>RD: AsyncResult hydrate
+    API-->>UI: {state, result}
+```
+
+### Design Level 17c — Worker package layout
+
+```mermaid
+graph TD
+    subgraph WK_PKG["app/worker ✅ P2-8"]
+        INIT["__init__.py\nimport celery_app + tasks (registration side-effect)"]
+        CA["celery_app.py\nbroker/backend\nJSON serializers"]
+        TS["tasks.py\nbuild · evaluation · deployment"]
+        DB_SYNC["db_sync.py\nsync_session_scope()"]
+    end
+
+    subgraph RT["app/routers/jobs.py"]
+        RJQ[".delay enqueue + polling"]
+    end
+
+    subgraph SCH["app/schemas/jobs.py"]
+        PYD["camelCase payloads"]
+    end
+
+    CA --> TS
+    DB_SYNC --> TS
+    TS --> RJQ
+    SCH --> RJQ
+    INIT --> CA
+```
+
+**Key decisions:**
+- **Explicit Celery module path** ``celery -A app.worker:celery_app`` guarantees ``tasks.py`` registers handlers before worker children boot.
+- **Sync DB boundary** avoids running ``asyncpg`` sessions inside Celery prefork workers.
+- **Inline evaluation payloads** unblock execution before Phase 8 evaluation APIs persist full corpuses server-side only.
+- **Operational defaults** — ``task_track_started``, ``task_acks_late``, ``worker_prefetch_multiplier=1`` trade a little latency for fair dispatch and crash safety.
 
 ---

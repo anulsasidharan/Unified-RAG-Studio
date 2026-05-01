@@ -29,6 +29,16 @@ class Settings(BaseSettings):
     # ── Redis ─────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379/0"
 
+    # ── Celery (async jobs; P2-8) ───────────────────────────────
+    # When true, tasks run synchronously in-process (pytest / local smoke).
+    celery_task_always_eager: bool = False
+    # Optional separate broker/back-end (defaults mirror redis_url in celery_app)
+    celery_broker_url: str = ""
+    celery_result_backend: str = ""
+
+    # Optional extra queue routing (comma-separated queue names bound by worker `-Q`)
+    celery_task_default_queue: str = "default"
+
     # ── Vector database ───────────────────────────────────────
     qdrant_url: str = "http://localhost:6333"
 
@@ -73,6 +83,16 @@ class Settings(BaseSettings):
     @property
     def is_test(self) -> bool:
         return self.app_env == "test"
+
+    @property
+    def database_url_sync(self) -> str:
+        """SQLAlchemy sync URL for Celery workers (async drivers are FastAPI-only)."""
+        url = self.database_url
+        if url.startswith("postgresql+asyncpg://"):
+            return url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+        if "sqlite+aiosqlite://" in url:
+            return "sqlite://" + url.split("sqlite+aiosqlite://", 1)[1]
+        return url
 
 
 @lru_cache

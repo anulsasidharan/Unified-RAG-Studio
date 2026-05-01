@@ -1,5 +1,16 @@
 """Shared pytest fixtures for the RAG Studio API test suite."""
 
+import os
+
+# Environment must be established before importing the app stack (cached Settings + Celery).
+os.environ.setdefault("APP_ENV", "test")
+os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+os.environ.setdefault("QDRANT_URL", "http://localhost:6333")
+os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
+os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-placeholder")
+
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
@@ -10,15 +21,7 @@ from app.main import app
 
 @pytest.fixture(scope="session", autouse=True)
 def override_settings():
-    """Force test environment settings for the entire test session."""
-    import os
-    os.environ.setdefault("APP_ENV", "test")
-    os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
-    os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
-    os.environ.setdefault("QDRANT_URL", "http://localhost:6333")
-    os.environ.setdefault("SECRET_KEY", "test-secret-key")
-    os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
-    os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-placeholder")
+    """Reset cached Settings between sessions (inherits env from module load time)."""
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()

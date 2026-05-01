@@ -148,3 +148,10 @@ apps/web/.next/standalone/
 storybook-static/
 # Bundle analysis
 .next/analyze/
+
+# ------------------------------------------------------------
+# Celery (optional local beat / schedule files — not committed)
+# ------------------------------------------------------------
+apps/api/celerybeat-schedule
+apps/api/celerybeat-schedule.*
+celerybeat-schedule

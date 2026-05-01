@@ -1,7 +1,8 @@
 # RAG Studio — Base Docker Compose
 # Usage:
-#   Dev:  docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d
-#   Prod: docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
+#   Dev (hot reload):  docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up -d
+#   Prod (GHCR/pull): docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
+#   Local images:       add -f docker/docker-compose.build.yml and --build when needed
 
 name: rag-studio
 
@@ -18,9 +19,6 @@ services:
   # ─────────────────────────────────────────────
   web:
     image: rag-studio-web:latest
-    build:
-      context: ../apps/web
-      dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
@@ -45,9 +43,6 @@ services:
   # ─────────────────────────────────────────────
   api:
     image: rag-studio-api:latest
-    build:
-      context: ../apps/api
-      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     environment:
@@ -89,10 +84,7 @@ services:
   # ─────────────────────────────────────────────
   worker:
     image: rag-studio-api:latest
-    build:
-      context: ../apps/api
-      dockerfile: Dockerfile
-    command: celery -A app.worker.celery_app worker --loglevel=info --concurrency=2
+    command: celery -A app.worker:celery_app worker --loglevel=info --concurrency=2
     environment:
       - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://raguser:ragpass@db:5432/ragstudio}
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
@@ -119,7 +111,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "celery", "-A", "app.worker.celery_app", "inspect", "ping", "-d", "celery@$$HOSTNAME"]
+      test: ["CMD", "celery", "-A", "app.worker:celery_app", "inspect", "ping", "-d", "celery@$$HOSTNAME"]
       interval: 60s
       timeout: 20s
       retries: 3
@@ -130,8 +122,6 @@ services:
   # ─────────────────────────────────────────────
   db:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-raguser}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-ragpass}
@@ -155,8 +145,6 @@ services:
   # ─────────────────────────────────────────────
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --save 60 1
     volumes:
       - redis-data:/data
@@ -176,9 +164,6 @@ services:
   # ─────────────────────────────────────────────
   vector-db:
     image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
-      - "6334:6334"
     volumes:
       - qdrant-data:/qdrant/storage
     networks:
@@ -197,8 +182,6 @@ services:
   # ─────────────────────────────────────────────
   mlflow:
     image: ghcr.io/mlflow/mlflow:latest
-    ports:
-      - "5000:5000"
     command: >
       mlflow server
       --backend-store-uri /mlflow/mlruns
@@ -223,9 +206,6 @@ services:
   # ─────────────────────────────────────────────
   minio:
     image: minio/minio:latest
-    ports:
-      - "9000:9000"   # S3 API
-      - "9001:9001"   # Web Console
     command: server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
