@@ -99,6 +99,7 @@ def create_app() -> FastAPI:
         return response
 
     # ── Routes ───────────────────────────────────────────────
+    from app.routers.designer import router as designer_router
     from app.routers.health import router as health_router
     from app.routers.jobs import router as jobs_router
     from app.routers.projects import router as projects_router
@@ -108,6 +109,7 @@ def create_app() -> FastAPI:
     app.include_router(utilities_router)
     app.include_router(jobs_router)
     app.include_router(projects_router)
+    app.include_router(designer_router)
 
     return app
 
