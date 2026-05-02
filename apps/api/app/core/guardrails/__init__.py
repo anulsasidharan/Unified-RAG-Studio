@@ -1,9 +1,9 @@
-"""Guardrails core infrastructure — P4.5-1 / P4.5-2 / P4.5-3.
+"""Guardrails core infrastructure — P4.5-1 … P4.5-4.
 
 Provides abstract :class:`Guardrail`, :class:`GuardrailManager` for ordered
 per-stage execution, and :class:`GuardrailOrchestrator` for input / retrieval /
-output entry points. Input/output implementations live under ``guardrails.input``
-and ``guardrails.output``.
+output entry points. Stage implementations live under ``guardrails.input``,
+``guardrails.retrieval``, and ``guardrails.output``.
 """
 
 from .base import Guardrail
@@ -22,6 +22,13 @@ from .output import (
     HallucinationHeuristicGuardrail,
     clear_output_guardrails,
     register_default_output_guardrails,
+)
+from .retrieval import (
+    RetrievalBiasHeuristicGuardrail,
+    RetrievedContentFilterGuardrail,
+    SourceProvenanceGuardrail,
+    clear_retrieval_guardrails,
+    register_default_retrieval_guardrails,
 )
 from .stubs import AlwaysAllowGuardrail, BlockIfSubstringGuardrail
 from .types import (
@@ -54,4 +61,9 @@ __all__ = [
     "CitationVerificationGuardrail",
     "register_default_output_guardrails",
     "clear_output_guardrails",
+    "RetrievedContentFilterGuardrail",
+    "SourceProvenanceGuardrail",
+    "RetrievalBiasHeuristicGuardrail",
+    "register_default_retrieval_guardrails",
+    "clear_retrieval_guardrails",
 ]
