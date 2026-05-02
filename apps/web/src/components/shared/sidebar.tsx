@@ -1,11 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, FolderPlus, PanelLeftClose, PanelLeft, X } from 'lucide-react';
+import { ChevronRight, FolderPlus, PanelLeftClose, PanelLeft, Trash2, X } from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/stores/project-store';
+
+import { EditableProjectName } from './editable-project-name';
 
 type SidebarProps = {
   collapsed: boolean;
@@ -24,12 +26,25 @@ export function Sidebar({
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
   const addProject = useProjectStore((s) => s.addProject);
+  const removeProject = useProjectStore((s) => s.removeProject);
+  const updateProject = useProjectStore((s) => s.updateProject);
 
   const handleNewProject = () => {
     const n = projects.filter((p) => p.name.startsWith('Untitled project')).length;
     const name =
       n === 0 ? 'Untitled project' : `Untitled project (${n + 1})`;
     addProject({ name });
+    onMobileClose();
+  };
+
+  const handleDeleteProject = (id: string, name: string) => {
+    if (
+      typeof window !== 'undefined' &&
+      !window.confirm(`Delete “${name}”? This cannot be undone.`)
+    ) {
+      return;
+    }
+    removeProject(id);
     onMobileClose();
   };
 
@@ -103,30 +118,46 @@ export function Sidebar({
           </button>
 
           {projects.map((p) => (
-            <button
+            <div
               key={p.id}
-              type="button"
-              onClick={() => {
-                setActiveProject(p.id);
-                onMobileClose();
-              }}
               className={cn(
-                'flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-accent',
+                'flex w-full items-center gap-0.5 rounded-md pr-0.5 transition-colors hover:bg-accent/80',
                 p.id === activeProjectId &&
-                  'bg-primary-50 font-medium text-primary-900 dark:bg-primary-950/40 dark:text-primary-100',
-                collapsed && 'md:justify-center md:px-0'
+                  'bg-primary-50 dark:bg-primary-950/40'
               )}
-              title={p.name}
             >
-              <span
-                className={cn(
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded bg-neutral-200 text-xs font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-100'
-                )}
-              >
-                {p.name.slice(0, 1).toUpperCase()}
-              </span>
-              {!collapsed ? <span className="truncate">{p.name}</span> : null}
-            </button>
+              <EditableProjectName
+                variant="sidebar"
+                name={p.name}
+                onSave={(next) => updateProject(p.id, { name: next })}
+                onSelect={() => {
+                  setActiveProject(p.id);
+                  onMobileClose();
+                }}
+                isActive={p.id === activeProjectId}
+                showLabel={!collapsed}
+                hidePencil={collapsed}
+                leading={
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-neutral-200 text-xs font-semibold text-neutral-700 dark:bg-neutral-700 dark:text-neutral-100">
+                    {p.name.slice(0, 1).toUpperCase()}
+                  </span>
+                }
+              />
+              {!collapsed ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteProject(p.id, p.name);
+                  }}
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-destructive/10 hover:text-destructive"
+                  title={`Delete ${p.name}`}
+                  aria-label={`Delete project ${p.name}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : null}
+            </div>
           ))}
         </div>
 
