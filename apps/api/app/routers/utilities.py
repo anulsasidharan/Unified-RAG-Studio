@@ -11,9 +11,10 @@ from pydantic import ValidationError
 from app.config import Settings, get_settings
 from app.core.utilities.cost import CostEstimator, PricingLoadError, load_pricing
 from app.metadata import API_SEMVER
-from app.schemas.designer import CostRequest
+from app.schemas.designer import CostRequest, RagPreviewRequest, RagPreviewResponse
 from app.schemas.pipeline import CostEstimateSchema, PipelineConfigurationSchema
 from app.schemas.utilities import InfoResponse, ValidatePipelineResponse
+from app.services.rag_preview_service import run_rag_preview
 
 router = APIRouter(prefix="/api/utilities", tags=["utilities"])
 
@@ -53,3 +54,13 @@ async def estimate_monthly_cost(
     except PricingLoadError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return CostEstimator(pricing).estimate(body)
+
+
+@router.post(
+    "/rag-preview",
+    response_model=RagPreviewResponse,
+    summary="Guarded RAG preview (same contract as POST /api/designer/rag-preview)",
+)
+async def utilities_rag_preview(body: RagPreviewRequest) -> RagPreviewResponse:
+    """Shared entry for Autopilot-style callers that post a pipeline config + query."""
+    return await run_rag_preview(body)

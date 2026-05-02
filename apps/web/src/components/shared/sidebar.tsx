@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, FolderPlus, PanelLeftClose, PanelLeft, Trash2, X } from 'lucide-react';
+import {
+  ChevronRight,
+  FolderPlus,
+  PanelLeftClose,
+  PanelLeft,
+  Trash2,
+  X,
+} from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -40,7 +47,7 @@ export function Sidebar({
   const handleDeleteProject = (id: string, name: string) => {
     if (
       typeof window !== 'undefined' &&
-      !window.confirm(`Delete “${name}”? This cannot be undone.`)
+      !window.confirm(`Delete "${name}"? This cannot be undone.`)
     ) {
       return;
     }
@@ -122,8 +129,8 @@ export function Sidebar({
               key={p.id}
               className={cn(
                 'flex w-full items-center gap-0.5 rounded-md pr-0.5 transition-colors hover:bg-accent/80',
-                p.id === activeProjectId &&
-                  'bg-primary-50 dark:bg-primary-950/40'
+                p.id === activeProjectId && 'bg-primary-50 dark:bg-primary-950/40',
+                collapsed && 'md:justify-center'
               )}
             >
               <EditableProjectName

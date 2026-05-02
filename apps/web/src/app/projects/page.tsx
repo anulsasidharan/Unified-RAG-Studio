@@ -15,7 +15,7 @@ export default function ProjectsPage() {
   const updateProject = useProjectStore((s) => s.updateProject);
 
   const handleDelete = (id: string, name: string) => {
-    if (!window.confirm(`Delete “${name}”? This cannot be undone.`)) return;
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
     removeProject(id);
   };
 

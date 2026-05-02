@@ -2,7 +2,14 @@
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import Link from 'next/link';
-import { LayoutGrid, Menu, ChevronDown, FolderKanban } from 'lucide-react';
+import {
+  LayoutGrid,
+  Menu,
+  ChevronDown,
+  FolderKanban,
+  PencilLine,
+  Trash2,
+} from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -20,7 +27,27 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
+  const updateProject = useProjectStore((s) => s.updateProject);
+  const removeProject = useProjectStore((s) => s.removeProject);
   const activeProject = projects.find((p) => p.id === activeProjectId) ?? null;
+
+  const handleRenameActive = () => {
+    if (!activeProject) return;
+    const next = window.prompt('Project name', activeProject.name);
+    if (next === null) return;
+    const trimmed = next.trim();
+    if (!trimmed) return;
+    updateProject(activeProject.id, { name: trimmed });
+  };
+
+  const handleDeleteActive = () => {
+    if (!activeProject) return;
+    if (
+      !window.confirm(`Delete project "${activeProject.name}"? This cannot be undone.`)
+    )
+      return;
+    removeProject(activeProject.id);
+  };
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-neutral-200/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-neutral-800">
@@ -94,6 +121,28 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
                     </DropdownMenu.Item>
                   ))
                 )}
+                {activeProject ? (
+                  <>
+                    <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                    <DropdownMenu.Label className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                      Active project
+                    </DropdownMenu.Label>
+                    <DropdownMenu.Item
+                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                      onSelect={handleRenameActive}
+                    >
+                      <PencilLine className="h-4 w-4" />
+                      Rename…
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-red-600 outline-none hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-red-300"
+                      onSelect={handleDeleteActive}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete…
+                    </DropdownMenu.Item>
+                  </>
+                ) : null}
                 <DropdownMenu.Separator className="my-1 h-px bg-border" />
                 <DropdownMenu.Item asChild>
                   <Link

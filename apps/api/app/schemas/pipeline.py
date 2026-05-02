@@ -6,7 +6,7 @@ model IDs, strategies, and provider names must match the JSON catalog values.
 """
 
 from enum import StrEnum
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
@@ -369,3 +369,16 @@ class PipelineConfigurationSchema(RAGBaseModel):
     metadata: PipelineMetadataSchema
     estimated_cost: CostEstimateSchema | None = None
     estimated_performance: PerformanceEstimateSchema | None = None
+    guardrails: Optional["GuardrailsConfigSchema"] = Field(
+        default=None,
+        description="Optional per-stage guardrail policy; omit for built-in defaults.",
+    )
+
+
+def _rebuild_pipeline_configuration_refs() -> None:
+    from app.schemas.guardrails import GuardrailsConfigSchema  # noqa: F401, PLC0415
+
+    PipelineConfigurationSchema.model_rebuild()
+
+
+_rebuild_pipeline_configuration_refs()

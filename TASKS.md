@@ -34,8 +34,6 @@
 | P4-3 · Cost Calculation API | `feature/p4-cost-api` | ✅ done |
 | P4-4 · Export API | `feature/p4-export-api` | ✅ done |
 | P4-5 · Templates API | `feature/p4-templates-api` | ✅ done |
-<<<<<<< Updated upstream
-=======
 
 ## Phase 4.5 — Guardrails
 
@@ -54,4 +52,3 @@
 | Task | Branch | Status |
 |------|--------|--------|
 | P5-1 · Designer Layout & Stage Navigator | `feature/p5-designer-layout` | ✅ done |
->>>>>>> Stashed changes
