@@ -1,3 +1,4 @@
+import uuid
 from functools import lru_cache
 from typing import Literal
 
@@ -71,6 +72,9 @@ class Settings(BaseSettings):
     # ── Pagination ────────────────────────────────────────────
     default_page_size: int = 20
     max_page_size: int = 100
+
+    # ── User scope (P4-1; replaced by JWT in P12) ─────────────
+    default_user_id: uuid.UUID = uuid.UUID("00000000-0000-4000-8000-000000000001")
 
     # ── Pricing catalog (P2-9 cost estimator) ────────────────
     pricing_catalog_path: str = ""

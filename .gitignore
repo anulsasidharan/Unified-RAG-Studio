@@ -63,6 +63,7 @@ pip-delete-this-directory.txt
 # SQLite test database (created by pytest)
 test.db
 *.db-journal
+apps/api/_tmp_*.db
 
 # ============================================================
 # Environment & Secrets

@@ -24,3 +24,9 @@
 | P3-1 · shadcn/ui Component Library Setup | `feature/p3-shadcn-components` | ✅ done |
 | P3-2 · Zustand State Stores | `feature/p3-zustand-stores` | ✅ done |
 | P3-3 · App Layout & Navigation | `feature/p3-app-layout` | ✅ done |
+
+## Phase 4 — Designer mode backend
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P4-1 · Projects API | `feature/p4-projects-api` | ✅ done |

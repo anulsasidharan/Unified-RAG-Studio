@@ -5,8 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import ForeignKey, JSON, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -21,12 +20,12 @@ class PipelineConfig(Base, TimestampMixin):
     __tablename__ = "pipeline_configs"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -35,7 +34,7 @@ class PipelineConfig(Base, TimestampMixin):
     version: Mapped[str] = mapped_column(String(32), nullable=False, server_default="1.0.0")
     cloud_provider: Mapped[str] = mapped_column(String(32), nullable=False)
     # Full PipelineConfigurationSchema stored as binary JSON
-    config: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    config: Mapped[dict] = mapped_column(JSON, nullable=False)
     source: Mapped[str | None] = mapped_column(String(32), nullable=True)
     build_id: Mapped[str | None] = mapped_column(Text, nullable=True)
 

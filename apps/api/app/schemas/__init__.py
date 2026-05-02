@@ -45,6 +45,17 @@ from app.schemas.pipeline import (
     VectorStoreProvider,
 )
 
+# ── Projects (P4-1) ───────────────────────────────────────────────────────────
+from app.schemas.project import (
+    AutopilotBuildSummary,
+    PaginatedProjectsResponse,
+    PipelineConfigSummary,
+    ProjectCreateRequest,
+    ProjectDetailResponse,
+    ProjectSummary,
+    ProjectUpdateRequest,
+)
+
 # ── Designer ──────────────────────────────────────────────────────────────────
 from app.schemas.designer import (
     ConfigListItem,
@@ -140,6 +151,14 @@ __all__ = [
     "CostEstimateSchema",
     "PerformanceEstimateSchema",
     "PipelineConfigurationSchema",
+    # projects (P4-1)
+    "ProjectCreateRequest",
+    "ProjectUpdateRequest",
+    "ProjectSummary",
+    "ProjectDetailResponse",
+    "PipelineConfigSummary",
+    "AutopilotBuildSummary",
+    "PaginatedProjectsResponse",
     # designer
     "SaveConfigRequest",
     "SaveConfigResponse",

@@ -15,9 +15,24 @@ os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-placeholder")
 import pytest
 from fastapi.testclient import TestClient
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy import create_engine
 
 from app.config import get_settings
 from app.main import app
+from app.models import Base
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _sqlite_schema():
+    """Create ORM tables once for the session test DB (SQLite + cross-dialect JSON)."""
+    get_settings.cache_clear()
+    url = get_settings().database_url_sync
+    engine = create_engine(url, echo=False)
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+    engine.dispose()
+    get_settings.cache_clear()
+    yield
 
 
 @pytest.fixture(scope="session", autouse=True)
