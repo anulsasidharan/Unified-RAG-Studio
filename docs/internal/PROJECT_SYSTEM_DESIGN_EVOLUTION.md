@@ -2229,4 +2229,76 @@ flowchart TB
 
 ### Next sub-phase in Phase 4.5
 
-P4.5-5 · RAG Pipeline Integration — wire guardrails into Generation Service and Designer/Autopilot APIs.
+P4.5-6 · Monitoring & Metrics — guardrail metrics, logging, and safety dashboard endpoints.
+
+---
+
+## Phase 4.5 — P4.5-5 · RAG Pipeline Integration (append)
+
+**Intent:** One **end-to-end guarded path** from user query through retrieved chunks to LLM output, driven by optional **`guardrails`** on `PipelineConfigurationSchema`, plus **HTTP preview** for Designer and utilities (Autopilot-style callers).
+
+### Behaviour
+
+1. **`build_guardrail_manager(GuardrailsConfigSchema | None)`** registers INPUT / RETRIEVAL / OUTPUT rails according to stage `enabled` flags and per-check toggles (same kwargs as P4.5-2 … P4.5-4 `register_default_*` functions).
+2. **`run_guarded_rag_query`** runs `GuardrailOrchestrator` for INPUT and RETRIEVAL, then **`GenerationService.generate`**, then OUTPUT checks with **reference passages** in `GuardrailContext.extra` for hallucination / citation rules.
+3. **Preview APIs** accept `query`, full `config`, and **`contextDocuments`** (client-supplied retrieved chunks). Response returns **allow/block**, **stage summaries**, and **omits answer** when OUTPUT blocks.
+
+### Mermaid — guarded RAG request path (P4.5-5)
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant API as API (designer / utilities)
+  participant GR as GuardrailOrchestrator
+  participant GEN as GenerationService
+  C->>API: POST /rag-preview (query, config, contextDocuments)
+  API->>GR: check_input(query)
+  alt BLOCK
+    GR-->>API: input blocked
+    API-->>C: allowed=false
+  else continue
+    GR->>GR: check_retrieval(payload)
+    alt BLOCK
+      GR-->>API: retrieval blocked
+      API-->>C: allowed=false
+    else continue
+      API->>GEN: generate(query', docs')
+      GEN-->>API: answer
+      API->>GR: check_output(answer, refs from docs')
+      alt BLOCK
+        GR-->>API: output blocked
+        API-->>C: allowed=false (no answer text)
+      else ALLOW
+        API-->>C: allowed=true, answer, check summaries
+      end
+    end
+  end
+```
+
+### Mermaid — configuration vs runtime (Phase 4.5 progression)
+
+```mermaid
+flowchart TB
+  subgraph CFG [Saved pipeline JSON]
+    PC[PipelineConfigurationSchema]
+    G[guardrails optional]
+    PC --> G
+  end
+  subgraph RT [Per request]
+    M[build_guardrail_manager]
+    R[run_guarded_rag_query]
+    G -.->|defaults if null| M
+    M --> R
+  end
+```
+
+### Code map (concise)
+
+| Piece | Location |
+|-------|----------|
+| Optional `guardrails` on pipeline | `app/schemas/pipeline.py` |
+| Manager from policy | `app/core/guardrails/configure_manager.py` |
+| Guarded runner | `app/core/rag/guarded_runner.py` |
+| Shared preview service | `app/services/rag_preview_service.py` |
+| Routes | `app/routers/designer.py`, `app/routers/utilities.py` |
+| Frontend types | `apps/web/src/types/pipeline.ts` (`GuardrailsConfig`) |

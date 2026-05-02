@@ -213,6 +213,36 @@ export interface EvaluationConfig {
   schedule?: 'on-demand' | 'continuous';
 }
 
+// ─── Guardrails (P4.5) — optional on saved pipeline JSON ─────────────────────
+
+export interface GuardrailStageSettings {
+  enabled: boolean;
+}
+
+export interface InputStageGuardrails extends GuardrailStageSettings {
+  piiRedactionEnabled: boolean;
+  promptInjectionBlockEnabled: boolean;
+  toxicityBlockEnabled: boolean;
+}
+
+export interface RetrievalStageGuardrails extends GuardrailStageSettings {
+  contentFilterEnabled: boolean;
+  sourceValidationEnabled: boolean;
+  biasDetectionEnabled: boolean;
+}
+
+export interface OutputStageGuardrails extends GuardrailStageSettings {
+  hallucinationHeuristicEnabled: boolean;
+  factualityCheckEnabled: boolean;
+  citationVerificationEnabled: boolean;
+}
+
+export interface GuardrailsConfig {
+  input: InputStageGuardrails;
+  retrieval: RetrievalStageGuardrails;
+  output: OutputStageGuardrails;
+}
+
 // ─── Cost & Performance ──────────────────────────────────────────────────────
 
 export interface CostBreakdown {
@@ -277,4 +307,6 @@ export interface PipelineConfiguration {
   metadata: PipelineMetadata;
   estimatedCost?: CostEstimate;
   estimatedPerformance?: PerformanceEstimate;
+  /** When omitted, the API applies default guardrail policy (all stages on). */
+  guardrails?: GuardrailsConfig | null;
 }

@@ -14,6 +14,8 @@ from app.schemas.designer import (
     CostRequest,
     ExportRequest,
     ExportResponse,
+    RagPreviewRequest,
+    RagPreviewResponse,
     SaveConfigRequest,
     SaveConfigResponse,
     UpdateDesignerConfigRequest,
@@ -22,6 +24,7 @@ from app.schemas.pipeline import CostEstimateSchema
 from app.services.cost_service import CostService
 from app.services.designer_service import DesignerService
 from app.services.export_service import ExportService
+from app.services.rag_preview_service import run_rag_preview
 from app.utils.cost_calculator import PricingLoadError
 
 router = APIRouter(prefix="/api/designer", tags=["designer"])
@@ -155,3 +158,18 @@ async def estimate_pipeline_cost(
         return CostService(settings).estimate(body)
     except PricingLoadError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+@router.post(
+    "/rag-preview",
+    response_model=RagPreviewResponse,
+    summary="Guarded RAG preview (input → retrieval → generation → output policy)",
+)
+async def rag_preview(body: RagPreviewRequest) -> RagPreviewResponse:
+    """Run one RAG query through the configured pipeline with per-stage guardrails.
+
+    The client supplies retrieved ``context_documents`` (same contract Autopilot
+    will use when wired to a vector store). Policy comes from ``config.guardrails``
+    or defaults when omitted.
+    """
+    return await run_rag_preview(body)
