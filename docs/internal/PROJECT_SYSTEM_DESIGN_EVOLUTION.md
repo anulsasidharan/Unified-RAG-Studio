@@ -2137,6 +2137,26 @@ flowchart TD
   G2 -->|...| OK[GuardrailPipelineResult]
 ```
 
+### P4.5-2 · Input Guardrails (completed)
+
+Concrete INPUT implementations live in `apps/api/app/core/guardrails/input/`.
+
+* **PII** — `PiiRedactionGuardrail` redacts email, US-style SSN, credit-card runs that pass Luhn (13–19 digits), and phone-shaped spans. Credit-card detection runs **before** phone redaction so long digit sequences (PANs) are not partially matched as phone numbers.
+* **Prompt injection** — `PromptInjectionGuardrail` blocks on a set of high-signal regex patterns (instruction override / jailbreak-style phrasing); patterns are extensible via constructor args.
+* **Toxicity** — `ToxicityFilterGuardrail` combines optional `blocked_terms` (word-boundary matches) and `extra_patterns`. The default includes only a non-user **self-test** regex so production traffic is not blocked until operators configure terms or patterns (see P4.5-7 for file-based lists).
+
+Registration helper: `register_default_input_guardrails(manager)` — order **PII (first)** → **injection** → **toxicity**. Schema: `InputStageGuardrailsSchema` adds `pii_redaction_enabled`, `prompt_injection_block_enabled`, `toxicity_block_enabled` under `GuardrailsConfigSchema.input`.
+
+### Mermaid — INPUT stage chain (P4.5-2)
+
+```mermaid
+flowchart LR
+  Q[Raw user query] --> PI[PII redaction MODIFY]
+  PI --> INJ[Prompt injection BLOCK]
+  INJ --> TOX[Toxicity BLOCK]
+  TOX --> OK[Allowed / sanitized query to RAG]
+```
+
 ### Next sub-phase in Phase 4.5
 
-P4.5-2 · Input Guardrails — PII, prompt-injection heuristics, toxicity (concrete `Guardrail` implementations registered on `INPUT`).
+P4.5-3 · Output Guardrails — hallucination heuristics, factuality, citation checks (`OUTPUT` stage).
