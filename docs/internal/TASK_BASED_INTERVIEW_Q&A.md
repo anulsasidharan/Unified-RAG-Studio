@@ -3515,3 +3515,75 @@ The gallery page will call `GET /api/templates` for cards and `POST /api/templat
 ---
 
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
+
+---
+
+## Phase 4.5 · P4.5-1 Guardrails Core Infrastructure
+
+### What problem does the guardrails core solve?
+
+It provides a **single, extensible pattern** for safety and policy checks at three RAG touchpoints (user input, retrieved context, model output) without duplicating ad hoc validation in every router or service.
+
+### Where does the code live?
+
+Under `apps/api/app/core/guardrails/`: `types.py` (enums and result dataclasses), `base.py` (abstract `Guardrail`), `manager.py` (`GuardrailManager`), `orchestrator.py` (`GuardrailOrchestrator`, `RetrievalGuardPayload`), `stubs.py` (reference implementations). Schemas: `apps/api/app/schemas/guardrails.py`. Tests: `apps/api/tests/test_core/test_guardrails.py`.
+
+### What are the three pipeline stages?
+
+`GuardrailStage.INPUT`, `RETRIEVAL`, and `OUTPUT` — matching where you typically filter or transform the user query, retrieved documents, and generated answer respectively.
+
+### What actions can a single guardrail return?
+
+`GuardrailAction`: `ALLOW`, `WARN`, `BLOCK`, `MODIFY`. `WARN` records a non-fatal notice; `BLOCK` stops the stage; `MODIFY` may set `payload_override` to pass a transformed value to the next guardrail and as the stage’s final payload if the run completes.
+
+### How does `GuardrailManager.run_stage` process multiple guardrails?
+
+It runs registered guardrails **in registration order**. On `BLOCK`, it returns immediately with `allowed=False` and `blocked_by` set to the guardrail name. On `MODIFY` with a non-null `payload_override`, it replaces the working payload before the next check. `ALLOW` and `WARN` leave the payload unchanged.
+
+### What does `GuardrailOrchestrator` add over the manager?
+
+Typed entry points: `check_input(text)`, `check_retrieval(RetrievalGuardPayload)`, `check_output(text)` — each delegates to `run_stage` with the correct `GuardrailStage`. Retrieval payloads carry `query` and `documents` (as an immutable tuple of LangChain `Document`).
+
+### Is the guardrails layer async?
+
+No — checks are synchronous for P4.5-1. Future guardrails that call remote APIs can wrap async work internally or extend the contract in a later task.
+
+### Are there HTTP endpoints for guardrails in P4.5-1?
+
+No. This phase is **library infrastructure only**. APIs and generation wiring are planned for P4.5-5 (RAG Pipeline Integration).
+
+### What is logged when a guardrail runs?
+
+The manager emits a structured log event `guardrail_check` with `guardrail`, `stage`, `action`, and optionally `request_id` when `GuardrailContext.request_id` is set.
+
+### What is `GuardrailContext` used for?
+
+Optional correlation and tenancy metadata: `request_id`, `user_id`, `pipeline_config_id`, `project_id`, plus an `extra` dict for arbitrary labels (e.g. experiment id).
+
+### What Pydantic types were added and why?
+
+`GuardrailStageSettingsSchema` (per-stage `enabled` flag) and `GuardrailsConfigSchema` (input / retrieval / output sections) so future pipeline JSON can toggle stages without ad hoc dicts.
+
+### What are the stub guardrails for?
+
+`AlwaysAllowGuardrail` is a no-op placeholder. `BlockIfSubstringGuardrail` demonstrates **blocking** on a forbidden substring in string payloads (demos/tests only — not a security control).
+
+### How do you unit test a custom guardrail?
+
+Subclass `Guardrail`, implement `name`, `stage`, and `check`, register on a `GuardrailManager`, call `run_stage` or use `GuardrailOrchestrator`. The test suite includes examples: prefix modification chain, warn-only, retrieval empty-query block, and context capture.
+
+### How does this connect to P4.5-2 and later?
+
+P4.5-2–4 add real detectors (PII, toxicity, hallucination heuristics, etc.) as additional `Guardrail` classes registered on the appropriate stages. P4.5-5 calls the orchestrator from the generation path and APIs.
+
+### What should you say in a code review about ordering?
+
+Order matters: put **cheap** checks first (e.g. length, regex) and **expensive** checks (LLM judges) later so `BLOCK` exits early; use `register(..., first=True)` when a guardrail must run before others.
+
+### Does P4.5-1 change `PipelineConfigurationSchema`?
+
+No — guardrails config schemas are standalone so integration can add an optional field in P4.5-5 without breaking existing saved configs.
+
+---
+
+*Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
