@@ -1,15 +1,17 @@
 # ============================================================
 # Internal docs — ignore by default; track selected interview/design logs
 # ============================================================
-docs/internal/*
-!docs/internal/TASK_BASED_INTERVIEW_Q&A.md
-!docs/internal/PROJECT_SYSTEM_DESIGN_EVOLUTION.md
-!docs/internal/project_status.md
-!docs/internal/TASKS.md
-!docs/internal/phase4.5_explained.md
+docs/
+docs/internal/
+docs/internal/TASK_BASED_INTERVIEW_Q&A.md
+docs/internal/PROJECT_SYSTEM_DESIGN_EVOLUTION.md
+docs/internal/PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase*.md
+docs/internal/project_status.md
+docs/internal/TASKS.md
+docs/internal/phase4.5_explained.md
 
-prompt_history/*
-!prompt_history/prompt_history.md
+prompt_history/
+prompt_history/prompt_history.md
 
 # ============================================================
 # Node / Next.js
