@@ -3,10 +3,14 @@
 These schemas handle the request/response shapes for:
   POST /api/designer/config   — save / create a pipeline configuration
   GET  /api/designer/config/{id}
+  PUT /api/designer/config/{id}
+  GET /api/designer/configs   — list by project
+  DELETE /api/designer/config/{id}
   POST /api/designer/export   — generate code in a requested format
   POST /api/designer/cost     — calculate cost estimate
 """
 
+import uuid
 from typing import Literal
 
 from pydantic import Field
@@ -25,7 +29,7 @@ class SaveConfigRequest(RAGBaseModel):
     """Body for POST /api/designer/config."""
 
     name: str = Field(min_length=1, max_length=255)
-    project_id: str
+    project_id: uuid.UUID
     config: PipelineConfigurationSchema
     description: str | None = None
 
@@ -61,6 +65,14 @@ class ConfigListResponse(RAGBaseModel):
     total: int
     page: int
     page_size: int
+
+
+class UpdateDesignerConfigRequest(RAGBaseModel):
+    """Body for PUT /api/designer/config/{id}. At least one field should be set."""
+
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    description: str | None = None
+    config: PipelineConfigurationSchema | None = None
 
 
 # ─── Export Endpoint ──────────────────────────────────────────────────────────

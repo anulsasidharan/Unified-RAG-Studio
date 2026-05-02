@@ -30,3 +30,4 @@
 | Task | Branch | Status |
 |------|--------|--------|
 | P4-1 · Projects API | `feature/p4-projects-api` | ✅ done |
+| P4-2 · Designer Config API | `feature/p4-designer-config-api` | ✅ done |

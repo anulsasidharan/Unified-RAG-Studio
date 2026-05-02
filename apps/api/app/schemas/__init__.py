@@ -67,6 +67,7 @@ from app.schemas.designer import (
     ExportResponse,
     SaveConfigRequest,
     SaveConfigResponse,
+    UpdateDesignerConfigRequest,
 )
 
 # ── Autopilot ─────────────────────────────────────────────────────────────────
@@ -162,6 +163,7 @@ __all__ = [
     # designer
     "SaveConfigRequest",
     "SaveConfigResponse",
+    "UpdateDesignerConfigRequest",
     "ConfigListItem",
     "ConfigListResponse",
     "ExportFormat",
