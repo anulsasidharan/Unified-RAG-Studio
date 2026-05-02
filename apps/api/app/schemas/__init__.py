@@ -114,7 +114,11 @@ from app.schemas.deployment import (
 )
 
 # ── Guardrails (P4.5) ─────────────────────────────────────────────────────────
-from app.schemas.guardrails import GuardrailsConfigSchema, GuardrailStageSettingsSchema
+from app.schemas.guardrails import (
+    GuardrailsConfigSchema,
+    GuardrailStageSettingsSchema,
+    InputStageGuardrailsSchema,
+)
 
 __all__ = [
     # pipeline
@@ -210,5 +214,6 @@ __all__ = [
     "DeploymentListResponse",
     # guardrails (P4.5)
     "GuardrailStageSettingsSchema",
+    "InputStageGuardrailsSchema",
     "GuardrailsConfigSchema",
 ]

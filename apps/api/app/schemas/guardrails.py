@@ -1,4 +1,4 @@
-"""Guardrails configuration contracts — P4.5-1.
+"""Guardrails configuration contracts — P4.5-1 / P4.5-2.
 
 Optional per-stage toggles for when pipeline integration (P4.5-5) wires guardrails
 into saved configurations.
@@ -17,9 +17,17 @@ class GuardrailStageSettingsSchema(RAGBaseModel):
     enabled: bool = True
 
 
-class GuardrailsConfigSchema(RAGBaseModel):
-    """Top-level guardrails policy placeholder (stages default to enabled)."""
+class InputStageGuardrailsSchema(GuardrailStageSettingsSchema):
+    """Input-stage policy flags (P4.5-2)."""
 
-    input: GuardrailStageSettingsSchema = Field(default_factory=GuardrailStageSettingsSchema)
+    pii_redaction_enabled: bool = True
+    prompt_injection_block_enabled: bool = True
+    toxicity_block_enabled: bool = True
+
+
+class GuardrailsConfigSchema(RAGBaseModel):
+    """Top-level guardrails policy (stages default to enabled)."""
+
+    input: InputStageGuardrailsSchema = Field(default_factory=InputStageGuardrailsSchema)
     retrieval: GuardrailStageSettingsSchema = Field(default_factory=GuardrailStageSettingsSchema)
     output: GuardrailStageSettingsSchema = Field(default_factory=GuardrailStageSettingsSchema)

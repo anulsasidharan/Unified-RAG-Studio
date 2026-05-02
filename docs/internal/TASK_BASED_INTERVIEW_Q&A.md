@@ -3586,4 +3586,56 @@ No — guardrails config schemas are standalone so integration can add an option
 
 ---
 
+## Phase 4.5 · P4.5-2 Input Guardrails
+
+### What ships in P4.5-2?
+
+Three concrete `Guardrail` classes for `GuardrailStage.INPUT`: `PiiRedactionGuardrail`, `PromptInjectionGuardrail`, and `ToxicityFilterGuardrail`, plus `register_default_input_guardrails()` and `clear_input_guardrails()`.
+
+### Where is the code?
+
+`apps/api/app/core/guardrails/input/` (`pii.py`, `injection.py`, `toxicity.py`, `__init__.py`). Re-exported from `app.core.guardrails`.
+
+### In what order should input guardrails run?
+
+Default registration order: **PII redaction first** (so later checks see redacted text and PANs are not mistaken for phones), then **prompt-injection block**, then **toxicity block**. PII is registered with `first=True` on the manager.
+
+### How does PII redaction behave?
+
+`MODIFY` with `payload_override` when something was redacted; `ALLOW` if nothing matched. Placeholders: `[REDACTED_EMAIL]`, `[REDACTED_SSN]`, `[REDACTED_PHONE]`, `[REDACTED_CARD]`. Cards require **Luhn-valid** digit runs.
+
+### Why is credit-card redaction ordered before phone?
+
+The phone regex can match substrings inside long digit sequences. Running **card (Luhn) before phone** reduces false phone redaction on PAN-like strings.
+
+### How does prompt injection detection work?
+
+Case-insensitive **regex** patterns for phrases such as “ignore previous instructions”, “developer message:”, “jailbreak”, “DAN mode”, etc. A match returns `BLOCK`. The list is not exhaustive; extend via `PromptInjectionGuardrail(patterns=...)`.
+
+### How does toxicity filtering work without an ML model?
+
+`ToxicityFilterGuardrail` applies **optional** `blocked_terms` (word-boundary regex per term) and **`extra_patterns`**. Defaults include only a pattern that matches `___RAG_STUDIO_TOXICITY_SELF_TEST___` so normal users are not blocked until operators add terms or patterns (production lists can be loaded in P4.5-7).
+
+### What Pydantic changes apply to guardrails config?
+
+`GuardrailsConfigSchema.input` is now `InputStageGuardrailsSchema`, which extends `enabled` with `pii_redaction_enabled`, `prompt_injection_block_enabled`, and `toxicity_block_enabled` (all default `True`). Retrieval/output stages remain `GuardrailStageSettingsSchema`.
+
+### Does `register_default_input_guardrails` read the Pydantic schema?
+
+Not automatically — wiring `InputStageGuardrailsSchema` flags to registration is for **P4.5-5** integration. The helper takes boolean kwargs `pii`, `prompt_injection`, `toxicity` and optional toxicity term/pattern overrides.
+
+### How do you test toxicity without embedding slurs in the repo?
+
+Tests pass `toxicity_blocked_terms=frozenset({"badword"})` and `toxicity_extra_patterns=()` or use the self-test marker string for the default pattern.
+
+### Are HTTP routes added in P4.5-2?
+
+No — same as P4.5-1; API integration is P4.5-5.
+
+### What tests exist?
+
+`apps/api/tests/test_core/test_input_guardrails.py` covers email/SSN/card redaction, injection block, toxicity custom term, registration order, orchestration after PII, and schema defaults.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

@@ -37,7 +37,7 @@
 | 28 | Phase 4 | P4-5 · Templates API | `feature/p4-templates-api` | Implement template listing and template-to-config application APIs. | ✅ done |
 |  | `Phase 4.5` | `Implement enterprise-grade guardrails for AI safety, compliance, and quality control.` |  |  |  |
 | 29 | Phase 4.5 | P4.5-1 · Guardrails Core Infrastructure | `feature/p4-guardrails-infra` | Build base guardrail classes, manager, and orchestration layer. | ✅ done |
-| 30 | Phase 4.5 | P4.5-2 · Input Guardrails | `feature/p4-guardrails-input` | Implement PII detection, prompt injection prevention, and toxicity filtering. | ⬜ pending |
+| 30 | Phase 4.5 | P4.5-2 · Input Guardrails | `feature/p4-guardrails-input` | Implement PII detection, prompt injection prevention, and toxicity filtering. | ✅ done |
 | 31 | Phase 4.5 | P4.5-3 · Output Guardrails | `feature/p4-guardrails-output` | Implement hallucination detection, factuality checking, and citation verification. | ⬜ pending |
 | 32 | Phase 4.5 | P4.5-4 · Retrieval Guardrails | `feature/p4-guardrails-retrieval` | Implement content filtering, source validation, and bias detection. | ⬜ pending |
 | 33 | Phase 4.5 | P4.5-5 · RAG Pipeline Integration | `feature/p4-guardrails-integration` | Integrate guardrails into Generation Service and Designer/Autopilot APIs. | ⬜ pending |

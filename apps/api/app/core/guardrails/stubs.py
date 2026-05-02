@@ -1,6 +1,6 @@
 """Reference and test guardrails — P4.5-1.
 
-Concrete policy guardrails (PII, toxicity, etc.) land in P4.5-2 through P4.5-4.
+Input/output/retrieval policy implementations: see ``guardrails.input`` (P4.5-2) and later phases.
 """
 
 from __future__ import annotations

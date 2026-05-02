@@ -40,7 +40,7 @@
 | Task | Branch | Status |
 |------|--------|--------|
 | P4.5-1 · Guardrails Core Infrastructure | `feature/p4-guardrails-infra` | ✅ done |
-| P4.5-2 · Input Guardrails | `feature/p4-guardrails-input` | ⬜ pending |
+| P4.5-2 · Input Guardrails | `feature/p4-guardrails-input` | ✅ done |
 | P4.5-3 · Output Guardrails | `feature/p4-guardrails-output` | ⬜ pending |
 | P4.5-4 · Retrieval Guardrails | `feature/p4-guardrails-retrieval` | ⬜ pending |
 | P4.5-5 · RAG Pipeline Integration | `feature/p4-guardrails-integration` | ⬜ pending |
