@@ -1,9 +1,9 @@
-"""Designer mode API — pipeline configuration CRUD (P4-2) and cost estimate (P4-3)."""
+"""Designer mode API — pipeline configuration CRUD (P4-2), cost estimate (P4-3), export (P4-4)."""
 
 from __future__ import annotations
 
-import uuid
 from typing import Annotated
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
@@ -12,6 +12,8 @@ from app.dependencies import DbSession, RequestUserId
 from app.schemas.designer import (
     ConfigListResponse,
     CostRequest,
+    ExportRequest,
+    ExportResponse,
     SaveConfigRequest,
     SaveConfigResponse,
     UpdateDesignerConfigRequest,
@@ -19,6 +21,7 @@ from app.schemas.designer import (
 from app.schemas.pipeline import CostEstimateSchema
 from app.services.cost_service import CostService
 from app.services.designer_service import DesignerService
+from app.services.export_service import ExportService
 from app.utils.cost_calculator import PricingLoadError
 
 router = APIRouter(prefix="/api/designer", tags=["designer"])
@@ -124,6 +127,18 @@ async def delete_config(
     if not ok:
         raise HTTPException(status_code=404, detail="Configuration not found")
     return None
+
+
+@router.post(
+    "/export",
+    response_model=ExportResponse,
+    summary=(
+        "Export pipeline as Python, YAML, Terraform, Docker Compose, or Kubernetes YAML"
+    ),
+)
+async def export_pipeline(body: ExportRequest) -> ExportResponse:
+    """Return generated file content and a suggested download filename."""
+    return ExportService.export(body)
 
 
 @router.post(
