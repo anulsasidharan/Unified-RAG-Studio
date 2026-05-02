@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 
+import { AppShell } from '@/components/shared/app-shell';
+import { Providers } from '@/components/providers';
 import { StoreHydration } from '@/components/store-hydration';
 
 import './globals.css';
@@ -34,9 +36,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
-        <StoreHydration />
-        {children}
+      <body
+        className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen font-sans antialiased`}
+      >
+        <Providers>
+          <StoreHydration />
+          <AppShell>{children}</AppShell>
+        </Providers>
       </body>
     </html>
   );

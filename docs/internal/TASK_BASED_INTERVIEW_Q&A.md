@@ -1,107 +1,79 @@
-# Task-based interview Q&A — Unified RAG Studio
+# Task-based interview — Unified RAG Studio (internal)
 
-> Internal reference: common questions and model answers tied to roadmap tasks.  
-> Update this file when substantial design or implementation work ships.
-
----
-
-## P3-2 · Zustand state stores (Designer, Autopilot, Projects)
-
-### Why use a client state library at all for RAG Studio?
-
-**Q:** The backend will eventually own projects and pipeline configs. Why add Zustand on the web app?  
-**A:** The API is not the only source of truth during authoring. Users need fast, local drafts (Designer wizard), in-progress Autopilot runs, and a project list that survives refresh while we still build CRUD APIs. Zustand gives a small, predictable client layer that can later sync to the server without rewriting UI flows.
-
-### Why Zustand specifically?
-
-**Q:** Why pick Zustand instead of Redux Toolkit, MobX, Jotai, or React Context?  
-**A:** Zustand has minimal boilerplate, excellent TypeScript ergonomics, supports middleware (including persistence), and avoids wiring providers for every subtree. For three focused domains (designer draft, autopilot session, projects), slice-shaped stores map cleanly to features without a global reducer ceremony.
-
-### How are stores split across domains?
-
-**Q:** Why three stores instead of one big store?  
-**A:** Separation limits re-renders and persistence shapes: Designer drafts change frequently during wizard navigation; Autopilot mixes requirements, documents, and live build snapshots; Projects are relatively stable metadata. Isolated stores make partial persistence and future sync boundaries simpler (e.g., merge projects from `/projects` API without touching autopilot buffers).
-
-### Persistence strategy
-
-**Q:** Where is state persisted and under what keys?  
-**A:** Browser `localStorage` via Zustand `persist` middleware with namespaced keys (`rag-studio-designer-v1`, `rag-studio-projects-v1`, `rag-studio-autopilot-v1`). Keys are versioned so we can migrate or invalidate layouts without clobbering unrelated data.
-
-**Q:** What happens if `localStorage` is full or unavailable?  
-**A:** Writes may throw; production apps often wrap storage adapters with try/catch and degrade to memory-only. For this codebase, persistence is best-effort for developer UX; APIs remain authoritative once wired.
-
-### Next.js App Router and SSR
-
-**Q:** How do you avoid hydration mismatches with persisted stores?  
-**A:** `persist` uses `skipHydration: true`, then a client-only `StoreHydration` component calls `persist.rehydrate()` inside `useEffect` after mount. Server-rendered HTML matches the initial store defaults; after hydration, persisted JSON restores user state without flashing incorrect markup.
-
-**Q:** Can these stores be read from Server Components?  
-**A:** No. Hooks run only in Client Components. Server Components should receive props from client children or fetch server data directly—not read `localStorage`.
-
-### Designer store semantics
-
-**Q:** What does `draft` represent?  
-**A:** A full `PipelineConfiguration` object—the working pipeline before save/export. It aligns with shared TypeScript contracts from Phase 1.
-
-**Q:** What is `activeStageId` for?  
-**A:** It mirrors `DESIGNER_STAGES` in `constants.ts` so the future multi-step UI can highlight the current wizard stage without coupling routing to store internals.
-
-**Q:** What is the difference between `patchDraft`, `updateStages`, `loadPipeline`, and `resetDraft`?  
-**A:**  
-- `patchDraft`: shallow/top-level merge plus optional `stages`/`metadata` merge—good for renaming or swapping nested slices from templates.  
-- `updateStages`: merges partial `PipelineStages` and bumps `metadata.updatedAt`.  
-- `loadPipeline`: replaces the draft (e.g., template apply or backend fetch result).  
-- `resetDraft`: new default pipeline with fresh id via `createDefaultPipelineConfiguration()`.
-
-### Autopilot store semantics
-
-**Q:** What is persisted for builds?  
-**A:** `builds` is a map keyed by build id containing trimmed `AutopilotBuild` objects—activity `messages` arrays are truncated before persistence to avoid unbounded growth while preserving recent agent output.
-
-**Q:** Why separate `resetSession` and `clearBuildHistory`?  
-**A:** `resetSession` clears wizard inputs (requirements, documents, handoff config, active pointer) but retains historical builds for comparison or auditing during a session. `clearBuildHistory` wipes stored builds when users explicitly discard history.
-
-**Q:** What is `baseConfig` / `startFromDesigner`?  
-**A:** Optional Designer → Autopilot handoff baseline (`PipelineConfiguration`). `startFromDesigner` loads that baseline and resets autopilot inputs per Phase 8 expectations.
-
-### Projects store semantics
-
-**Q:** Why store projects locally before the Projects API ships?  
-**A:** It unlocks UI flows (project switcher, naming drafts, linkage placeholders) and mirrors eventual CRUD. Records carry timestamps for sorting until P4-1 replaces persistence.
-
-### Testing & observability
-
-**Q:** How would you unit-test components using these stores?  
-**A:** Reset store state in `beforeEach` (`setState` helpers or dedicated reset actions), render under React Testing Library, dispatch actions, assert DOM. For persistence integration tests, mock `localStorage` or use Vitest/Jest `jest-environment-jsdom`.
-
-**Q:** How would you debug rogue re-renders?  
-**A:** Narrow selectors (`useDesignerStore((s) => s.draft.name)`), React Profiler, and ensuring derived props aren’t recreated each render. Avoid subscribing entire store objects in leaf components.
-
-### Security & privacy
-
-**Q:** Any concerns storing pipeline configs in `localStorage`?  
-**A:** Yes—configs may imply proprietary stack choices or endpoints (later phases). For sensitive deployments, encrypt-at-rest in storage, shorten TTL, or gate persistence behind consent—production policies belong with auth (Phase 12).
-
-### Comparison prompts
-
-**Q:** When would you move state from Zustand into TanStack Query?  
-**A:** When data is server-owned (canonical lists, ACL-sensitive documents). Query caches fetch results; Zustand holds UI/session overlays (wizard stage, optimistic merges). They complement each other.
-
-**Q:** Can Immer help here?  
-**A:** Optional—nested merges like `patchRequirements` are manageable with spreads today. Immer is justified if immutable updates become verbose or bug-prone.
+> Supplement for candidates reviewing implementation tasks. Answers reflect design intent and current codebase choices unless noted.
 
 ---
 
-## Cross-cutting / roadmap adjacent
+## Phase 3 · P3-3 — App layout & navigation
 
-### Phase alignment
+### Why split `Providers`, `AppShell`, and `layout.tsx`?
 
-**Q:** How does P3-2 relate to Phase 4 APIs?  
-**A:** Client stores act as a staging layer: once Projects and Designer Config APIs exist, stores orchestrate optimistic updates and reconcile server responses without rewriting wizard UI.
+**Answer:** Next.js **server** `layout.tsx` should stay thin: fonts, metadata, and HTML shell. **React Query** must live in a **client** component (`providers.tsx`) because hooks cannot run in server components. **`AppShell`** is client-side because it uses pathname-aware UI (sidebar visibility, mobile drawer). **`StoreHydration`** stays separate so Zustand `persist` rehydration runs once at startup.
+
+### Why is React Query added before API-heavy screens exist?
+
+**Answer:** Phase 4+ will mount hooks against Projects and Designer APIs. Providing `QueryClientProvider` early avoids refactors and establishes defaults (`staleTime`, no aggressive refetch on focus).
+
+### How does mode switching (Designer vs Autopilot) work?
+
+**Answer:** **`ModeToggle`** uses `usePathname()` and `<Link>` to `/designer` and `/autopilot`. Active state is derived from the URL prefix, not duplicated global state—single source of truth for navigation.
+
+### Why does the sidebar disappear on the home page?
+
+**Answer:** Marketing/landing typically stays **full-bleed** without project chrome. All other primary routes show **Navbar + Sidebar** so project context stays visible during configuration workflows.
+
+### How is the sidebar collapsible and persisted?
+
+**Answer:** Desktop collapse toggles width (`md:w-14` vs wider panel). State is stored under **`rag-studio-sidebar-collapsed`** in `localStorage` so preference survives refreshes. Mobile uses **overlay + backdrop** and closes on route change.
+
+### How does the project dropdown relate to the sidebar?
+
+**Answer:** Both read **`useProjectStore`** (Zustand + persist). The navbar dropdown selects **`activeProjectId`**; the sidebar lists projects and supports **“New project”** via `addProject`. Until **P4-1 Projects API**, data is **local-only**.
+
+### Why Radix `DropdownMenu` without shadcn wrappers?
+
+**Answer:** This milestone prioritized shell behaviour over regenerating shadcn primitives. Radix is already a dependency; dropdown triggers remain keyboard-accessible and portal-rendered.
+
+### What is the avatar placeholder?
+
+**Answer:** **No auth yet** (Phase 12). “RS” initials mark reserved space for future user menu.
+
+### What do `not-found.tsx` and `error.tsx` accomplish?
+
+**Answer:** **`not-found`** renders for unknown routes with recovery links. **`error.tsx`** is a **client** boundary (required by Next.js) that logs errors and offers **`reset()`** plus navigation home.
+
+### Font strategy: task mentions Geist—what shipped?
+
+**Answer:** **`next/font/google`** loads **Inter** and **JetBrains Mono** with CSS variables **`--font-geist-sans`** and **`--font-geist-mono`** so Tailwind `font-sans` / `font-mono` align with the design token names. Teams may swap to the **`geist`** npm package later without changing Tailwind wiring.
+
+### How would you test navigation in CI?
+
+**Answer:** Component tests for **`ModeToggle`** active classes (mock `usePathname`), and Playwright smoke for `/` → `/designer` link (Phase 10). Until Vitest is wired, manual QA paths suffice for this branch.
 
 ---
 
-## Prompt maintenance
+## Cross-cutting (layout-adjacent)
 
-**Q:** Why pair implementation tasks with interview Q&A updates?  
-**A:** It preserves rationale for future reviewers and onboarding—design intent stays adjacent to code history instead of living only in ephemeral chats.
+### Where should shared loading UI live?
+
+**Answer:** Route-level **`loading.tsx`** or shared **`LoadingSpinner`** under `components/shared/` (P3-1). Global skeleton policy is product-specific.
+
+### How does hydration interact with the shell?
+
+**Answer:** **Zustand persist** skips hydration on SSR; **`StoreHydration`** calls `persist.rehydrate()` on mount so navbar/sidebar see projects after client loads. **`suppressHydrationWarning`** on `<html>` avoids noise if theme toggles appear later.
+
+---
+
+## Behavioural / scenario questions
+
+### “A user reports the sidebar won’t open on mobile.”
+
+**Answer:** Verify **`showSidebarTrigger`** is true (not on `/`), confirm **`openSidebar`** wires to state toggling **`mobileSidebarOpen`**, and check z-index conflicts with other overlays.
+
+### “Should Designer store drive which tab is active in ModeToggle?”
+
+**Answer:** Prefer **URL as source of truth** for mode to avoid desync when opening links in new tabs or sharing URLs.
+
+---
+
+*Extend this file after each phase with new Q&A blocks keyed by task ID.*

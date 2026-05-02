@@ -1,7 +1,7 @@
 # Project system design evolution — Unified RAG Studio
 
 > Narrative and diagrams showing how the architecture deepens by phase.  
-> Last updated: Phase 3 · P3-2 (Zustand stores).
+> Last updated: Phase 3 · P3-3 (App layout & navigation).
 
 ---
 
@@ -115,9 +115,33 @@ flowchart TB
 
 **Characteristics:** UX continuity offline/between refreshes; explicit seam for server reconciliation once CRUD endpoints land.
 
-### P3-3 — App shell & navigation (pending)
+### P3-3 — App shell & navigation (this milestone)
 
-Global layout, routing polish, error boundaries—not reflected above yet.
+**Goal:** A consistent **app chrome** for every route: top navigation (mode switcher, project switcher, placeholders for templates/account), optional **project sidebar** on non-marketing routes, **React Query** at the root for upcoming API integration, and **404 / error** boundaries for resilient UX.
+
+```mermaid
+flowchart TB
+  subgraph Shell["Next.js App Router"]
+    RL["layout.tsx"]
+    PV["Providers + QueryClient"]
+    SH["StoreHydration"]
+    AS["AppShell"]
+    NB["Navbar"]
+    SB["Sidebar — projects"]
+    PG["page segments"]
+  end
+  RL --> PV --> SH --> AS
+  AS --> NB
+  AS --> SB
+  AS --> PG
+  subgraph Stores["Zustand persisted"]
+    PS[(Projects metadata)]
+  end
+  NB --> PS
+  SB --> PS
+```
+
+**Characteristics:** Sidebar hidden on `/` for a clean landing; Designer / Autopilot / Templates / Projects routes share chrome; collapse state persisted locally; server APIs remain Phase 4+.
 
 ### P3-4 — Landing refinements (pending)
 
