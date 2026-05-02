@@ -2072,3 +2072,71 @@ flowchart TB
 ```
 
 **Correction:** List/get template endpoints are **file-backed**, not DB-backed. Only **apply** writes through `DesignerService` to Postgres.
+
+---
+
+## Phase 4.5 · Guardrails (evolving)
+
+Enterprise safety and policy checks are introduced **around** the existing RAG path without replacing core services. This section grows with each P4.5 sub-phase.
+
+### P4.5-1 · Guardrails Core Infrastructure (completed)
+
+**Scope:** Backend-only foundation in `apps/api/app/core/guardrails/`: abstract `Guardrail`, `GuardrailManager` (ordered per-stage execution with `ALLOW` / `WARN` / `BLOCK` / `MODIFY`), `GuardrailOrchestrator` with typed payloads (`str` for input/output, `RetrievalGuardPayload` for retrieval). Reference stubs `AlwaysAllowGuardrail` and `BlockIfSubstringGuardrail` support tests; real detectors arrive in P4.5-2–4. Pydantic placeholders `GuardrailsConfigSchema` / `GuardrailStageSettingsSchema` prepare pipeline integration (P4.5-5). Structured log line `guardrail_check` on each evaluation.
+
+**Behaviour summary:**
+
+* Stages: `input`, `retrieval`, `output` (`GuardrailStage`).
+* `run_stage` stops on first `BLOCK`; `MODIFY` replaces the in-flight payload for subsequent guardrails in the same stage.
+* No HTTP routes yet; generation and designer APIs will call the orchestrator in P4.5-5.
+
+### Mermaid — RAG without guardrails (baseline before Phase 4.5)
+
+```mermaid
+flowchart LR
+  U[User query] --> API[FastAPI]
+  API --> RAG[RAG core services]
+  RAG --> R[Response]
+```
+
+### Mermaid — P4.5-1 logical layer (hook points only)
+
+```mermaid
+flowchart TB
+  subgraph hooks [Guardrail hook points — P4.5-1]
+    GI[check_input]
+    GR[check_retrieval]
+    GO[check_output]
+  end
+  subgraph core [Existing RAG core — unchanged]
+    ING[Ingestion]
+    CH[Chunking]
+    EMB[Embedding]
+    VS[Vector store]
+    RET[Retrieval]
+    GEN[Generation]
+  end
+  U[User] --> GI
+  GI --> ING
+  ING --> CH --> EMB --> VS
+  U --> RET
+  RET --> GR
+  GR --> GEN
+  GEN --> GO
+  GO --> OUT[Client response]
+```
+
+### Mermaid — GuardrailManager execution (single stage)
+
+```mermaid
+flowchart TD
+  P0[Initial payload] --> G1[Guardrail 1]
+  G1 -->|ALLOW/WARN| G2[Guardrail 2]
+  G1 -->|MODIFY| M1[Updated payload]
+  M1 --> G2
+  G1 -->|BLOCK| STOP[Stage failed — blocked_by]
+  G2 -->|...| OK[GuardrailPipelineResult]
+```
+
+### Next sub-phase in Phase 4.5
+
+P4.5-2 · Input Guardrails — PII, prompt-injection heuristics, toxicity (concrete `Guardrail` implementations registered on `INPUT`).

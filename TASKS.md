@@ -34,3 +34,15 @@
 | P4-3 · Cost Calculation API | `feature/p4-cost-api` | ✅ done |
 | P4-4 · Export API | `feature/p4-export-api` | ✅ done |
 | P4-5 · Templates API | `feature/p4-templates-api` | ✅ done |
+
+## Phase 4.5 — Guardrails
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P4.5-1 · Guardrails Core Infrastructure | `feature/p4-guardrails-infra` | ✅ done |
+| P4.5-2 · Input Guardrails | `feature/p4-guardrails-input` | ⬜ pending |
+| P4.5-3 · Output Guardrails | `feature/p4-guardrails-output` | ⬜ pending |
+| P4.5-4 · Retrieval Guardrails | `feature/p4-guardrails-retrieval` | ⬜ pending |
+| P4.5-5 · RAG Pipeline Integration | `feature/p4-guardrails-integration` | ⬜ pending |
+| P4.5-6 · Monitoring & Metrics | `feature/p4-guardrails-monitoring` | ⬜ pending |
+| P4.5-7 · Configuration & Testing | `feature/p4-guardrails-testing` | ⬜ pending |
