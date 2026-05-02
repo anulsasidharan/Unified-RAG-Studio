@@ -1,9 +1,10 @@
-"""Guardrails core infrastructure — P4.5-1 … P4.5-5.
+"""Guardrails core infrastructure — P4.5-1 … P4.5-7.
 
 Provides abstract :class:`Guardrail`, :class:`GuardrailManager` for ordered
 per-stage execution, and :class:`GuardrailOrchestrator` for input / retrieval /
 output entry points. Stage implementations live under ``guardrails.input``,
-``guardrails.retrieval``, and ``guardrails.output``.
+``guardrails.retrieval``, and ``guardrails.output``. Optional file-based operator
+policies are loaded in :func:`configure_manager.build_guardrail_manager`.
 """
 
 from .base import Guardrail

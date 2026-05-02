@@ -86,6 +86,13 @@ class Settings(BaseSettings):
     # When false, ``/metrics`` and ``/monitoring/guardrails`` return 404.
     prometheus_metrics_enabled: bool = True
 
+    # ── Guardrails operator policy files (P4.5-7) ───────────────
+    # JSON files: ``blocked_terms`` (string array), ``regex_patterns`` (Python regex).
+    # Empty string = use code defaults (self-test markers only until configured).
+    guardrails_toxicity_policy_path: str = ""
+    guardrails_content_filter_policy_path: str = ""
+    guardrails_bias_patterns_policy_path: str = ""
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"
