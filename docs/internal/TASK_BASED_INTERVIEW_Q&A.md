@@ -133,3 +133,67 @@
 ### How would you test the landing page in CI?
 
 **Answer:** Playwright `e2e/landing.spec.ts` (Phase 10) will: (1) verify the page loads at `/`, (2) assert the "Start Designing" CTA links to `/designer`, (3) assert "Launch Autopilot" links to `/autopilot`, and (4) check that no sidebar renders on `pathname === '/'`. Until Playwright is wired, `tsc --noEmit` and Next.js build serve as correctness gates.
+
+---
+
+## Phase 3 · P3-5 — Lib Utilities & Validators
+
+### Why create Zod validators separately from TypeScript types?
+
+**Answer:** TypeScript types are erased at compile time — they only verify static correctness. **Zod schemas** are runtime constructs that validate unknown data at system boundaries (form submissions, API responses, localStorage deserialization). Keeping them separate from types allows the type system and validation logic to evolve independently. The `z.infer<>` utility then derives TypeScript types from the Zod schema when needed, eliminating drift.
+
+### How does `ChunkingConfigSchema` enforce the overlap-less-than-size invariant?
+
+**Answer:** The schema adds a `.refine()` predicate after the base `z.object()` definition: `(data) => data.chunkOverlap < data.chunkSize`. Zod's `.refine()` runs post-field validation, receives the parsed object, and can produce a targeted error message on the `chunkOverlap` path. This cross-field constraint cannot be expressed in TypeScript's type system alone.
+
+### Why does `RetrievalConfigSchema` require `hybridSearch` only when strategy is `hybrid`?
+
+**Answer:** This is a **discriminated validation** — the field is contextually required. Using `.refine()` with a path on `hybridSearch`, the schema rejects configs where `strategy === 'hybrid'` but `hybridSearch` is absent. This enforces invariants that the TypeScript union types cannot express, keeping the backend from receiving an underspecified retrieval config.
+
+### How does `generateMermaidDiagram` avoid injecting user content into the diagram syntax?
+
+**Answer:** All user-supplied strings (model names, index names, source types) are passed through a `q()` sanitiser that strips `"`, `[`, and `]` characters before embedding them in node labels. Mermaid flowchart node labels that contain unescaped brackets or quotes break the diagram parser. The sanitiser is intentionally minimal — it strips the specific characters that Mermaid treats as syntax.
+
+### Why does the Mermaid generator use two sub-graphs (indexing path and query path)?
+
+**Answer:** RAG pipelines have two distinct flows: the **offline indexing path** (document → chunking → embedding → vector store) and the **online query path** (query → retrieval → optional reranking → generation → answer). Separating them into sub-graphs makes the architecture immediately legible and mirrors how engineers mentally model RAG systems. Using a single flat graph would create a confusing tangle of arrows.
+
+### What is the LCEL pattern in the Python code generator output?
+
+**Answer:** **LangChain Expression Language (LCEL)** composes runnables with the `|` pipe operator: `retriever | format_docs | prompt | llm | parser`. The generated code uses `RunnableParallel` to run context retrieval and the passthrough question in parallel, then feeds both into the prompt template. LCEL enables streaming, batching, and tracing out of the box without custom orchestration code.
+
+### How does the Python code generator handle different vector store backends?
+
+**Answer:** An internal `VECTORSTORE_IMPORTS` dictionary maps provider IDs (`qdrant`, `pinecone`, `chroma`, etc.) to provider-specific import strings and initialization code. The `buildVectorStore()` function uses a switch/case on `stages.vectorStore.provider` to emit the correct connection setup (e.g., `QdrantClient` + URL for Qdrant, `Pinecone()` + `pc.Index()` for Pinecone). Unrecognised providers emit a `# TODO` stub so the file is still syntactically valid.
+
+### Why does the YAML generator avoid a third-party serialisation library?
+
+**Answer:** Third-party YAML libraries (like `js-yaml`) would add a dependency and produce output we can't control (e.g., quoting strategy, key ordering). Since the pipeline config is a known, bounded shape, hand-building the YAML with helper functions (`yamlString`, `yamlBool`, `yamlArray`) gives us full control over formatting, comment placement, and indentation. It also removes a runtime dependency from the browser bundle.
+
+### How does `yamlString` decide when to quote a value?
+
+**Answer:** The helper tests for characters that YAML treats as special syntax (`:#[]{},|>&*!,`) and also checks for embedded newlines. If any are present, the value is wrapped in double quotes with internal double quotes escaped as `\"`. Plain scalar values (most model names and IDs) are emitted without quotes, producing cleaner YAML.
+
+### What does the Terraform generator produce for multi-cloud configurations?
+
+**Answer:** Multi-cloud falls back to **AWS** since Terraform providers are cloud-specific — there is no single "multi-cloud" provider. The raw cloud value `"multi-cloud"` is preserved in the header comment so the engineer knows which logical target it represents, but the generated HCL uses the AWS provider block, ECS, and Secrets Manager. Engineers building true multi-cloud deployments would extend the output to combine multiple provider blocks.
+
+### How are the generator tests structured to balance specificity with maintainability?
+
+**Answer:** Tests use **two complementary techniques**: (1) targeted string assertions (`expect(result).toContain(...)`) for stable structural properties — import paths, constant names, YAML keys — and (2) `toMatchSnapshot()` for the complete output. Targeted assertions catch regressions in specific features without over-constraining the full output. Snapshots catch unexpected global changes. If a snapshot fails after an intentional change, running `vitest --update-snapshots` regenerates it.
+
+### Why are test fixtures (`fixtures.ts`) shared across all generator tests?
+
+**Answer:** A `minimalConfig` and a `fullConfig` fixture defined once in `__tests__/fixtures.ts` eliminate duplication and ensure every generator is tested against the same known inputs. If the `PipelineConfiguration` shape changes, only the fixtures need updating — not every test file. The fixtures also double as documentation of the valid config surface area.
+
+### How does snapshot testing complement unit assertions for the generators?
+
+**Answer:** Unit assertions verify **individual properties** (e.g., "the output contains the model name"), but snapshots verify **the entire serialised output** at once. This is particularly valuable for YAML and Terraform where whitespace, ordering, and overall structure matter. The first run writes the snapshot to disk; subsequent runs diff against it. Intentional changes are accepted with `--update-snapshots`; accidental regressions fail CI.
+
+### Why are generator functions pure (no side effects)?
+
+**Answer:** Pure functions — those that take inputs and return a string without reading files, environment variables, or global state — are trivially testable (no mocking needed), cacheable, and safe to call from both server components and client-side export buttons. The generators are called from the frontend code export UI and from the backend export API; purity lets them work identically in both environments.
+
+### Why install Vitest in P3-5 rather than waiting for P10-3 (Frontend Unit Tests)?
+
+**Answer:** P3-5 explicitly includes "unit tests for all generators". Running those tests requires a test runner. Installing **Vitest** now is a one-line devDependency addition that does not conflict with P10-3 (which adds React Testing Library and full component coverage on top of the same Vitest runner). Waiting would leave the generator tests in the repo as untestable stubs, which defeats the purpose of writing them.
