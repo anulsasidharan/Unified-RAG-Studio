@@ -132,6 +132,10 @@ yarn-error.log*
 apps/web/playwright-report/
 apps/web/test-results/
 
+# Vitest snapshot files are committed (they are the expected output)
+# Vitest coverage output is ignored
+apps/web/coverage/
+
 # ============================================================
 # Build artifacts
 # ============================================================

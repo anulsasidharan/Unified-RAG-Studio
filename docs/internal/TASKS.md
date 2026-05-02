@@ -462,18 +462,18 @@ Create `apps/web/src/app/page.tsx` and landing components in `apps/web/src/compo
 
 ---
 
-### P3-5 · Lib Utilities & Validators
+### ✅ P3-5 · Lib Utilities & Validators
 **Branch:** `feature/p3-lib-utilities`
 
 > **Depends on:** P1-1, P1-2 merged
 
-- [ ] `apps/web/src/lib/validators.ts` — Zod schemas matching TypeScript types (PipelineConfiguration, BuildRequirements)
-- [ ] `apps/web/src/lib/constants.ts` — stage route map, default configs, magic numbers
-- [ ] `apps/web/src/lib/generators/mermaidGenerator.ts` — `generateMermaidDiagram(stages, cloudProvider) -> string`
-- [ ] `apps/web/src/lib/generators/pythonCodeGenerator.ts` — `generatePythonCode(config) -> string` (LangChain LCEL)
-- [ ] `apps/web/src/lib/generators/yamlGenerator.ts` — `generateYAML(config) -> string`
-- [ ] `apps/web/src/lib/generators/terraformGenerator.ts` — `generateTerraform(config, cloudProvider) -> string`
-- [ ] Unit tests for all generators with snapshot testing
+- [x] `apps/web/src/lib/validators.ts` — Zod schemas matching TypeScript types (PipelineConfiguration, BuildRequirements)
+- [x] `apps/web/src/lib/constants.ts` — stage route map, default configs, magic numbers
+- [x] `apps/web/src/lib/generators/mermaidGenerator.ts` — `generateMermaidDiagram(stages, cloudProvider) -> string`
+- [x] `apps/web/src/lib/generators/pythonCodeGenerator.ts` — `generatePythonCode(config) -> string` (LangChain LCEL)
+- [x] `apps/web/src/lib/generators/yamlGenerator.ts` — `generateYAML(config) -> string`
+- [x] `apps/web/src/lib/generators/terraformGenerator.ts` — `generateTerraform(config, cloudProvider) -> string`
+- [x] Unit tests for all generators with snapshot testing (113 tests, 7 snapshots — Vitest)
 
 ---
 

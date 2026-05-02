@@ -1,7 +1,7 @@
 # Project system design evolution — Unified RAG Studio
 
 > Narrative and diagrams showing how the architecture deepens by phase.  
-> Last updated: Phase 3 · P3-3 (App layout & navigation).
+> Last updated: Phase 3 · P3-5 (Lib Utilities & Validators).
 
 ---
 
@@ -186,9 +186,56 @@ flowchart TB
 
 **Characteristics:** Sidebar is suppressed on `/` (AppShell `isHome` check from P3-3). All sections are RSC — no `'use client'` required. Animated orbs use native CSS (`@keyframes`), not framer-motion. Routing from CTA buttons goes to `/designer` and `/autopilot`.
 
-### P3-5 — Utilities & validators (pending)
+### P3-5 — Utilities & validators (this milestone)
 
-Shared validation/helpers bridging UI inputs to pipeline contracts.
+**Goal:** Zod validation schemas for all pipeline types, four code/diagram generators (Mermaid, Python LCEL, YAML, Terraform), and a Vitest unit-test suite covering all generator outputs.
+
+```mermaid
+flowchart TB
+  subgraph Lib["apps/web/src/lib/"]
+    VAL["validators.ts\nZod schemas for\nPipelineConfiguration\nBuildRequirements"]
+    CONST["constants.ts\nstage route map\ndefault values"]
+  end
+
+  subgraph Gen["apps/web/src/lib/generators/"]
+    MG["mermaidGenerator.ts\ngenerateMermaidDiagram()\ngeneratePipelineSummary()"]
+    PG["pythonCodeGenerator.ts\ngeneratePythonCode()\n— LangChain LCEL"]
+    YG["yamlGenerator.ts\ngenerateYAML()"]
+    TG["terraformGenerator.ts\ngenerateTerraform()\n— AWS / GCP / Azure"]
+  end
+
+  subgraph Tests["__tests__/  (Vitest)"]
+    FX["fixtures.ts\nminimalConfig\nfullConfig\nazureConfig"]
+    MT["mermaidGenerator.test.ts\n17 assertions + snapshot"]
+    PT["pythonCodeGenerator.test.ts\n18 assertions + snapshot"]
+    YT["yamlGenerator.test.ts\n19 assertions + 2 snapshots"]
+    TT["terraformGenerator.test.ts\n21 assertions + 2 snapshots"]
+    VT["validators.test.ts\n38 assertions"]
+  end
+
+  subgraph Types["apps/web/src/types/"]
+    PC["PipelineConfiguration"]
+    BR["BuildRequirements"]
+  end
+
+  Types --> VAL
+  Types --> MG & PG & YG & TG
+  FX --> MT & PT & YT & TT & VT
+  VAL --> VT
+```
+
+**Key design decisions:**
+
+| Module | Key design decision |
+|---|---|
+| `validators.ts` | Zod schemas mirror TS types; cross-field refinements (overlap < chunkSize, hybrid requires hybridSearch config) |
+| `mermaidGenerator.ts` | Two sub-graphs (indexing vs query path); node labels sanitised to strip Mermaid syntax characters |
+| `pythonCodeGenerator.ts` | Provider-to-import maps; LCEL `RunnableParallel` pattern; all optional stages (reranking, memory, multi-query) wired conditionally |
+| `yamlGenerator.ts` | No third-party serialiser; hand-built helpers for quoting, bool, arrays; block scalars for system prompts |
+| `terraformGenerator.ts` | Three concrete cloud targets (AWS/GCP/Azure); multi-cloud falls back to AWS; Pinecone handled as managed service with secrets-manager wiring |
+| Tests | Targeted `.toContain()` assertions + `toMatchSnapshot()` per generator; shared fixtures eliminate duplication |
+
+**Characteristics:** All generators are pure functions (no I/O, no global state), callable from both the browser export UI and the backend export API. The Vitest runner is installed now (`devDependencies`) so P10-3 adds React Testing Library on top rather than replacing this setup. 113 tests pass with 7 snapshots written on first run.
 
 ---
 

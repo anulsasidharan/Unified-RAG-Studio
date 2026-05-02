@@ -1,0 +1,56 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateMermaidDiagram > matches snapshot for full config 1`] = `
+"flowchart LR
+  subgraph IDX["GCP — Indexing Path"]
+    direction LR
+    SRC[("📄 Source\\ngcs")]
+    ING["⬆️ Ingest & Preprocess"]
+    SRC --> ING
+    CH["✂️ Chunking\\nsemantic\\n1024 tok / 128 overlap"]
+    EMB["🎯 Embed\\ntext-embedding-3-large\\n3072d"]
+    VS[("🗃️ Vector Store\\npinecone\\nfull-pipeline-index")]
+    ING --> CH --> EMB --> VS
+  end
+  subgraph QRY["Query Path"]
+    direction LR
+    QUERY[/"🔍 User Query"/]
+    MEM[("💾 Memory\\nconversation-buffer")]
+    QUERY --> MEM
+    RET["🔎 Retrieve\\nhybrid · top-10"]
+    RNK["⚡ Rerank\\ncohere-rerank-v3 · top-5"]
+    RET --> RNK
+    GEN["🤖 Generate\\nclaude-sonnet-4-6\\nt=0"]
+    ANSWER[/"💬 Answer"/]
+    MEM --> RET
+    QUERY --> RET
+    RNK --> GEN --> ANSWER
+    ROUTER{"🔀 Route"}
+    QUERY --> ROUTER --> GEN
+    EVAL["📊 Evaluate"]
+    ANSWER --> EVAL
+  end
+  VS --> RET"
+`;
+
+exports[`generateMermaidDiagram > matches snapshot for minimal config 1`] = `
+"flowchart LR
+  subgraph IDX["AWS — Indexing Path"]
+    direction LR
+    ING[("📄 Documents")]
+    CH["✂️ Chunking\\nrecursive-character\\n512 tok / 50 overlap"]
+    EMB["🎯 Embed\\ntext-embedding-3-small\\n1536d"]
+    VS[("🗃️ Vector Store\\nqdrant\\nrag-documents")]
+    ING --> CH --> EMB --> VS
+  end
+  subgraph QRY["Query Path"]
+    direction LR
+    QUERY[/"🔍 User Query"/]
+    RET["🔎 Retrieve\\nsimilarity · top-5"]
+    GEN["🤖 Generate\\ngpt-4o-mini\\nt=0.1"]
+    ANSWER[/"💬 Answer"/]
+    QUERY --> RET
+    RET --> GEN --> ANSWER
+  end
+  VS --> RET"
+`;

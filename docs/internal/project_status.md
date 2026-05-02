@@ -28,7 +28,7 @@
 | 20 | Phase 3 | P3-2 · Zustand State Stores | `feature/p3-zustand-stores` | Create persistent frontend stores for designer, autopilot, and projects. | ✅ done |
 | 21 | Phase 3 | P3-3 · App Layout & Navigation | `feature/p3-app-layout` | Build global app layout, navbar/sidebar, and error/not-found pages. | ✅ done |
 | 22 | Phase 3 | P3-4 · Landing Page | `feature/p3-landing-page` | Implement marketing/entry landing experience and key sections. | ✅ done |
-| 23 | Phase 3 | P3-5 · Lib Utilities & Validators | `feature/p3-lib-utilities` | Build validators, constants, and code/diagram generation utilities. | ⬜ pending |
+| 23 | Phase 3 | P3-5 · Lib Utilities & Validators | `feature/p3-lib-utilities` | Build validators, constants, and code/diagram generation utilities. | ✅ done |
 |  | `Phase 4` | `Deliver backend APIs required to support all Designer mode workflows.` |  |  |  |
 | 24 | Phase 4 | P4-1 · Projects API | `feature/p4-projects-api` | Implement backend CRUD APIs/services for project management. | ⬜ pending |
 | 25 | Phase 4 | P4-2 · Designer Config API | `feature/p4-designer-config-api` | Implement save/load/update/delete APIs for pipeline configurations. | ⬜ pending |
