@@ -1,6 +1,7 @@
 """Reference and test guardrails — P4.5-1.
 
-Input/output/retrieval policy implementations: see ``guardrails.input`` (P4.5-2) and later phases.
+Input/output/retrieval policy implementations: ``guardrails.input`` (P4.5-2),
+``guardrails.output`` (P4.5-3).
 """
 
 from __future__ import annotations

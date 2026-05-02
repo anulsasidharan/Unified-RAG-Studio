@@ -2157,6 +2157,49 @@ flowchart LR
   TOX --> OK[Allowed / sanitized query to RAG]
 ```
 
+### P4.5-3 · Output Guardrails (completed)
+
+Concrete OUTPUT implementations live in `apps/api/app/core/guardrails/output/`.
+
+* **Hallucination heuristic** — `HallucinationHeuristicGuardrail` compares substantive answer tokens to `GuardrailContext.extra["reference_texts"]` with word-boundary matching; low overlap yields **WARN** (skipped when no references).
+* **Factuality** — `FactualityCheckGuardrail` flags **WARN** when date-like strings or large integers in the answer do not appear in reference text (complements overlap).
+* **Citation verification** — `CitationVerificationGuardrail` parses `[n]` citations; invalid indices **BLOCK**; citations with zero sources **WARN**.
+
+Registration: `register_default_output_guardrails(manager)` — order **hallucination** → **factuality** → **citation**. Schema: `OutputStageGuardrailsSchema` under `GuardrailsConfigSchema.output`.
+
+### Mermaid — OUTPUT stage chain (P4.5-3)
+
+```mermaid
+flowchart LR
+  GEN[LLM answer text] --> HH[Hallucination heuristic WARN]
+  HH --> FC[Factuality literals WARN]
+  FC --> CV[Citation verification BLOCK or ALLOW]
+  CV --> OUT[Sanitized / gated response to client]
+  RT[(reference_texts + citation_source_count in context.extra)] -.-> HH
+  RT -.-> FC
+  RT -.-> CV
+```
+
+### Mermaid — Phase 4.5 guardrail coverage (after P4.5-3)
+
+```mermaid
+flowchart TB
+  subgraph IN [INPUT — P4.5-2]
+    PII[PII redaction]
+    INJ[Injection block]
+    TOX[Toxicity block]
+  end
+  subgraph OUT [OUTPUT — P4.5-3]
+    HAL[Hallucination WARN]
+    FAC[Factuality WARN]
+    CIT[Citation BLOCK]
+  end
+  U[User query] --> IN
+  IN --> RAG[RAG core]
+  RAG --> OUT
+  OUT --> R[Response]
+```
+
 ### Next sub-phase in Phase 4.5
 
-P4.5-3 · Output Guardrails — hallucination heuristics, factuality, citation checks (`OUTPUT` stage).
+P4.5-4 · Retrieval Guardrails — content filtering, source validation, bias detection (`RETRIEVAL` stage).

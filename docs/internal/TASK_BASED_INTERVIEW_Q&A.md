@@ -3618,7 +3618,7 @@ Case-insensitive **regex** patterns for phrases such as “ignore previous instr
 
 ### What Pydantic changes apply to guardrails config?
 
-`GuardrailsConfigSchema.input` is now `InputStageGuardrailsSchema`, which extends `enabled` with `pii_redaction_enabled`, `prompt_injection_block_enabled`, and `toxicity_block_enabled` (all default `True`). Retrieval/output stages remain `GuardrailStageSettingsSchema`.
+`GuardrailsConfigSchema.input` is now `InputStageGuardrailsSchema`, which extends `enabled` with `pii_redaction_enabled`, `prompt_injection_block_enabled`, and `toxicity_block_enabled` (all default `True`). The retrieval stage still uses `GuardrailStageSettingsSchema`; the output stage gained per-check flags in **P4.5-3** (`OutputStageGuardrailsSchema`).
 
 ### Does `register_default_input_guardrails` read the Pydantic schema?
 
@@ -3635,6 +3635,58 @@ No — same as P4.5-1; API integration is P4.5-5.
 ### What tests exist?
 
 `apps/api/tests/test_core/test_input_guardrails.py` covers email/SSN/card redaction, injection block, toxicity custom term, registration order, orchestration after PII, and schema defaults.
+
+---
+
+## Phase 4.5 · P4.5-3 Output Guardrails
+
+### What ships in P4.5-3?
+
+Three concrete `Guardrail` classes for `GuardrailStage.OUTPUT`: `HallucinationHeuristicGuardrail`, `FactualityCheckGuardrail`, and `CitationVerificationGuardrail`, plus `register_default_output_guardrails()` and `clear_output_guardrails()`.
+
+### Where is the code?
+
+`apps/api/app/core/guardrails/output/` (`hallucination.py`, `factuality.py`, `citation.py`, `context_refs.py`, `__init__.py`). Re-exported from `app.core.guardrails`.
+
+### In what order do output guardrails run?
+
+Default registration: **hallucination heuristic** → **factuality** → **citation verification**. Citation runs last so invalid `[n]` citations can **BLOCK** after softer **WARN** checks.
+
+### Why does output grounding use `GuardrailContext.extra`?
+
+`GuardrailOrchestrator.check_output` still takes a plain `text: str`; retrieval chunks are passed out-of-band as `GuardrailContext.extra["reference_texts"]` until P4.5-5 attaches them from the RAG pipeline. Optional `extra["citation_source_count"]` overrides how many numbered sources exist for citation validation.
+
+### What does `HallucinationHeuristicGuardrail` do?
+
+When `reference_texts` are present, extracts substantive alphanumeric tokens from the answer, filters a small stop-word set, requires at least eight tokens, and compares **word-boundary** matches against joined references. Below a configurable grounding ratio threshold it returns **WARN** with metadata (`grounding_ratio`, token counts). With no references it **ALLOW**s and records `skipped: no_reference_texts`.
+
+### Why WARN instead of BLOCK for hallucination heuristics?
+
+Lexical overlap is a **weak** signal; false positives would harm UX. Production systems often log WARNs, show disclaimers, or trigger human review. BLOCK is reserved for clear policy violations (here: invalid citations).
+
+### What does `FactualityCheckGuardrail` check?
+
+**Dates** (ISO-like and slash forms) and **integers ≥ 100** (configurable) that appear in the answer must appear as substrings in the joined reference text; otherwise **WARN** with `missing_in_references`. Small integers are ignored to reduce noise from common prose. Decimals are checked if absent from references.
+
+### How does `CitationVerificationGuardrail` work?
+
+Regex finds bracket citations `[1]`, `[2]`, … Valid range is `1` through `citation_source_count` if set in `extra`, else `len(reference_texts)`. Out-of-range indices → **BLOCK**. Citations present with zero allowed sources → **WARN**. No citations → **ALLOW**.
+
+### What Pydantic changes apply to guardrails config?
+
+`GuardrailsConfigSchema.output` is now `OutputStageGuardrailsSchema`, adding `hallucination_heuristic_enabled`, `factuality_check_enabled`, and `citation_verification_enabled` (all default `True`) in addition to `enabled`.
+
+### Does registration read the Pydantic schema automatically?
+
+No — same as input; P4.5-5 will map flags to `register_default_output_guardrails(...)` kwargs.
+
+### What tests cover P4.5-3?
+
+`apps/api/tests/test_core/test_output_guardrails.py` exercises skip paths, WARN paths, BLOCK on bad citations, registration order, orchestrator chain with `blocked_by`, and schema defaults.
+
+### How would you improve these checks in production?
+
+Use NLI or LLM judges for claim verification, structured citation formats (doc IDs), cross-encoder scores against chunks, and calibrated thresholds from offline eval — while keeping heuristics as fast first-line filters.
 
 ---
 
