@@ -3742,4 +3742,49 @@ Core retrieval returns ranked `Document`s; guardrails are a **policy layer** on 
 
 ---
 
+## Phase 4.5 · P4.5-5 RAG Pipeline Integration
+
+### What problem does P4.5-5 solve?
+
+Guardrails were implemented per stage (P4.5-2 … P4.5-4) but not **wired** into a single request path. P4.5-5 connects INPUT → RETRIEVAL (post-retrieval payload) → `GenerationService` → OUTPUT, applies saved **per-stage toggles** from configuration, and exposes **HTTP preview** endpoints for Designer and shared utilities callers.
+
+### Where is the integration code?
+
+- **Policy → manager** — `apps/api/app/core/guardrails/configure_manager.py` (`build_guardrail_manager`).
+- **Orchestrated run** — `apps/api/app/core/rag/guarded_runner.py` (`run_guarded_rag_query`).
+- **API** — `POST /api/designer/rag-preview` and `POST /api/utilities/rag-preview` (same body), implemented via `app/services/rag_preview_service.py`.
+
+### How does `PipelineConfigurationSchema` carry guardrails?
+
+Optional field `guardrails: GuardrailsConfigSchema | None` (JSON camelCase `guardrails`). When omitted, **defaults** match `GuardrailsConfigSchema()` (all sub-stage flags on). Resolved in the runner as `policy = explicit_override or pipeline.guardrails`; `build_guardrail_manager(None)` still applies full defaults.
+
+### What is the execution order?
+
+1. **INPUT** — `GuardrailOrchestrator.check_input(query)`; may MODIFY (e.g. PII redaction) or BLOCK.
+2. **RETRIEVAL** — `check_retrieval(RetrievalGuardPayload(query_after_input, documents))`; may MODIFY (drop chunks) or BLOCK.
+3. **Generation** — `await GenerationService.generate(...)` with the post-guard query and documents.
+4. **OUTPUT** — `check_output(answer, context)` with `GuardrailContext.extra` populated with `reference_texts` and `citation_source_count` from the final chunk list. If OUTPUT **BLOCK**s, the API **does not** return model text (unsafe answer omitted).
+
+### Why pass client-supplied `context_documents` instead of calling `RetrievalService` in the preview?
+
+Phase 4 Designer does not yet bind every deployment to a live vector index in-process. The preview contract matches **“here is what retrieval returned”** so the same guardrail chain applies when Autopilot or a worker later wires real retrieval. Vector lookup can be swapped in without changing guard semantics.
+
+### How do stage `enabled: false` and per-check flags work?
+
+`build_guardrail_manager` clears each stage and registers nothing when that stage’s `enabled` is false. When enabled, individual checks map to `register_default_*_guardrails(..., pii=..., hallucination=..., content_filter=...)` exactly as documented in P4.5-2 … P4.5-4.
+
+### What does the preview response include?
+
+`RagPreviewResponse`: `allowed`, optional `blocked_stage` / `blocked_by`, `query_used`, optional `answer` / `model` / `provider`, three lists of `GuardrailCheckSummary` (input / retrieval / output), and `had_warnings`.
+
+### What tests cover P4.5-5?
+
+`apps/api/tests/test_core/test_guarded_rag_integration.py` — factory respects disabled INPUT stage, injection **BLOCK** on `run_guarded_rag_query`, happy path with mocked LLM, utilities **rag-preview** route integration, orchestrator smoke with configured manager.
+
+### How would you extend this for production RAG?
+
+Add an internal path that obtains `context_documents` from `RetrievalService` + vector store using `pipeline.stages`, reuse the same `run_guarded_rag_query`, stream tokens only after OUTPUT passes (or buffer then validate), and emit metrics (P4.5-6).
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

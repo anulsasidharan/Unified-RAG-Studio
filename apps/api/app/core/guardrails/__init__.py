@@ -1,4 +1,4 @@
-"""Guardrails core infrastructure — P4.5-1 … P4.5-4.
+"""Guardrails core infrastructure — P4.5-1 … P4.5-5.
 
 Provides abstract :class:`Guardrail`, :class:`GuardrailManager` for ordered
 per-stage execution, and :class:`GuardrailOrchestrator` for input / retrieval /
@@ -7,6 +7,7 @@ output entry points. Stage implementations live under ``guardrails.input``,
 """
 
 from .base import Guardrail
+from .configure_manager import build_guardrail_manager
 from .input import (
     PiiRedactionGuardrail,
     PromptInjectionGuardrail,
@@ -40,6 +41,7 @@ from .types import (
 )
 
 __all__ = [
+    "build_guardrail_manager",
     "Guardrail",
     "GuardrailAction",
     "GuardrailContext",

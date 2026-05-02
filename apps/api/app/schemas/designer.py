@@ -11,8 +11,9 @@ These schemas handle the request/response shapes for:
 """
 
 import uuid
-from typing import Literal
+from typing import Any, Literal
 
+from langchain_core.documents import Document
 from pydantic import Field
 
 from app.schemas.pipeline import (
@@ -134,3 +135,46 @@ class CostRequest(RAGBaseModel):
 # CostResponse is just CostEstimateSchema — imported and re-exported for
 # route type annotations without introducing a thin wrapper.
 CostResponse = CostEstimateSchema
+
+
+# ─── RAG preview (P4.5-5) ────────────────────────────────────────────────────
+
+
+class ContextDocumentItem(RAGBaseModel):
+    """One retrieved chunk supplied by the client for an in-process guarded RAG call."""
+
+    page_content: str = ""
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+    def to_document(self) -> Document:
+        return Document(page_content=self.page_content, metadata=dict(self.metadata))
+
+
+class RagPreviewRequest(RAGBaseModel):
+    """Body for POST /api/designer/rag-preview and POST /api/utilities/rag-preview."""
+
+    query: str = Field(min_length=1)
+    config: PipelineConfigurationSchema
+    context_documents: list[ContextDocumentItem] = Field(default_factory=list)
+    conversation: list[tuple[str, str]] | None = None
+
+
+class GuardrailCheckSummary(RAGBaseModel):
+    guardrail_name: str
+    stage: str
+    action: str
+    message: str | None = None
+
+
+class RagPreviewResponse(RAGBaseModel):
+    allowed: bool
+    blocked_stage: Literal["input", "retrieval", "output"] | None = None
+    blocked_by: str | None = None
+    query_used: str
+    answer: str | None = None
+    model: str | None = None
+    provider: str | None = None
+    input_checks: list[GuardrailCheckSummary]
+    retrieval_checks: list[GuardrailCheckSummary]
+    output_checks: list[GuardrailCheckSummary]
+    had_warnings: bool = False
