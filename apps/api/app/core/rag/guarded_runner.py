@@ -7,8 +7,13 @@ from dataclasses import dataclass
 
 from langchain_core.documents import Document
 
-from app.core.generation import GenerationResult, GenerationService, generation_runtime_from_pipeline
+from app.core.generation import (
+    GenerationResult,
+    GenerationService,
+    generation_runtime_from_pipeline,
+)
 from app.core.guardrails.configure_manager import build_guardrail_manager
+from app.core.guardrails.metrics import record_guarded_rag_outcome
 from app.core.guardrails.orchestrator import GuardrailOrchestrator, RetrievalGuardPayload
 from app.core.guardrails.types import GuardrailContext, GuardrailPipelineResult, GuardrailStage
 from app.core.vectorstore.strategies import ScoredDoc
@@ -88,6 +93,7 @@ async def run_guarded_rag_query(
 
     input_res = orch.check_input(query, context=ctx_base)
     if not input_res.allowed:
+        record_guarded_rag_outcome("blocked_input")
         return GuardedRAGOutcome(
             allowed=False,
             blocked_stage=GuardrailStage.INPUT,
@@ -104,6 +110,7 @@ async def run_guarded_rag_query(
     payload = RetrievalGuardPayload.from_lists(q_after, norm_docs)
     retr_res = orch.check_retrieval(payload, context=ctx_base)
     if not retr_res.allowed:
+        record_guarded_rag_outcome("blocked_retrieval")
         return GuardedRAGOutcome(
             allowed=False,
             blocked_stage=GuardrailStage.RETRIEVAL,
@@ -138,6 +145,7 @@ async def run_guarded_rag_query(
     )
     out_res = orch.check_output(gen_out.text, context=out_ctx)
     if not out_res.allowed:
+        record_guarded_rag_outcome("blocked_output")
         return GuardedRAGOutcome(
             allowed=False,
             blocked_stage=GuardrailStage.OUTPUT,
@@ -158,6 +166,7 @@ async def run_guarded_rag_query(
         finish_reason=gen_out.finish_reason,
         usage=gen_out.usage,
     )
+    record_guarded_rag_outcome("success")
     return GuardedRAGOutcome(
         allowed=True,
         blocked_stage=None,

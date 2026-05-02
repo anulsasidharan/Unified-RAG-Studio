@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.config import get_settings
 from app.metadata import API_SEMVER
 
@@ -102,10 +103,12 @@ def create_app() -> FastAPI:
     from app.routers.designer import router as designer_router
     from app.routers.health import router as health_router
     from app.routers.jobs import router as jobs_router
+    from app.routers.monitoring import router as monitoring_router
     from app.routers.projects import router as projects_router
     from app.routers.templates import router as templates_router
     from app.routers.utilities import router as utilities_router
 
+    app.include_router(monitoring_router)
     app.include_router(health_router)
     app.include_router(utilities_router)
     app.include_router(jobs_router)

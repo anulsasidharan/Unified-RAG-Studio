@@ -2227,9 +2227,9 @@ flowchart TB
   OUT --> R[Response]
 ```
 
-### Next sub-phase in Phase 4.5
+### Next sub-phase in Phase 4.5 (historical pointer)
 
-P4.5-6 · Monitoring & Metrics — guardrail metrics, logging, and safety dashboard endpoints.
+P4.5-6 · Monitoring & Metrics — **done** (see append **P4.5-6 · Monitoring & Metrics**). Next: **P4.5-7 · Configuration & Testing**.
 
 ---
 
@@ -2302,3 +2302,61 @@ flowchart TB
 | Shared preview service | `app/services/rag_preview_service.py` |
 | Routes | `app/routers/designer.py`, `app/routers/utilities.py` |
 | Frontend types | `apps/web/src/types/pipeline.ts` (`GuardrailsConfig`) |
+
+---
+
+## Phase 4.5 — P4.5-6 · Monitoring & Metrics (append)
+
+**Intent:** Make guardrail behavior **measurable** for SRE and product analytics: every check and stage run emits **Prometheus** counters/histograms; full guarded RAG runs emit a **coarse outcome** time series; operators scrape **`/metrics`** or call **`/monitoring/guardrails`** for a JSON snapshot.
+
+### Components
+
+| Piece | Role |
+|-------|------|
+| `app/core/guardrails/metrics.py` | Defines `rag_guardrail_*` instruments and `collect_guardrail_metric_samples()`. |
+| `GuardrailManager.run_stage` | Records per-check + per-stage-result samples after each `check()` and on stage exit. |
+| `run_guarded_rag_query` | Records `success` / `blocked_*` pipeline outcomes. |
+| `app/routers/monitoring.py` | `GET /metrics` (Prometheus text), `GET /monitoring/guardrails` (JSON). |
+| `Settings.prometheus_metrics_enabled` | When `false`, both routes return **404**. |
+
+### Mermaid — metrics flow (P4.5-6)
+
+```mermaid
+flowchart LR
+  subgraph GR [Guardrail execution]
+    M[GuardrailManager.run_stage]
+    R[run_guarded_rag_query]
+  end
+  subgraph OBS [Observability]
+    P[Prometheus counters / histograms]
+    S[GET /metrics scrape]
+    J[GET /monitoring/guardrails JSON]
+  end
+  M --> P
+  R --> P
+  P --> S
+  P --> J
+```
+
+### Mermaid — guarded RAG with telemetry (conceptual)
+
+```mermaid
+sequenceDiagram
+  participant C as Client
+  participant API as FastAPI
+  participant GR as Guardrails + Manager
+  participant M as Prometheus registry
+  C->>API: RAG preview / internal call
+  API->>GR: run stages + optional generate
+  GR->>M: increment checks, stage_results, rag_runs
+  API-->>C: allow/block + payload
+  Note over M: Scraper reads GET /metrics
+```
+
+### Evolution note
+
+Phase 4.5 now has **policy** (P4.5-2 … P4.5-4), **integration** (P4.5-5), and **telemetry** (P4.5-6). Phase 11 can unify these series with HTTP and infrastructure metrics in Grafana without changing guardrail semantics.
+
+### Next sub-phase in Phase 4.5
+
+P4.5-7 · Configuration & Testing — config files, comprehensive tests, and documentation pass.

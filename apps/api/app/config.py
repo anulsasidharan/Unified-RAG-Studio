@@ -82,6 +82,10 @@ class Settings(BaseSettings):
     # ── Templates catalog (P4-5) ──────────────────────────────
     templates_catalog_path: str = ""
 
+    # ── Prometheus / guardrail metrics (P4.5-6) ───────────────
+    # When false, ``/metrics`` and ``/monitoring/guardrails`` return 404.
+    prometheus_metrics_enabled: bool = True
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"
