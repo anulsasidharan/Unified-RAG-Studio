@@ -3787,4 +3787,59 @@ Add an internal path that obtains `context_documents` from `RetrievalService` + 
 
 ---
 
+## Phase 4.5 · P4.5-6 Monitoring & Metrics
+
+### What does P4.5-6 deliver?
+
+**Prometheus-style observability** for guardrails: per-check counters and latency histograms, per-stage allow/block totals, end-to-end guarded RAG outcome counts, a **`GET /metrics`** scrape endpoint (OpenMetrics text), a **`GET /monitoring/guardrails`** JSON snapshot for quick dashboards, and a **`prometheus_metrics_enabled`** setting to disable those routes when needed. Structured logs from P4.5-1 (`guardrail_check` events) remain the narrative complement to numeric metrics.
+
+### Which metrics exist and what are their labels?
+
+| Metric | Type | Labels | Meaning |
+|--------|------|--------|---------|
+| `rag_guardrail_checks_total` | Counter | `stage`, `guardrail`, `action` | One increment per `Guardrail.check()` completion (`allow`, `warn`, `block`, `modify`, …). |
+| `rag_guardrail_stage_results_total` | Counter | `stage`, `outcome` | One increment per `run_stage` completion: `allowed` or `blocked`. |
+| `rag_guardrail_check_duration_seconds` | Histogram | `stage`, `guardrail` | Wall time inside each `check()` call (buckets tuned for sub-second guards). |
+| `rag_guardrail_rag_runs_total` | Counter | `outcome` | One increment per `run_guarded_rag_query` terminal path: `success`, `blocked_input`, `blocked_retrieval`, `blocked_output`. |
+
+### Where is the instrumentation wired?
+
+- **Per check + stage** — `GuardrailManager.run_stage` in `apps/api/app/core/guardrails/manager.py` records check metrics after each result and stage outcome on exit (blocked or full pass).
+- **Pipeline** — `run_guarded_rag_query` in `apps/api/app/core/rag/guarded_runner.py` records the RAG-level outcome on every return path.
+- **Definitions** — `apps/api/app/core/guardrails/metrics.py`.
+
+### Why both stage-level and RAG-level counters?
+
+Stage metrics show **which layer** fires (input vs retrieval vs output) and **which guard** dominated (`action`, `guardrail` label). RAG-level outcomes answer product questions like “what fraction of preview requests were blocked before generation?” without joining every per-check series.
+
+### How do you scrape Prometheus in Kubernetes?
+
+Add a `ServiceMonitor` (Prometheus Operator) or annotate the API service for scraping, target **`/metrics`** on the API port, and set `PROMETHEUS_METRICS_ENABLED=true` (default). Restrict network access to `/metrics` if the endpoint should not be public.
+
+### When would you set `prometheus_metrics_enabled` to false?
+
+Edge deployments where the scrape surface must be absent (404 on `/metrics` and `/monitoring/guardrails`), or when a sidecar exports metrics instead. Tests can override via `PROMETHEUS_METRICS_ENABLED=false` and `get_settings.cache_clear()`.
+
+### What does `GET /monitoring/guardrails` return?
+
+A JSON object `{ "metrics": [ { "name", "labels", "value" }, ... ] }` listing samples whose names start with `rag_guardrail`, derived from the process registry — useful for a minimal admin UI before Grafana is available.
+
+### How are label values sanitized?
+
+Guardrail names and free-text labels are passed through `_label()` in `metrics.py` (non-alphanumeric → `_`, max length) to avoid runaway cardinality from user content while keeping stable series for built-in guard names.
+
+### Does this replace Phase 11 Prometheus work?
+
+No — P4.5-6 is **guardrail-focused** metrics and routes. Phase **P11-2** can add service-wide HTTP metrics, business KPIs, and Grafana dashboards that **include** these series alongside request latency and DB health.
+
+### What tests cover P4.5-6?
+
+`apps/api/tests/test_guardrail_metrics.py` — delta assertions on registry samples, `/metrics` body contains `rag_guardrail_*`, JSON snapshot route, disabled-metrics 404.
+
+### How would you alert on this in production?
+
+Example PromQL: high rate of `rag_guardrail_rag_runs_total{outcome="blocked_output"}` vs `success`, or spikes in `rag_guardrail_checks_total{action="block"}`. Pair with logs via `request_id` in `GuardrailContext` for drill-down.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

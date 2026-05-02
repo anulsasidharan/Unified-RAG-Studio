@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import structlog
 
 from .base import Guardrail
+from .metrics import record_guardrail_check, record_stage_result
 from .types import (
     GuardrailAction,
     GuardrailContext,
@@ -61,8 +63,17 @@ class GuardrailManager:
         results: list[GuardrailResult] = []
 
         for g in self._by_stage[stage]:
+            t0 = time.perf_counter()
             res = g.check(current, context=context)
+            dt = time.perf_counter() - t0
             results.append(res)
+
+            record_guardrail_check(
+                stage,
+                res.guardrail_name,
+                res.action.value,
+                duration_seconds=dt,
+            )
 
             log_kwargs: dict[str, object] = {
                 "guardrail": res.guardrail_name,
@@ -74,6 +85,7 @@ class GuardrailManager:
             logger.info("guardrail_check", **log_kwargs)
 
             if res.action == GuardrailAction.BLOCK:
+                record_stage_result(stage, allowed=False)
                 return GuardrailPipelineResult(
                     allowed=False,
                     final_payload=current,
@@ -84,6 +96,7 @@ class GuardrailManager:
             if res.action == GuardrailAction.MODIFY and res.payload_override is not None:
                 current = res.payload_override
 
+        record_stage_result(stage, allowed=True)
         return GuardrailPipelineResult(
             allowed=True,
             final_payload=current,

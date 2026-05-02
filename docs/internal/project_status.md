@@ -41,7 +41,7 @@
 | 31 | Phase 4.5 | P4.5-3 · Output Guardrails | `feature/p4-guardrails-output` | Implement hallucination detection, factuality checking, and citation verification. | ✅ done |
 | 32 | Phase 4.5 | P4.5-4 · Retrieval Guardrails | `feature/p4-guardrails-retrieval` | Implement content filtering, source validation, and bias detection. | ✅ done |
 | 33 | Phase 4.5 | P4.5-5 · RAG Pipeline Integration | `feature/p4-guardrails-integration` | Integrate guardrails into Generation Service and Designer/Autopilot APIs. | ✅ done |
-| 34 | Phase 4.5 | P4.5-6 · Monitoring & Metrics | `feature/p4-guardrails-monitoring` | Build guardrail metrics, logging, and safety dashboard endpoints. | ⬜ pending |
+| 34 | Phase 4.5 | P4.5-6 · Monitoring & Metrics | `feature/p4-guardrails-monitoring` | Build guardrail metrics, logging, and safety dashboard endpoints. | ✅ done |
 | 35 | Phase 4.5 | P4.5-7 · Configuration & Testing | `feature/p4-guardrails-testing` | Add config files, comprehensive tests, and documentation updates. | ⬜ pending |
 |  | `Phase 5` | `Complete the full step-by-step visual pipeline builder experience in Designer mode.` |  |  |  |
 | 36 | Phase 5 | P5-1 · Designer Layout & Stage Navigator | `feature/p5-designer-layout` | Build multi-step Designer shell and stage navigation flow. | ⬜ pending |
