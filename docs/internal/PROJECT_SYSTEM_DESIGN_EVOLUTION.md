@@ -143,9 +143,48 @@ flowchart TB
 
 **Characteristics:** Sidebar hidden on `/` for a clean landing; Designer / Autopilot / Templates / Projects routes share chrome; collapse state persisted locally; server APIs remain Phase 4+.
 
-### P3-4 — Landing refinements (pending)
+### P3-4 — Landing page (this milestone)
 
-Marketing surfaces atop the same shell.
+**Goal:** A full-featured **marketing/entry experience** at `/` composed of seven focused section components assembled in `page.tsx`. All sections are **React Server Components** — zero client JS for the landing route — ensuring fast initial load and optimal Core Web Vitals.
+
+```mermaid
+flowchart TB
+  subgraph Page["apps/web/src/app/page.tsx (RSC)"]
+    HE["Hero\n badge · headline · gradient orbs · 2 CTAs"]
+    MC["ModeComparison\n Designer card | Autopilot card"]
+    HW["HowItWorks\n 4 numbered steps × 2 modes"]
+    FT["Features\n 6-feature icon grid"]
+    UC["UseCases\n 3 persona cards"]
+    PR["Pricing\n Free / Pro / Enterprise tiers"]
+    CT["CTA\n gradient banner · 2 CTAs"]
+    FO["Footer\n minimal brand line"]
+  end
+  subgraph CSS["globals.css additions"]
+    AN["@keyframes float\n .animate-float\n .animate-float-delayed"]
+  end
+  HE -->|uses| AN
+  subgraph Routes["Navigation targets"]
+    DR["/designer"]
+    AR["/autopilot"]
+  end
+  HE --> DR & AR
+  MC --> DR & AR
+  CT --> DR & AR
+```
+
+**Component breakdown:**
+
+| Component | Purpose | Key decisions |
+|---|---|---|
+| `Hero` | First impression | CSS-only floating orbs (`@keyframes float`), ping animation badge, two CTAs |
+| `ModeComparison` | Feature contrast | Designer (primary) vs Autopilot (purple) visual split; feature lists with checkmarks |
+| `HowItWorks` | Step-by-step guide | Two 4-step columns with connector lines; server component |
+| `Features` | Capability grid | 6 cards with color-mapped lucide icons; hover lift transition |
+| `UseCases` | Persona-driven | Learning Engineer / Startup / Enterprise; quote + benefit list pattern |
+| `Pricing` | Conversion | `included: boolean | 'partial'` discriminated feature rows; Minus vs Check icons |
+| `CTA` | Final conversion | Brand gradient banner; mirrors Hero's visual language |
+
+**Characteristics:** Sidebar is suppressed on `/` (AppShell `isHome` check from P3-3). All sections are RSC — no `'use client'` required. Animated orbs use native CSS (`@keyframes`), not framer-motion. Routing from CTA buttons goes to `/designer` and `/autopilot`.
 
 ### P3-5 — Utilities & validators (pending)
 

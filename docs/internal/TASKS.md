@@ -444,21 +444,21 @@ Add all required shadcn/ui components:
 
 ---
 
-### P3-4 · Landing Page
+### ✅ P3-4 · Landing Page
 **Branch:** `feature/p3-landing-page`
 
 > **Depends on:** P3-3 merged
 
 Create `apps/web/src/app/page.tsx` and landing components in `apps/web/src/components/landing/`:
 
-- [ ] `Hero.tsx` — headline, sub-headline, two CTA buttons (Designer / Autopilot), animated gradient background
-- [ ] `ModeComparison.tsx` — side-by-side cards: Designer mode vs Autopilot mode features
-- [ ] `HowItWorks.tsx` — numbered steps for each mode
-- [ ] `Features.tsx` — feature grid (6 key features with icons)
-- [ ] `UseCases.tsx` — persona cards: Learning Engineer, Time-Strapped Startup, Enterprise Architect
-- [ ] `Pricing.tsx` — Free / Pro / Enterprise tier cards
-- [ ] `CTA.tsx` — bottom call-to-action
-- [ ] `apps/web/src/app/page.tsx` — assembles all landing sections
+- [x] `Hero.tsx` — headline, sub-headline, two CTA buttons (Designer / Autopilot), animated gradient background
+- [x] `ModeComparison.tsx` — side-by-side cards: Designer mode vs Autopilot mode features
+- [x] `HowItWorks.tsx` — numbered steps for each mode
+- [x] `Features.tsx` — feature grid (6 key features with icons)
+- [x] `UseCases.tsx` — persona cards: Learning Engineer, Time-Strapped Startup, Enterprise Architect
+- [x] `Pricing.tsx` — Free / Pro / Enterprise tier cards
+- [x] `CTA.tsx` — bottom call-to-action
+- [x] `apps/web/src/app/page.tsx` — assembles all landing sections
 
 ---
 
