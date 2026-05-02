@@ -119,6 +119,7 @@ from app.schemas.guardrails import (
     GuardrailStageSettingsSchema,
     InputStageGuardrailsSchema,
     OutputStageGuardrailsSchema,
+    RetrievalStageGuardrailsSchema,
 )
 
 __all__ = [
@@ -217,5 +218,6 @@ __all__ = [
     "GuardrailStageSettingsSchema",
     "InputStageGuardrailsSchema",
     "OutputStageGuardrailsSchema",
+    "RetrievalStageGuardrailsSchema",
     "GuardrailsConfigSchema",
 ]
