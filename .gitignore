@@ -6,6 +6,7 @@ docs/internal/*
 !docs/internal/PROJECT_SYSTEM_DESIGN_EVOLUTION.md
 !docs/internal/project_status.md
 !docs/internal/TASKS.md
+!docs/internal/phase4.5_explained.md
 
 prompt_history/*
 !prompt_history/prompt_history.md
