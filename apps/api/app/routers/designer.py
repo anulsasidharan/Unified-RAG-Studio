@@ -1,4 +1,4 @@
-"""Designer mode API — pipeline configuration CRUD (P4-2)."""
+"""Designer mode API — pipeline configuration CRUD (P4-2) and cost estimate (P4-3)."""
 
 from __future__ import annotations
 
@@ -11,11 +11,15 @@ from app.config import Settings, get_settings
 from app.dependencies import DbSession, RequestUserId
 from app.schemas.designer import (
     ConfigListResponse,
+    CostRequest,
     SaveConfigRequest,
     SaveConfigResponse,
     UpdateDesignerConfigRequest,
 )
+from app.schemas.pipeline import CostEstimateSchema
+from app.services.cost_service import CostService
 from app.services.designer_service import DesignerService
+from app.utils.cost_calculator import PricingLoadError
 
 router = APIRouter(prefix="/api/designer", tags=["designer"])
 
@@ -120,3 +124,19 @@ async def delete_config(
     if not ok:
         raise HTTPException(status_code=404, detail="Configuration not found")
     return None
+
+
+@router.post(
+    "/cost",
+    response_model=CostEstimateSchema,
+    summary="Estimate pipeline cost (per query and per month)",
+)
+async def estimate_pipeline_cost(
+    body: CostRequest,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> CostEstimateSchema:
+    """Return ``CostEstimateSchema`` using ``data/pricing.json`` (or ``PRICING_CATALOG_PATH``)."""
+    try:
+        return CostService(settings).estimate(body)
+    except PricingLoadError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

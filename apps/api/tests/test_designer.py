@@ -164,3 +164,25 @@ def test_designer_put_requires_field(sync_client: TestClient):
         headers={"X-User-ID": USER},
     )
     assert r.status_code == 400
+
+
+@pytest.mark.integration
+def test_designer_cost_endpoint(sync_client: TestClient):
+    """POST /api/designer/cost mirrors utilities cost using catalog pricing."""
+    cfg = _minimal_pipeline_payload()
+    r = sync_client.post(
+        "/api/designer/cost",
+        json={
+            "config": cfg,
+            "queriesPerMonth": 10_000,
+            "documentsCount": 200,
+            "avgDocumentTokens": 400,
+        },
+    )
+    assert r.status_code == 200
+    data = r.json()
+    assert data["currency"] == "USD"
+    assert data["total"] >= 0.0
+    assert data["breakdown"]
+    assert "perQuery" in data
+    assert "perMonth" in data
