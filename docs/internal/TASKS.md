@@ -553,18 +553,18 @@ Create `apps/api/app/routers/designer.py` export endpoint and `apps/api/app/serv
 
 ---
 
-### P4-5 · Templates API
+### ✅ P4-5 · Templates API
 **Branch:** `feature/p4-templates-api`
 
 > **Depends on:** P1-1, P4-2 merged
 
 Create `apps/api/app/routers/templates.py` and `apps/api/app/services/template_service.py`:
 
-- [ ] `GET /api/templates` — list all templates from `data/templates.json`
-- [ ] `GET /api/templates/{id}` — get single template
-- [ ] `POST /api/templates/{id}/apply` — creates a new `PipelineConfig` from template for a project
-- [ ] `TemplateService.list_templates()`, `TemplateService.apply(template_id, project_id) -> PipelineConfig`
-- [ ] Integration tests
+- [x] `GET /api/templates` — list all templates from `data/templates.json`
+- [x] `GET /api/templates/{id}` — get single template
+- [x] `POST /api/templates/{id}/apply` — creates a new `PipelineConfig` from template for a project
+- [x] `TemplateService.list_templates()`, `TemplateService.apply(...)` → `DesignerService.save_config` → persisted `PipelineConfig`
+- [x] Integration tests
 
 ---
 

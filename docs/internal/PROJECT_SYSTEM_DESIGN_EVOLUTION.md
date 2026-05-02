@@ -2016,3 +2016,59 @@ flowchart TB
 ### Next sub-phase in Phase 4
 
 Templates API — list/apply `data/templates.json` and create `PipelineConfig` rows.
+
+---
+
+## Phase 4 · P4-5 Templates API (completed)
+
+Designer backend can expose curated pipeline presets from the shared JSON catalog and materialize them as first-class saved configurations.
+
+### Behaviour
+
+- **Read paths** (`GET /api/templates`, `GET /api/templates/{id}`): load and validate `data/templates.json` (or `TEMPLATES_CATALOG_PATH` / optional `apps/api/catalogs/templates.json` mirror). No database reads for listing.
+- **Apply** (`POST /api/templates/{id}/apply`): resolve template by id, build a `SaveConfigRequest` (optional `name` / `description` overrides), call `DesignerService.save_config` — same persistence rules as manual Designer create. Response extends `SaveConfigResponse` with `templateId` so clients know which preset was used.
+- **Data fix:** `customer-support` template routing rules were aligned with `RoutingRuleSchema` (`condition` ∈ `keyword` | `query-length` | `semantic-complexity`, `targetModel`, optional `threshold` / `keywords`) so all templates validate as `PipelineConfigurationSchema`.
+
+### Mermaid — Templates API (Phase 4)
+
+```mermaid
+flowchart LR
+  subgraph read [Catalog read — stateless]
+    FE1[Client / P5 gallery]
+    TGET[GET /api/templates]
+    TONE[GET /api/templates/id]
+    TSVC[TemplateService.list / get]
+    TJ[(templates.json)]
+  end
+  subgraph apply [Apply — persists]
+    FE2[Client]
+    TAP[POST .../apply]
+    TAPL[TemplateService.apply]
+    DS[DesignerService.save_config]
+    DB[(Postgres PipelineConfig)]
+  end
+  FE1 --> TGET --> TSVC --> TJ
+  FE1 --> TONE --> TSVC
+  FE2 --> TAP --> TAPL --> DS --> DB
+```
+
+### Phase 4 Designer backend — revised summary
+
+```mermaid
+flowchart TB
+  subgraph p4 [Phase 4 Designer backend]
+    P1[Projects API]
+    P2[Config API]
+    P3[Cost API]
+    P4[Export API]
+    P5[Templates API]
+  end
+  P1 --> DB[(Postgres)]
+  P2 --> DB
+  P3 --> CAT[pricing.json]
+  P4 -.->|stateless| GEN[Text generators]
+  P5 -->|GET| TJ[templates.json]
+  P5 -->|apply| DB
+```
+
+**Correction:** List/get template endpoints are **file-backed**, not DB-backed. Only **apply** writes through `DesignerService` to Postgres.

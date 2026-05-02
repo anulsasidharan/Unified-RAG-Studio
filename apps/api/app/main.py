@@ -103,12 +103,14 @@ def create_app() -> FastAPI:
     from app.routers.health import router as health_router
     from app.routers.jobs import router as jobs_router
     from app.routers.projects import router as projects_router
+    from app.routers.templates import router as templates_router
     from app.routers.utilities import router as utilities_router
 
     app.include_router(health_router)
     app.include_router(utilities_router)
     app.include_router(jobs_router)
     app.include_router(projects_router)
+    app.include_router(templates_router)
     app.include_router(designer_router)
 
     return app

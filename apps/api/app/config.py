@@ -79,6 +79,9 @@ class Settings(BaseSettings):
     # ── Pricing catalog (P2-9 cost estimator) ────────────────
     pricing_catalog_path: str = ""
 
+    # ── Templates catalog (P4-5) ──────────────────────────────
+    templates_catalog_path: str = ""
+
     @property
     def is_development(self) -> bool:
         return self.app_env == "development"

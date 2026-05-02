@@ -3470,4 +3470,48 @@ Yes. No database session or `X-User-ID`; same pattern as `POST /api/designer/cos
 
 ---
 
+## Phase 4 · P4-5 · Templates API
+
+### What does the Templates API provide?
+
+Three endpoints under `/api/templates`: **list** the full catalog (`GET /api/templates`), **get one** template by stable id (`GET /api/templates/{id}`), and **apply** a template to a project (`POST /api/templates/{id}/apply`). The catalog is `data/templates.json` at the repo root (validated as `TemplatesCatalogResponse` / `PipelineTemplate` with embedded `PipelineConfigurationSchema`).
+
+### Where is the templates file loaded from?
+
+Resolution order matches pricing: optional `TEMPLATES_CATALOG_PATH` env (`templates_catalog_path` in `Settings`), then `apps/api/catalogs/templates.json` if present, then `../../data/templates.json` relative to `apps/api`.
+
+### Does listing templates hit the database?
+
+No. Only JSON validation and response serialization. Same idea as stateless export/cost for read-only catalog data.
+
+### What is the apply request body?
+
+`ApplyTemplateRequest`: `projectId` (required UUID), optional `name` and `description` overrides. If `name` is omitted, the template’s display name is used; description defaults from the template’s top-level description when not overridden.
+
+### How does apply persist configuration?
+
+`TemplateService.apply` constructs a `SaveConfigRequest` from the template’s `config` field and calls `DesignerService.save_config`. The project must belong to the user (`X-User-ID`); otherwise the service returns `None` and the route responds **404** (“Template or project not found”).
+
+### What does the apply response include?
+
+`ApplyTemplateResponse`: same fields as `SaveConfigResponse` (`id`, `name`, `projectId`, `description`, `config`, `createdAt`, `updatedAt`) plus **`templateId`** (the catalog id, e.g. `faq-chatbot`) for UI analytics and redirects.
+
+### How is `metadata.source` set for applied configs?
+
+Templates already use `source: "template"` in JSON; `DesignerService._prepare_new_config` preserves `source` when it is `"template"` (it only defaults to `"designer"` when source is missing).
+
+### Why was `data/templates.json` updated for customer-support?
+
+The **customer-support** template had routing `rules` with free-form `condition` strings and `model` keys. The backend schema requires `RoutingRuleSchema`: `condition` must be `keyword` | `query-length` | `semantic-complexity`, and the target LLM must be `targetModel`. The file was updated to schema-valid rules (e.g. `query-length` + `semantic-complexity` with thresholds) so the catalog loads and validates end-to-end.
+
+### What tests cover templates?
+
+`tests/test_templates.py`: list + get by id, unknown template 404, apply creates a row loadable via `GET /api/designer/config/{id}`, unknown template apply 404, invalid project 404.
+
+### How does this connect to the future Template Gallery (P5-14)?
+
+The gallery page will call `GET /api/templates` for cards and `POST /api/templates/{id}/apply` with the active project id, then navigate to Designer review with the new `config` id returned in the response.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
