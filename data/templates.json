@@ -502,16 +502,17 @@
           },
           "routing": {
             "enabled": true,
+            "defaultModel": "gpt-4o-mini",
             "rules": [
               {
-                "condition": "queryComplexity == 'simple'",
-                "model": "gpt-4o-mini",
-                "description": "Simple greetings and basic questions"
+                "condition": "query-length",
+                "threshold": 120,
+                "targetModel": "gpt-4o-mini"
               },
               {
-                "condition": "queryComplexity == 'complex'",
-                "model": "gpt-4o",
-                "description": "Complex troubleshooting and escalations"
+                "condition": "semantic-complexity",
+                "threshold": 0.65,
+                "targetModel": "gpt-4o"
               }
             ]
           },

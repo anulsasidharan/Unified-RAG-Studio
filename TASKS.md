@@ -31,3 +31,6 @@
 |------|--------|--------|
 | P4-1 · Projects API | `feature/p4-projects-api` | ✅ done |
 | P4-2 · Designer Config API | `feature/p4-designer-config-api` | ✅ done |
+| P4-3 · Cost Calculation API | `feature/p4-cost-api` | ✅ done |
+| P4-4 · Export API | `feature/p4-export-api` | ✅ done |
+| P4-5 · Templates API | `feature/p4-templates-api` | ✅ done |
