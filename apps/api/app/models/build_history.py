@@ -6,8 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -21,12 +20,12 @@ class AutopilotBuild(Base, TimestampMixin):
     __tablename__ = "autopilot_builds"
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("projects.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -40,13 +39,13 @@ class AutopilotBuild(Base, TimestampMixin):
     current_stage: Mapped[str] = mapped_column(String(64), nullable=False, server_default="")
     iteration: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     # Serialised BuildRequirementsSchema
-    requirements: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
+    requirements: Mapped[dict] = mapped_column(JSON, nullable=False, server_default="{}")
     # dict[str, StageStatusSchema] — keyed by stage name
-    stages: Mapped[dict] = mapped_column(JSONB, nullable=False, server_default="{}")
+    stages: Mapped[dict] = mapped_column(JSON, nullable=False, server_default="{}")
     # list[BuildMessageSchema]
-    messages: Mapped[list] = mapped_column(JSONB, nullable=False, server_default="[]")
+    messages: Mapped[list] = mapped_column(JSON, nullable=False, server_default="[]")
     # BuildResultSchema | null
-    result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),

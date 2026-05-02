@@ -5,11 +5,12 @@ Clients are created once per request (or shared via module-level singletons
 where the client itself is thread/async safe).
 """
 
+import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated
 
 import redis.asyncio as aioredis
-from fastapi import Depends
+from fastapi import Depends, Header, HTTPException
 from qdrant_client import AsyncQdrantClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
@@ -106,3 +107,21 @@ DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 RedisClient = Annotated[aioredis.Redis, Depends(get_redis)]
 QdrantDB = Annotated[AsyncQdrantClient, Depends(get_qdrant)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
+
+
+def get_request_user_id(
+    settings: AppSettings,
+    x_user_id: Annotated[
+        str | None,
+        Header(alias="X-User-ID", convert_underscores=False),
+    ] = None,
+) -> uuid.UUID:
+    """Resolves the acting user for row-level scoping (pre-auth: ``X-User-ID`` or default)."""
+    raw = (x_user_id or str(settings.default_user_id)).strip()
+    try:
+        return uuid.UUID(raw)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid X-User-ID header") from exc
+
+
+RequestUserId = Annotated[uuid.UUID, Depends(get_request_user_id)]
