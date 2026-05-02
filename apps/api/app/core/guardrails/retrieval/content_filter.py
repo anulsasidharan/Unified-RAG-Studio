@@ -26,6 +26,8 @@ _SELF_TEST_PATTERN = re.compile(r"___RAG_STUDIO_RETRIEVAL_FILTER_SELF_TEST___")
 
 _DEFAULT_EXTRA_PATTERNS: tuple[re.Pattern[str], ...] = (_SELF_TEST_PATTERN,)
 
+DEFAULT_RETRIEVAL_FILTER_EXTRA_PATTERNS: tuple[re.Pattern[str], ...] = _DEFAULT_EXTRA_PATTERNS
+
 
 def _compile_terms(terms: frozenset[str]) -> tuple[re.Pattern[str], ...]:
     out: list[re.Pattern[str]] = []

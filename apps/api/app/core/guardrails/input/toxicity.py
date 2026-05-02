@@ -24,6 +24,9 @@ _SELF_TEST_PATTERN = re.compile(r"___RAG_STUDIO_TOXICITY_SELF_TEST___")
 
 _DEFAULT_EXTRA_PATTERNS: tuple[re.Pattern[str], ...] = (_SELF_TEST_PATTERN,)
 
+# Merged with file-based regex lists (P4.5-7); keeps the self-test marker available.
+DEFAULT_TOXICITY_EXTRA_PATTERNS: tuple[re.Pattern[str], ...] = _DEFAULT_EXTRA_PATTERNS
+
 
 def _compile_terms(terms: frozenset[str]) -> tuple[re.Pattern[str], ...]:
     out: list[re.Pattern[str]] = []

@@ -161,3 +161,8 @@ storybook-static/
 apps/api/celerybeat-schedule
 apps/api/celerybeat-schedule.*
 celerybeat-schedule
+
+# ------------------------------------------------------------
+# Guardrails — operator-specific JSON policies (P4.5-7)
+# ------------------------------------------------------------
+apps/api/config/guardrails/local/

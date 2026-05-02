@@ -2360,3 +2360,81 @@ Phase 4.5 now has **policy** (P4.5-2 … P4.5-4), **integration** (P4.5-5), and 
 ### Next sub-phase in Phase 4.5
 
 P4.5-7 · Configuration & Testing — config files, comprehensive tests, and documentation pass.
+
+---
+
+## Phase 4.5 — P4.5-7 · Configuration & Testing (append)
+
+**Intent:** Let operators **extend** toxicity, retrieval content-filter, and bias heuristics via **JSON policy files** on disk (separate from saved pipeline JSON), with **pytest** coverage and **documented** env vars. Keeps default behavior safe (self-test markers only) until paths are set.
+
+### Behaviour
+
+1. **`Settings`** exposes optional paths: `guardrails_toxicity_policy_path`, `guardrails_content_filter_policy_path`, `guardrails_bias_patterns_policy_path` (empty = unchanged defaults).
+2. **`policy_loader`** reads JSON (`blocked_terms`, `regex_patterns` for toxicity/content filter; `regex_patterns` only for bias), compiles regexes (invalid pattern → `ValueError`), and **merges** file patterns with built-in default patterns so self-test markers remain available.
+3. **`build_guardrail_manager`** loads policies via `get_settings()` and passes merged terms/patterns into `register_default_input_guardrails` / `register_default_retrieval_guardrails`.
+4. **Examples** live under `apps/api/config/guardrails/examples/`; operator-specific overrides can live in `apps/api/config/guardrails/local/` (gitignored).
+
+### Mermaid — operator policy files + manager build (P4.5-7)
+
+```mermaid
+flowchart LR
+  subgraph ENV [Environment]
+    P1[GUARDRAILS_TOXICITY_POLICY_PATH]
+    P2[GUARDRAILS_CONTENT_FILTER_POLICY_PATH]
+    P3[GUARDRAILS_BIAS_PATTERNS_POLICY_PATH]
+  end
+  subgraph FS [Filesystem JSON]
+    J1[toxicity.json]
+    J2[content_filter.json]
+    J3[bias_patterns.json]
+  end
+  subgraph APP [API process]
+    S[Settings]
+    L[policy_loader]
+    B[build_guardrail_manager]
+    M[GuardrailManager]
+  end
+  P1 --> S
+  P2 --> S
+  P3 --> S
+  S --> L
+  J1 --> L
+  J2 --> L
+  J3 --> L
+  L --> B
+  B --> M
+```
+
+### Mermaid — configuration layers (Phase 4.5 complete)
+
+```mermaid
+flowchart TB
+  subgraph P [Per-request pipeline JSON]
+    G[guardrails toggles]
+  end
+  subgraph O [Operator filesystem policies — P4.5-7]
+    F[JSON term + regex lists]
+  end
+  subgraph R [Runtime]
+    M[build_guardrail_manager]
+    GR[Guarded RAG + metrics P4.5-6]
+  end
+  G --> M
+  F --> M
+  M --> GR
+```
+
+### Code map (concise)
+
+| Piece | Location |
+|-------|----------|
+| Settings fields | `app/config.py` |
+| Load + merge | `app/core/guardrails/policy_loader.py` |
+| Wire into manager | `app/core/guardrails/configure_manager.py` |
+| Default pattern exports | `input/toxicity.py`, `retrieval/content_filter.py`, `retrieval/bias.py` |
+| Example JSON | `apps/api/config/guardrails/examples/` |
+| Tests | `apps/api/tests/test_core/test_guardrails_policy_loader.py` |
+
+### Evolution note
+
+Phase **4.5** is **complete**: policy implementations, RAG integration, Prometheus metrics, and **operator-configurable** lists/patterns without redeploying pipeline documents.

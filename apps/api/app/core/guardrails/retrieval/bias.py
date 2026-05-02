@@ -24,6 +24,8 @@ _SELF_TEST_PATTERN = re.compile(r"___RAG_STUDIO_RETRIEVAL_BIAS_SELF_TEST___")
 
 _DEFAULT_PATTERNS: tuple[re.Pattern[str], ...] = (_SELF_TEST_PATTERN,)
 
+DEFAULT_BIAS_HEURISTIC_PATTERNS: tuple[re.Pattern[str], ...] = _DEFAULT_PATTERNS
+
 
 class RetrievalBiasHeuristicGuardrail(Guardrail):
     """Emits WARN when bias-related patterns appear in query or retrieved chunks."""
