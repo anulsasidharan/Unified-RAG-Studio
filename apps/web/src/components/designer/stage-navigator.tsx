@@ -1,0 +1,101 @@
+'use client';
+
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { Check } from 'lucide-react';
+
+import { DESIGNER_STAGES } from '@/lib/constants';
+import { normalizeDesignerPathname } from '@/lib/designer-routes';
+import { cn } from '@/lib/utils';
+import { useDesignerStore } from '@/stores/designer-store';
+
+export function StageNavigator() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const normalized = normalizeDesignerPathname(pathname ?? '');
+  const draft = useDesignerStore((s) => s.draft);
+
+  return (
+    <nav
+      className="sticky top-0 z-30 flex max-h-none shrink-0 flex-col gap-3 border-b border-neutral-200 bg-card/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:sticky lg:top-0 lg:z-10 lg:h-full lg:max-h-[calc(100vh-3.5rem)] lg:w-[min(280px,calc((100vw-14rem)*0.28))] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-2 lg:py-4 xl:w-72 dark:border-neutral-800"
+      aria-label="Designer pipeline stages"
+    >
+      <div className="hidden px-2 lg:block">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Pipeline builder
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Move through stages; configuration panels arrive in upcoming P5 tasks.
+        </p>
+      </div>
+
+      <div className="lg:hidden">
+        <label htmlFor="designer-stage-select" className="sr-only">
+          Jump to stage
+        </label>
+        <select
+          id="designer-stage-select"
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+          value={normalized}
+          onChange={(e) => {
+            const href = e.target.value;
+            if (href) router.push(href);
+          }}
+        >
+          {DESIGNER_STAGES.map((s) => (
+            <option key={s.id} value={s.path}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <ol className="hidden max-h-none flex-1 list-none space-y-0.5 overflow-y-auto lg:block">
+        {DESIGNER_STAGES.map((stage, idx) => {
+          const isActive = stage.path === normalized;
+          const isPast =
+            DESIGNER_STAGES.findIndex((x) => x.path === normalized) > idx;
+
+          return (
+            <li key={stage.id}>
+              <Link
+                href={stage.path}
+                className={cn(
+                  'group flex items-start gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors',
+                  isActive &&
+                    'bg-primary-600/15 font-medium text-primary-900 dark:bg-primary-500/20 dark:text-primary-50',
+                  !isActive && 'hover:bg-accent hover:text-accent-foreground'
+                )}
+              >
+                <span
+                  className={cn(
+                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                    isActive &&
+                      'border-primary-600 bg-primary-600 text-primary-foreground',
+                    !isActive &&
+                      isPast &&
+                      'border-primary-600/60 bg-background text-primary-700 dark:text-primary-300',
+                    !isActive &&
+                      !isPast &&
+                      'border-muted-foreground/30 bg-muted/40 text-muted-foreground'
+                  )}
+                  aria-hidden
+                >
+                  {isPast ? <Check className="h-3.5 w-3.5" /> : idx + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block leading-snug">{stage.label}</span>
+                  {stage.id === 'cloud' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {String(draft.cloudProvider).toUpperCase()}
+                    </span>
+                  ) : null}
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ol>
+    </nav>
+  );
+}
