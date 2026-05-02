@@ -4,10 +4,11 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import Link from 'next/link';
 import { LayoutGrid, Menu, ChevronDown, FolderKanban } from 'lucide-react';
 
-import { APP_NAME, ROUTES } from '@/lib/constants';
+import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useProjectStore } from '@/stores/project-store';
 
+import { Logo } from './Logo';
 import { ModeToggle } from './mode-toggle';
 
 type NavbarProps = {
@@ -35,12 +36,7 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
               <Menu className="h-4 w-4" />
             </button>
           ) : null}
-          <Link
-            href={ROUTES.home}
-            className="flex min-w-0 items-center gap-2 font-semibold tracking-tight text-neutral-900 dark:text-neutral-100"
-          >
-            <span className="gradient-text truncate text-lg">{APP_NAME}</span>
-          </Link>
+          <Logo className="min-w-0" />
         </div>
 
         <div className="hidden shrink-0 items-center justify-center sm:flex">
