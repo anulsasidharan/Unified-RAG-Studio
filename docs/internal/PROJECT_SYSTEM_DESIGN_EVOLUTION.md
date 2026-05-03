@@ -69,3 +69,28 @@ flowchart TB
 ```
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-4)
+
+**P5-4** adds the **Chunking** stage: **`ChunkingConfigurator`** reads **`data/chunking-strategies.json`** (via **`chunking-strategies-catalog.ts`**) and writes **`updateStages({ chunking })`**. Users pick a **strategy** (fixed, recursive, semantic, markdown header, sentence, paragraph, code-aware), tune **token chunk size** and **overlap** within **Zod** bounds, edit the **separator ladder** for **recursive-character**, and set optional **chunk metadata**. **`StageNavigator`** shows a short **strategy · size/overlap** hint. Execution remains in backend **`ChunkingService` (P2-2)**; the UI captures deployable parameters for exports and APIs.
+
+```mermaid
+flowchart TB
+  subgraph Catalog["Shared catalog"]
+    CH[data/chunking-strategies.json]
+  end
+  subgraph Designer["apps/web"]
+    Lib[chunking-strategies-catalog.ts]
+    Cmp[ChunkingConfigurator]
+    V[Zod ChunkingConfigSchema]
+    Z[(useDesignerStore draft.stages.chunking)]
+  end
+  CH --> Lib
+  Lib --> Cmp
+  Cmp -->|"updateStages(chunking)"| Z
+  Cmp -.->|safeParse| V
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

@@ -3989,4 +3989,56 @@ Stages **chunking** through **review** still use the dashed placeholder until **
 
 ---
 
+## Phase 5 · P5-4 · Chunking Configuration
+
+### What problem does the Chunking stage solve in Designer mode?
+
+Users must choose **how documents are split** before embedding: strategy (fixed, recursive, semantic, etc.), **token budget** per chunk, **overlap** for boundary context, and optionally **recursive separators** and **chunk metadata**. **P5-4** surfaces those controls with catalog-backed guidance so the draft matches **`ChunkingConfig`** in **`pipeline.ts`** and validates with **`ChunkingConfigSchema`** (Zod).
+
+### Where does strategy metadata come from?
+
+**`data/chunking-strategies.json`** is imported at build time through **`apps/web/src/lib/chunking-strategies-catalog.ts`** (same pattern as **`cloud-providers-catalog.ts`**). The UI lists **name**, **description**, **complexity** badge, and **pros / cons / best for** from the catalog.
+
+### How does changing strategy update numbers?
+
+**`chunkingDefaultsFromCatalog(strategy)`** reads **`defaultConfig`** from the catalog entry, **clamps** **`chunkSize`** to **128–4096** and **`chunkOverlap`** to **0–1024** with **`overlap < chunkSize`**. Catalog entries with symbolic sizes (e.g. sentence counts) are lifted to at least **128** tokens so **`ChunkingConfigSchema`** stays valid. **Recursive character** also copies **`separators`** when present.
+
+### Which fields are persisted on the draft?
+
+**`updateStages({ chunking })`** merges into **`draft.stages.chunking`**: **`strategy`**, **`chunkSize`**, **`chunkOverlap`**, optional **`separators`**, optional **`metadata`** (**`includeSource`**, **`includePageNumber`**, **`customMetadata`**). Zustand **`persist`** saves to **localStorage** with the rest of the pipeline.
+
+### How are separators edited for recursive-character?
+
+A **textarea** shows **one separator string per line**. Inline control characters use escapes: **`\n`**, **`\t`**, **`\r`**, and **`\\`** for a literal backslash. This mirrors LangChain’s ordered separator list (large structures first).
+
+### Does the UI run chunking on documents?
+
+**No.** Configuration only. Actual splitting runs in backend **`ChunkingService`** (**P2-2**) when a build or export executes.
+
+### How does the sidebar summarize chunking?
+
+**`StageNavigator`** prints **`chunkingHint`**: short strategy label plus **`chunkSize/chunkOverlap`** (e.g. **Recursive · 512/50**).
+
+### How does this align with the API schema?
+
+Backend **`ChunkingConfigSchema`** in **`apps/api/app/schemas/pipeline.py`** includes **`strategy`**, **`chunk_size`**, **`chunk_overlap`**, **`separators`**. Frontend **`metadata`** on chunking is **designer/export enrichment**; confirm serializer paths when posting full pipeline JSON to the API.
+
+### What validation rules catch bad drafts?
+
+**`chunkOverlap < chunkSize`**, **chunk size** in **[128, 4096]**, **overlap** in **[0, 1024]**. The component surfaces **Zod** issues in an alert region.
+
+### What accessibility patterns are used?
+
+Strategy grid uses **`role="radiogroup"`** / **`role="radio"`** / **`aria-checked`**. Metadata toggles use **`role="switch"`**. Section headings use **`aria-labelledby`**.
+
+### What tests cover this task?
+
+**`apps/web/src/lib/__tests__/chunking-strategies-catalog.test.ts`** asserts catalog size, meta lookup, **clamping** behavior, and **recursive** separators. **`ChunkingConfigurator`** relies on existing **`ChunkingConfigSchema`** tests in **`validators`** tests.
+
+### What remains placeholder after P5-4?
+
+Stages **embedding** through **review** still ship as dashed placeholders until **P5-5+**. **Cloud**, **ingestion**, and **chunking** are interactive.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

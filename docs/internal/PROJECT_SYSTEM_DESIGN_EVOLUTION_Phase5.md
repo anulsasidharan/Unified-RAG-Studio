@@ -57,17 +57,34 @@ flowchart LR
 
 ---
 
+## Design level 4 — Chunking bound to `draft.stages.chunking` (after P5-4)
+
+The **Chunking** stage renders **`ChunkingConfigurator`**, which edits **`ChunkingConfig`** (**`strategy`**, **`chunkSize`**, **`chunkOverlap`**, optional **`separators`**, optional **`metadata`**) aligned with **`apps/web/src/types/pipeline.ts`** and **`ChunkingConfigSchema`** in **`validators.ts`**. Strategy cards are driven by **`data/chunking-strategies.json`**; switching strategy applies catalog defaults (clamped to **128–4096** tokens and overlap rules). **Recursive character** exposes a **separator ladder** textarea with `\n` / `\t` escapes. **`StageNavigator`** shows a compact **strategy · tokens/overlap** subtitle under **Chunking**.
+
+```mermaid
+flowchart LR
+  subgraph UI["apps/web"]
+    Cmp[ChunkingConfigurator]
+    Store[(draft.stages.chunking)]
+    Cat[data/chunking-strategies.json]
+  end
+  Cat --> Cmp
+  Cmp -->|"updateStages"| Store
+```
+
+---
+
 ## Future levels (placeholder)
 
-Later P5 tasks add panels for chunking, embeddings, vector store, retrieval, generation, routing/memory/evaluation, visualizer, cost, export, review, and templates — each **`patchDraft`** / **`updateStages`** onto the same **`draft`** object consumed by Phase 4 APIs.
+Later P5 tasks add panels for embeddings, vector store, retrieval, generation, routing/memory/evaluation, visualizer, cost, export, review, and templates — each **`patchDraft`** / **`updateStages`** onto the same **`draft`** object consumed by Phase 4 APIs.
 
 ```mermaid
 flowchart TB
   Draft[PipelineConfiguration draft]
-  Draft --> Chunk[P5-4 chunking …]
+  Draft --> Emb[P5-5 embedding …]
   Draft --> Later[Later P5 stages …]
 ```
 
 ---
 
-*Append new “Design level” sections at the end as P5-4+ ship.*
+*Append new “Design level” sections at the end as P5-5+ ship.*
