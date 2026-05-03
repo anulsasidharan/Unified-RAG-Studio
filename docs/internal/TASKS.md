@@ -40,3 +40,4 @@
 |------|--------|--------|
 | P6-1 · LangGraph Agent Infrastructure | `feature/p6-langgraph-infrastructure` | ✅ done |
 | P6-2 · Document Analyst Agent | `feature/p6-document-analyst-agent` | ✅ done |
+| P6-3 · Chunking Optimizer Agent | `feature/p6-chunking-optimizer-agent` | ✅ done |
