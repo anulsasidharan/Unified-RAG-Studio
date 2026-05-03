@@ -4109,4 +4109,64 @@ Free-text **`model`** ids would drift from **`embeddings.json`** and break **`em
 
 ---
 
+## Phase 5 · P5-6 · Vector Store Selector
+
+### What problem does the Vector Store stage solve in Designer mode?
+
+Users must pick **where vectors are stored and queried**: **provider** (Qdrant, Pinecone, Weaviate, etc.), an **index/collection name**, **similarity metric**, scaling hints (**replicas**, **shards**), optional **namespace**, and optional **non-secret cloud placement**. **P5-6** surfaces **`data/vector-stores.json`** with search and filters so **`draft.stages.vectorStore`** validates against **`VectorStoreConfigSchema`** (Zod) and matches **`VectorStoreConfig`** in **`pipeline.ts`**.
+
+### Where does vector store catalog metadata come from?
+
+**`data/vector-stores.json`** is imported at build time via **`apps/web/src/lib/vector-stores-catalog.ts`**. Entries describe **type** (managed / self-hosted / embedded), **cloudNative** flags (AWS, GCP, Azure, self-managed), **features** (e.g. **hybridSearch**), **bestFor**, **pros/cons**, and **supportedMetrics** strings.
+
+### How does selecting a store update the draft?
+
+**`vectorStorePatchFromCatalog(storeId, current)`** sets **`provider`** and aligns **`configuration.metric`** with metrics that are valid for **both** the catalog row **and** **`SimilarityMetric`** (**cosine**, **euclidean**, **dot**). Other **`configuration`** fields (**indexName**, **replicas**, **shards**, **namespace**, **cloud**) are merged by **`mergeVectorStore`** so users do not lose edits when switching providers.
+
+### Why map catalog metrics (`l2`, `ip`, …) to pipeline metrics?
+
+**`VectorStoreConfigSchema`** only allows **cosine**, **euclidean**, **dot** (see **`SimilarityMetricSchema`**). Catalog rows use vendor names (**l2** ≈ **euclidean**, **ip** ≈ **dot**). **`catalogMetricToSchemaMetric`** and **`schemaMetricsForStore`** restrict the metric dropdown to **export-safe** values; metrics with no mapping (e.g. **hamming**) are omitted from the selector.
+
+### Which fields are editable in **`VectorStoreConfigurator`**?
+
+**Provider** (cards), **indexName** (validated pattern), **metric** (intersection of catalog + schema), **replicas**, **shards**, optional **namespace**, optional **cloud.region** and **cloud.instanceType** (hints only — no secrets). Clearing both region and instance **removes** **`configuration.cloud`** from state.
+
+### How does filtering work?
+
+Client-side filters: **text search** (id, name, description, bestFor), **deployment type**, **cloud native** (AWS/GCP/Azure must be true on **`cloudNative`**), and **hybrid search capable** (**features.hybridSearch**). If filters exclude the **currently selected** provider, that row is **pinned** at the top (same pattern as **Embedding**).
+
+### Does the UI create or connect to a live index?
+
+**No.** Configuration only. Provisioning and queries run through backend **`VectorStoreService` (P2-4)** and runtime credentials — not in the Designer draft.
+
+### How does **`StageNavigator`** summarize vector store?
+
+**`vectorStoreHint`** shows catalog **display name** · **indexName** (truncated), using **`getVectorStoreMeta`**.
+
+### How does this align with code export?
+
+**`pythonCodeGenerator`** switches on **`stages.vectorStore.provider`** for **`QdrantVectorStore`**, **`PineconeVectorStore`**, etc. (**`VECTORSTORE_IMPORTS`** / **`buildVectorStore`**). Terraform and YAML generators also read **`vectorStore`**.
+
+### What validation rules apply?
+
+**`VectorStoreConfigSchema`**: **provider** enum; **indexName** non-empty, **≤ 100** chars, **`/^[a-z0-9-]+$/`**; **configuration** with optional **metric**, **replicas** ≥ 1, **shards** ≥ 1, optional **namespace**, optional **cloud** with **region** required when the object is present (Zod shape).
+
+### What accessibility patterns are used?
+
+Provider grid uses **`role="radiogroup"`** / **`role="radio"`** / **`aria-checked`**. Filter controls use **`aria-labelledby`** / **`aria-live`** where appropriate.
+
+### What tests cover this task?
+
+**`apps/web/src/lib/__tests__/vector-stores-catalog.test.ts`** covers store **count**, **lookup**, **`isVectorStoreProvider`**, metric **mapping**, **`schemaMetricsForStore`**, and **`vectorStorePatchFromCatalog`**. **`VectorStoreConfigurator`** relies on existing **`VectorStoreConfigSchema`** tests in **`validators.test.ts`**.
+
+### What remains placeholder after P5-6?
+
+Stages **retrieval** through **review** still use dashed placeholders until **P5-7+**. **Cloud** through **vector store** are interactive.
+
+### How do you add a new vector store to the catalog?
+
+1. Add an entry to **`data/vector-stores.json`** with **`id`** equal to a **`VectorStoreProvider`** in **`validators.ts`**. 2. Ensure **`supportedMetrics`** map to pipeline metrics where possible. 3. Extend **`pythonCodeGenerator`** **`VECTORSTORE_IMPORTS`** / **`buildVectorStore`** if codegen should support the provider. 4. Bump **`vector-stores-catalog.test.ts`** expected count.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

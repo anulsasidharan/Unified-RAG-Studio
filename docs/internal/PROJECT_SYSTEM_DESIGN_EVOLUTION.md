@@ -134,3 +134,28 @@ flowchart LR
 ```
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-6)
+
+**P5-6** adds the **Vector Store** stage: **`VectorStoreConfigurator`** reads **`data/vector-stores.json`** (via **`vector-stores-catalog.ts`**) and writes **`updateStages({ vectorStore })`**. Users **search** and **filter** (deployment type, AWS/GCP/Azure affinity, hybrid-capable), select a **provider card**, and edit **index name**, **metric** (catalog ∩ schema), **replicas/shards**, **namespace**, and optional **cloud placement hints**. Metric strings like **`l2`** / **`ip`** map to **`euclidean`** / **`dot`** for **`VectorStoreConfigSchema`**. **`StageNavigator`** shows **`vectorStoreHint`**. Runtime vector IO remains in **`VectorStoreService` (P2-4)**.
+
+```mermaid
+flowchart TB
+  subgraph Catalog["Shared catalog"]
+    VS[data/vector-stores.json]
+  end
+  subgraph Web["apps/web"]
+    Lib[vector-stores-catalog.ts]
+    Cmp[VectorStoreConfigurator]
+    V[Zod VectorStoreConfigSchema]
+    Z[(useDesignerStore draft.stages.vectorStore)]
+  end
+  VS --> Lib
+  Lib --> Cmp
+  Cmp -->|"updateStages(vectorStore)"| Z
+  Cmp -.->|safeParse| V
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

@@ -8,6 +8,7 @@ import { DESIGNER_STAGES } from '@/lib/constants';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { cn } from '@/lib/utils';
 import { getEmbeddingModelMeta } from '@/lib/embeddings-catalog';
+import { getVectorStoreMeta } from '@/lib/vector-stores-catalog';
 import { useDesignerStore } from '@/stores/designer-store';
 import type { ChunkingStrategy, DataIngestionConfig } from '@/types/pipeline';
 
@@ -47,6 +48,16 @@ function embeddingHint(modelId?: string, dimensions?: number): string {
   const short = label.length > 22 ? `${label.slice(0, 20)}…` : label;
   if (dimensions === undefined) return short;
   return `${short} · ${dimensions}d`;
+}
+
+function vectorStoreHint(providerId?: string, indexName?: string): string {
+  if (!providerId) return '';
+  const meta = getVectorStoreMeta(providerId);
+  const label = meta?.name ?? providerId;
+  const short = label.length > 20 ? `${label.slice(0, 18)}…` : label;
+  if (!indexName) return short;
+  const idx = indexName.length > 14 ? `${indexName.slice(0, 12)}…` : indexName;
+  return `${short} · ${idx}`;
 }
 
 export function StageNavigator() {
@@ -144,6 +155,10 @@ export function StageNavigator() {
                   ) : stage.id === 'embedding' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {embeddingHint(draft.stages.embedding?.model, draft.stages.embedding?.dimensions)}
+                    </span>
+                  ) : stage.id === 'vectorstore' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {vectorStoreHint(draft.stages.vectorStore?.provider, draft.stages.vectorStore?.indexName)}
                     </span>
                   ) : null}
                 </span>

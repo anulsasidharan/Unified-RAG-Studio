@@ -99,14 +99,37 @@ flowchart LR
 
 ---
 
+## Design level 6 — Vector store bound to `draft.stages.vectorStore` (after P5-6)
+
+The **Vector Store** stage renders **`VectorStoreConfigurator`**, which reads **`data/vector-stores.json`** via **`apps/web/src/lib/vector-stores-catalog.ts`**. Users filter by **type**, **cloud**, and **hybridSearch**, pick a **provider** card, and edit **`indexName`**, **metric** (intersection of catalog **supportedMetrics** and **`SimilarityMetric`**), **replicas/shards**, optional **namespace**, and optional **cloud** hints. Switching providers calls **`vectorStorePatchFromCatalog`** so **metric** stays valid; pinned rows mirror the Embedding stage when filters hide the active provider. **`StageNavigator`** shows **`vectorStoreHint`**.
+
+```mermaid
+flowchart LR
+  subgraph Repo["Monorepo"]
+    JSON[(data/vector-stores.json)]
+  end
+  subgraph Next["apps/web"]
+    Lib[vector-stores-catalog.ts]
+    Cmp[VectorStoreConfigurator]
+    V[Zod VectorStoreConfigSchema]
+    Z[(draft.stages.vectorStore)]
+  end
+  JSON --> Lib
+  Lib --> Cmp
+  Cmp -->|"updateStages"| Z
+  Cmp -.->|safeParse| V
+```
+
+---
+
 ## Future levels (placeholder)
 
-Remaining P5 tasks add panels for **vector store**, **retrieval**, **generation**, **routing/memory/evaluation**, **visualizer**, **cost**, **export**, **review**, and **templates** — each **`updateStages`** / **`patchDraft`** onto the same **`draft`** consumed by Phase 4 APIs.
+Remaining P5 tasks add panels for **retrieval**, **generation**, **routing/memory/evaluation**, **visualizer**, **cost**, **export**, **review**, and **templates** — each **`updateStages`** / **`patchDraft`** onto the same **`draft`** consumed by Phase 4 APIs.
 
 ```mermaid
 flowchart TB
   Draft[PipelineConfiguration draft]
-  Draft --> VS[P5-6 vector store …]
+  Draft --> RT[P5-7 retrieval …]
   Draft --> Later[Later P5 stages …]
 ```
 

@@ -24,3 +24,4 @@
 | P5-3 · Data Ingestion Configuration | `feature/p5-ingestion-config` | ✅ done |
 | P5-4 · Chunking Configuration | `feature/p5-chunking-config` | ✅ done |
 | P5-5 · Embedding Model Selector | `feature/p5-embedding-selector` | ✅ done |
+| P5-6 · Vector Store Selector | `feature/p5-vectorstore-selector` | ✅ done |
