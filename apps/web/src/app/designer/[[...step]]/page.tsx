@@ -1,4 +1,4 @@
-import { DesignerStepView } from './designer-step-view';
+import { DesignerStepView } from '@/components/designer/designer-step-view';
 import { stageIdFromStepParams } from '@/lib/designer-routes';
 
 type PageProps = {

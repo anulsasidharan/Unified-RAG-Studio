@@ -101,6 +101,19 @@ describe('generateMermaidDiagram', () => {
     const result = generateMermaidDiagram(fullConfig.stages, 'gcp');
     expect(result).toMatchSnapshot();
   });
+
+  it('is only a placeholder when no stage beyond cloud is visited (reveal -1)', () => {
+    const result = generateMermaidDiagram(minimalConfig.stages, 'aws', -1);
+    expect(result).toContain('Start designing');
+    expect(result).not.toContain('subgraph');
+  });
+
+  it('adds indexing through chunking but not embedding when reveal index is 2', () => {
+    const result = generateMermaidDiagram(minimalConfig.stages, 'aws', 2);
+    expect(result).toContain('Chunking');
+    expect(result).not.toContain('Embed');
+    expect(result).not.toContain('Vector Store');
+  });
 });
 
 describe('generatePipelineSummary', () => {

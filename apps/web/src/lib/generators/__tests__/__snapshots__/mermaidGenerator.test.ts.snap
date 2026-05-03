@@ -6,11 +6,10 @@ exports[`generateMermaidDiagram > matches snapshot for full config 1`] = `
     direction LR
     SRC[("📄 Source\\ngcs")]
     ING["⬆️ Ingest & Preprocess"]
-    SRC --> ING
     CH["✂️ Chunking\\nsemantic\\n1024 tok / 128 overlap"]
     EMB["🎯 Embed\\ntext-embedding-3-large\\n3072d"]
     VS[("🗃️ Vector Store\\npinecone\\nfull-pipeline-index")]
-    ING --> CH --> EMB --> VS
+    SRC --> ING --> CH --> EMB --> VS
   end
   subgraph QRY["Query Path"]
     direction LR

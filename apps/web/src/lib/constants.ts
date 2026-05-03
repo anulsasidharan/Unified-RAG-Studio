@@ -18,6 +18,12 @@ export const DESIGNER_STAGES = [
 
 export type DesignerStageId = (typeof DESIGNER_STAGES)[number]['id'];
 
+/** 0-based index in {@link DESIGNER_STAGES} — used for progressive diagram reveal. */
+export function designerStageIndex(id: DesignerStageId): number {
+  const i = DESIGNER_STAGES.findIndex((s) => s.id === id);
+  return i >= 0 ? i : 0;
+}
+
 export const STAGE_ROUTE_MAP: Record<string, string> = Object.fromEntries(
   DESIGNER_STAGES.map((s) => [s.id, s.path])
 );
