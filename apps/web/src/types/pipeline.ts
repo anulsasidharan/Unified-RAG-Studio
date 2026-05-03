@@ -266,6 +266,17 @@ export interface CostEstimate {
   breakdown: CostBreakdown[];
 }
 
+/** Formats supported by `POST /api/designer/export` (P4-4). */
+export type DesignerExportFormat = 'python' | 'yaml' | 'terraform' | 'docker-compose' | 'k8s';
+
+/** Response from `POST /api/designer/export` (camelCase via `RAGBaseModel`). */
+export interface DesignerExportResponse {
+  code: string;
+  filename: string;
+  format: DesignerExportFormat;
+  contentType: string;
+}
+
 export interface PerformanceEstimate {
   avgLatencyMs: number;
   p95LatencyMs: number;

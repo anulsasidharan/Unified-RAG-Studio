@@ -30,3 +30,4 @@
 | P5-9 · Routing, Memory & Evaluation Config | `feature/p5-routing-memory-eval` | ✅ done |
 | P5-10 · Pipeline Visualizer | `feature/p5-pipeline-visualizer` | ✅ done |
 | P5-11 · Cost Estimator Component | `feature/p5-cost-estimator` | ✅ done |
+| P5-12 · Code Export Component | `feature/p5-code-exporter` | ✅ done |
