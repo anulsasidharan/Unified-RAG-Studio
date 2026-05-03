@@ -51,7 +51,7 @@
 | 40 | Phase 5 | P5-5 · Embedding Model Selector | `feature/p5-embedding-selector` | Build embedding model discovery/filter/selection UI. | ✅ done |
 | 41 | Phase 5 | P5-6 · Vector Store Selector | `feature/p5-vectorstore-selector` | Build vector store selection and provider-specific config UI. | ✅ done |
 | 42 | Phase 5 | P5-7 · Retrieval Configuration | `feature/p5-retrieval-config` | Build retrieval strategy, top-k, filters, and reranking UI. | ✅ done |
-| 43 | Phase 5 | P5-8 · Generation Model Selector | `feature/p5-generation-selector` | Build generation model and inference parameter selection UI. | ⬜ pending |
+| 43 | Phase 5 | P5-8 · Generation Model Selector | `feature/p5-generation-selector` | Build generation model and inference parameter selection UI. | ✅ done |
 | 44 | Phase 5 | P5-9 · Routing, Memory & Evaluation Config | `feature/p5-routing-memory-eval` | Build routing logic, memory settings, and evaluation options UI. | ⬜ pending |
 | 45 | Phase 5 | P5-10 · Pipeline Visualizer | `feature/p5-pipeline-visualizer` | Render live pipeline graph/summary from current configuration. | ⬜ pending |
 | 46 | Phase 5 | P5-11 · Cost Estimator Component | `feature/p5-cost-estimator` | Show live cost estimates with detailed component breakdowns. | ⬜ pending |
