@@ -1,4 +1,10 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// In the browser, use same-origin `/api/*` so `next.config.js` rewrites proxy to the FastAPI
+// backend. Calling `http://localhost:8000` directly breaks CORS when the app is opened on
+// `127.0.0.1` or another host not listed in the API's `cors_origins`.
+const API_BASE =
+  typeof window !== 'undefined'
+    ? ''
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -45,7 +51,28 @@ async function request<TResponse, TBody = unknown>(
   const response = await fetch(url, init);
 
   if (!response.ok) {
-    const data = await response.json().catch(() => null);
+    const raw = await response.text();
+    const trimmed = raw.slice(0, 16_000);
+    let data: unknown = null;
+    if (trimmed) {
+      try {
+        data = JSON.parse(trimmed) as unknown;
+      } catch {
+        // Next.js proxy errors are often HTML/plain text, not JSON.
+      }
+    }
+    const head = trimmed.slice(0, 4000);
+    const proxyUnreachable =
+      /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND/i.test(head);
+    if (
+      proxyUnreachable &&
+      (typeof data !== 'object' || data === null || !('detail' in (data as object)))
+    ) {
+      data = {
+        detail:
+          'Cannot reach the backend API on port 8000. From the repository root run npm run dev:full (starts Next + FastAPI), or in apps/api run: uv run uvicorn app.main:app --reload --port 8000',
+      };
+    }
     throw new ApiError(response.status, response.statusText, data);
   }
 

@@ -67,7 +67,12 @@ class Settings(BaseSettings):
     minio_bucket: str = "rag-studio-documents"
 
     # ── CORS ──────────────────────────────────────────────────
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:80"]
+    cors_origins: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:80",
+        "http://127.0.0.1:80",
+    ]
 
     # ── Pagination ────────────────────────────────────────────
     default_page_size: int = 20
