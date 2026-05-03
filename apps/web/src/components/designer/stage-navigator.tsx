@@ -8,6 +8,21 @@ import { DESIGNER_STAGES } from '@/lib/constants';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
+import type { DataIngestionConfig } from '@/types/pipeline';
+
+function ingestionSourceHint(source?: DataIngestionConfig['sourceType']): string {
+  if (!source) return '';
+  const labels: Record<DataIngestionConfig['sourceType'], string> = {
+    'file-upload': 'Upload',
+    s3: 'S3',
+    gcs: 'GCS',
+    'azure-blob': 'Azure Blob',
+    url: 'URL',
+    database: 'Database',
+    api: 'API',
+  };
+  return labels[source];
+}
 
 export function StageNavigator() {
   const pathname = usePathname();
@@ -88,6 +103,10 @@ export function StageNavigator() {
                   {stage.id === 'cloud' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {String(draft.cloudProvider).toUpperCase()}
+                    </span>
+                  ) : stage.id === 'ingestion' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {ingestionSourceHint(draft.stages.dataIngestion?.sourceType)}
                     </span>
                   ) : null}
                 </span>

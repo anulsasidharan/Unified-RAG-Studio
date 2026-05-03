@@ -53,3 +53,4 @@
 |------|--------|--------|
 | P5-1 · Designer Layout & Stage Navigator | `feature/p5-designer-layout` | ✅ done |
 | P5-2 · Cloud Provider Selector | `feature/p5-cloud-provider-selector` | ✅ done |
+| P5-3 · Data Ingestion Configuration | `feature/p5-ingestion-config` | ✅ done |

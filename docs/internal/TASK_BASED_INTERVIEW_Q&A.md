@@ -3933,4 +3933,60 @@ Only the **cloud** stage is fully interactive; other stages still use **`Designe
 
 ---
 
+## Phase 5 · P5-3 Data Ingestion Configuration
+
+### What does P5-3 deliver?
+
+An interactive **Data Ingestion** stage at **`/designer/ingestion`** that edits **`draft.stages.dataIngestion`** (`DataIngestionConfig`): **source type** (file upload, S3, GCS, Azure Blob, URL, database, API), **allowed file extensions**, **preprocessing** toggles (strip HTML, normalize whitespace, extract metadata) plus optional **custom rules** (one per line), **metadata** toggles (include source path, include page numbers) with optional **custom key/value metadata**, and **connection hints** stored in **`connectionConfig`** (non-secret placeholders only). Changes persist via **`useDesignerStore`** → **`updateStages`** with the same **Zustand `persist`** behavior as other Designer stages.
+
+### Where is the UI implemented?
+
+**`apps/web/src/components/designer/data-ingestion-configurator.tsx`** — exported as **`DataIngestionConfigurator`**. **`DesignerStagePlaceholder`** renders it when **`stageId === 'ingestion'`**, parallel to **`CloudProviderSelector`** on the cloud stage.
+
+### How does state merge without wiping nested fields?
+
+The component uses a **`mergeIngestion`** helper that starts from **`createDefaultPipelineConfiguration().stages.dataIngestion`** when missing and deep-merges **`preprocessing`** and **`metadata`**. **`patchIngestion`** composes partial updates so toggling one switch does not drop sibling keys.
+
+### Which schema validates the shape?
+
+Frontend **`DataIngestionConfigSchema`** in **`apps/web/src/lib/validators.ts`** (Zod) mirrors **`DataIngestionConfig`** in **`apps/web/src/types/pipeline.ts`** and aligns with **`DataIngestionConfigSchema`** in **`apps/api/app/schemas/pipeline.py`**. The UI runs **`safeParse`** and shows a compact issue list if the draft becomes invalid (for example after manual localStorage edits).
+
+### Why separate “connection hints” from secrets?
+
+**`connectionConfig`** is typed as **`Record<string, unknown>`** for flexibility; the UI labels it **reference only** and collects bucket names, regions, prefixes, hosts, etc. **Credentials belong in a secret manager at deploy time**, not in the committed pipeline JSON—consistent with export and Terraform generators treating config as **non-sensitive parameters**.
+
+### What happens when the user changes source type?
+
+**`connectionConfig`** is **reset to `{}`** so incompatible keys from the previous source do not leak into export payloads. The user re-enters hints for the new source.
+
+### How are custom metadata rows edited?
+
+Rows render from **`metadata.customMetadata`** (`Record<string, string>`). Users add/remove rows; empty keys are stripped on save so optional **`customMetadata`** can be omitted entirely.
+
+### Does P5-3 upload files or connect to live buckets?
+
+**No.** This task is **configuration only**. Actual ingestion execution remains in **Phase 2 `IngestionService`** and future worker/API flows; the Designer captures **intent** for YAML/Python/export.
+
+### What appears in the stage navigator for ingestion?
+
+**`StageNavigator`** shows a short **source hint** under **Data Ingestion** (for example **S3**, **GCS**, **Upload**) derived from **`draft.stages.dataIngestion.sourceType`**, similar to the cloud abbreviation for the first stage.
+
+### What accessibility patterns are used?
+
+Source selection uses **`role="radiogroup"`** / **`role="radio"`** with **`aria-checked`**. Switches use **`role="switch"`** / **`aria-checked`**. Sections have **`aria-labelledby`** where headings anchor the region.
+
+### What tests should be added or extended for P5-3?
+
+There is **no new Vitest file** in this change set; regression relies on **`tsc --noEmit`** and existing **`validators`** tests. A follow-up can add component tests for **`mergeIngestion`** or smoke-render **`DataIngestionConfigurator`**.
+
+### What remains placeholder after P5-3?
+
+Stages **chunking** through **review** still use the dashed placeholder until **P5-4+**. Only **Cloud Provider** and **Data Ingestion** are fully interactive.
+
+### How does ingestion config flow to exports?
+
+ **`draft.stages.dataIngestion`** is part of **`PipelineConfiguration`** consumed by **`yamlGenerator`**, **`pythonCodeGenerator`**, **`mermaidGenerator`**, and backend export services—same field names as today (**`dataIngestion`** in TS JSON).
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
