@@ -14,7 +14,12 @@ from app.core.agents import (
     invoke_autopilot_bootstrap,
 )
 from app.core.agents.prompts import format_stage_delegation
-from app.core.agents.tools import autopilot_health_ping, document_corpus_analyze, summarize_requirements_snapshot
+from app.core.agents.tools import (
+    autopilot_health_ping,
+    chunking_optimizer_run,
+    document_corpus_analyze,
+    summarize_requirements_snapshot,
+)
 
 
 def test_initial_state_shapes():
@@ -44,12 +49,14 @@ def test_bootstrap_graph_runs_without_checkpointer():
         requirements={},
     )
     out = invoke_autopilot_bootstrap(st, checkpointer=None)
-    assert out["current_stage"] == "analyze_complete"
+    assert out["current_stage"] == "chunking_complete"
     assert out["iteration"] == 1
     assert out["stage_outputs"]["bootstrap"]["status"] == "complete"
     assert out["stage_outputs"]["analyze"]["status"] == "complete"
-    assert len(out["messages"]) >= 2
-    assert len(out["agent_trace"]) >= 3
+    assert out["stage_outputs"]["chunking"]["status"] == "complete"
+    assert (out["stage_outputs"]["chunking"].get("selected") or {}).get("strategy")
+    assert len(out["messages"]) >= 3
+    assert len(out["agent_trace"]) >= 4
 
 
 def test_bootstrap_graph_with_memory_checkpointer():
@@ -73,7 +80,7 @@ def test_compile_returns_runnable():
         requirements={},
     )
     final = app.invoke(st)
-    assert final["current_stage"] == "analyze_complete"
+    assert final["current_stage"] == "chunking_complete"
 
 
 def test_stub_tools():
@@ -83,7 +90,7 @@ def test_stub_tools():
 
 def test_tool_registry_non_empty():
     tools = get_autopilot_bootstrap_tools()
-    assert len(tools) == 5
+    assert len(tools) == 6
 
 
 def test_document_corpus_analyze_tool_smoke():
@@ -91,6 +98,19 @@ def test_document_corpus_analyze_tool_smoke():
         {"document_ids_json": json.dumps(["1"]), "requirements_json": "{}"},
     )
     assert "chunking_recommendation" in json.loads(raw)
+
+
+def test_chunking_optimizer_tool_smoke():
+    analyze_raw = document_corpus_analyze.invoke(
+        {"document_ids_json": json.dumps(["1"]), "requirements_json": "{}"},
+    )
+    analyze = json.loads(analyze_raw)
+    out_raw = chunking_optimizer_run.invoke(
+        {"analyze_json": json.dumps(analyze), "requirements_json": "{}"},
+    )
+    out = json.loads(out_raw)
+    assert out.get("status") == "complete"
+    assert out.get("selected", {}).get("strategy")
 
 
 def test_format_stage_delegation_contains_ids():

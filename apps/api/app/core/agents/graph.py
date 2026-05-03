@@ -1,4 +1,4 @@
-"""LangGraph construction — bootstrap plus Document Analyst (P6-2 analyze stage)."""
+"""LangGraph construction — bootstrap, Document Analyst (P6-2), Chunking Optimizer (P6-3)."""
 
 from __future__ import annotations
 
@@ -10,8 +10,13 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 
+from app.core.agents.chunking_optimizer import human_readable_optimizer_message, run_chunking_optimizer
 from app.core.agents.document_analyst import human_readable_analyst_message, run_document_analyst
-from app.core.agents.prompts import DOCUMENT_ANALYST_PROMPT, ORCHESTRATOR_SYSTEM_PROMPT
+from app.core.agents.prompts import (
+    CHUNKING_OPTIMIZER_PROMPT,
+    DOCUMENT_ANALYST_PROMPT,
+    ORCHESTRATOR_SYSTEM_PROMPT,
+)
 from app.core.agents.state import AutopilotGraphState
 
 logger = structlog.get_logger(__name__)
@@ -29,7 +34,7 @@ def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
     text = (
         "Autopilot graph online. "
         f"Documents queued: {trace['document_count']}. "
-        "Running document analyst next, then later subgraphs per AUTOPILOT_STAGE_ORDER."
+        "Running document analyst, then chunking optimizer, then later subgraphs per AUTOPILOT_STAGE_ORDER."
     )
     return {
         "messages": [
@@ -61,8 +66,64 @@ def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
             "bootstrap": {
                 "status": "complete",
                 "next": "document_analyst",
+                "then": "chunking_optimizer",
             },
         },
+    }
+
+
+def _chunking_optimizer_node(state: AutopilotGraphState) -> dict[str, Any]:
+    """P6-3: benchmark chunking configs around the analyst recommendation; write ``stage_outputs['chunking']``."""
+
+    merged = state.get("stage_outputs") or {}
+    analyze = merged.get("analyze")
+    if not analyze or analyze.get("status") != "complete":
+        trace = {
+            "event": "chunking_optimizer",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_analyze",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Chunking optimizer skipped: analyze stage missing or incomplete.",
+                    additional_kwargs={"stage": "chunking", "optimizer_prompt_hint": CHUNKING_OPTIMIZER_PROMPT[:120]},
+                ),
+            ],
+            "current_stage": "chunking_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "chunking": {
+                    "status": "failed",
+                    "reason": "missing_analyze",
+                },
+            },
+        }
+
+    payload = run_chunking_optimizer(
+        analyze_payload=dict(analyze),
+        requirements=dict(state.get("requirements") or {}),
+    )
+    trace = {
+        "event": "chunking_optimizer",
+        "build_id": state["build_id"],
+        "project_id": state["project_id"],
+        "selected_strategy": (payload.get("selected") or {}).get("strategy"),
+    }
+    text = human_readable_optimizer_message(payload)
+    return {
+        "messages": [
+            AIMessage(
+                content=text,
+                additional_kwargs={
+                    "stage": "chunking",
+                    "optimizer_prompt_hint": CHUNKING_OPTIMIZER_PROMPT[:120],
+                },
+            ),
+        ],
+        "current_stage": "chunking_complete",
+        "agent_trace": [trace],
+        "stage_outputs": {"chunking": payload},
     }
 
 
@@ -97,7 +158,7 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
-    """Compile graph: prepare → finalize → document_analyst → END.
+    """Compile graph: prepare → finalize → document_analyst → chunking_optimizer → END.
 
     Pass a ``MemorySaver`` (or other checkpointer) to exercise persistence; omit for stateless smoke tests.
     """
@@ -106,10 +167,12 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
     graph.add_node("bootstrap_prepare", _bootstrap_prepare)
     graph.add_node("bootstrap_finalize", _bootstrap_finalize)
     graph.add_node("document_analyst", _document_analyst_node)
+    graph.add_node("chunking_optimizer", _chunking_optimizer_node)
     graph.set_entry_point("bootstrap_prepare")
     graph.add_edge("bootstrap_prepare", "bootstrap_finalize")
     graph.add_edge("bootstrap_finalize", "document_analyst")
-    graph.add_edge("document_analyst", END)
+    graph.add_edge("document_analyst", "chunking_optimizer")
+    graph.add_edge("chunking_optimizer", END)
     compiled = graph.compile(checkpointer=checkpointer)
     logger.debug("autopilot_bootstrap_graph_compiled", checkpointer=bool(checkpointer))
     return compiled
@@ -121,7 +184,7 @@ def invoke_autopilot_bootstrap(
     thread_id: str = "bootstrap-test",
     checkpointer: MemorySaver | None = None,
 ) -> AutopilotGraphState:
-    """Run bootstrap + document analyst graph once; return merged terminal state (typed dict)."""
+    """Run bootstrap + document analyst + chunking optimizer graph once; return merged terminal state."""
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
     if checkpointer is not None:

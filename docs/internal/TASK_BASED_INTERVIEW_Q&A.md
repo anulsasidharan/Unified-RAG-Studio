@@ -4696,4 +4696,54 @@ They mirror the same logic as the graph node so a future **tool-calling LLM** ca
 
 ---
 
+## Phase 6 · P6-3 · Chunking Optimizer Agent
+
+### What problem does the Chunking Optimizer solve?
+
+The analyst proposes **one primary** strategy plus **alternates**, but real chunk quality depends on **tokenizer boundaries**, **overlap**, and **strategy-specific behaviour**. The optimizer **materialises candidate `ChunkingConfig` rows**, runs the production **`ChunkingService`** on a **small benchmark corpus**, scores outputs with **`ChunkQualityScorer`**, and picks the **highest composite score** so Autopilot exports a defensible `chunk_size` / `chunk_overlap` / `strategy` triple—not only a rule-based guess.
+
+### Why benchmark on synthetic text instead of full uploads?
+
+The LangGraph state carries **`document_ids` and optional `corpus_profiles`**, not full file bytes. Until ingestion streams text into the worker, the optimizer builds (or accepts) **short representative documents**: default **signal-aware synthetic prose/markdown/code/tabular snippets**, or optional **`requirements["chunking_sample_documents"]`** for tests and future wiring that passes real snippets from storage.
+
+### How is the composite score defined?
+
+Per candidate, chunks are scored with **`ChunkQualityScorer`** (density, sentence completeness, proximity to target `chunk_size`). The mean **overall** metric is adjusted by **`optimize_for`**: **latency** penalises high chunk counts; **cost** penalises many chunks (embedding calls); **quality** gives a small bonus for reasonable fragmentation; **balanced** uses the mean alone.
+
+### What happens if a strategy fails at runtime (e.g. semantic embeddings)?
+
+Each candidate is wrapped in **try/except**; failures become **`candidates_tried[].error`** strings and **do not crash** the graph. If **every** candidate fails, **`stage_outputs["chunking"].status`** is **`failed`** with **`reason: all_chunking_benchmarks_failed`**.
+
+### How does the graph topology change after P6-3?
+
+**Linear:** `bootstrap_prepare` → `bootstrap_finalize` → `document_analyst` → **`chunking_optimizer`** → END. The terminal **`current_stage`** is **`chunking_complete`** (success path) even when chunking payload records an internal failure, so orchestrators can rely on a single stage pointer.
+
+### What keys does `stage_outputs["chunking"]` contain on success?
+
+| Key | Role |
+|-----|------|
+| `status` | `complete` or `failed` |
+| `selected` | `strategy`, `chunk_size`, `chunk_overlap`, `composite_score`, `rationale` |
+| `candidates_tried` | List of per-candidate metrics (`chunk_count`, `composite_score`, optional `error`) |
+| `alternatives_tested` | Strategy ids of non-winning successful runs (aligns with API “alternatives tested” wording) |
+| `benchmark_document_count` | How many LangChain documents were chunked |
+
+### Which LangChain tool was added for P6-3?
+
+**`chunking_optimizer_run(analyze_json, requirements_json)`** — accepts the **same JSON shape** as `stage_outputs["analyze"]` plus requirements; returns **optimizer JSON** for future tool-calling LLMs.
+
+### Interview trap: is `current_stage` still `analyze_complete` after the full bootstrap graph?
+
+**No after P6-3.** After a successful end-to-end invoke, **`current_stage` is `chunking_complete`**. The analyst node still sets **`analyze_complete` internally before merge**, but the **last write wins** on the scalar field.
+
+### How do tests cover the optimizer without large models?
+
+**`tests/test_core/test_chunking_optimizer.py`** exercises candidate deduplication, JSON tool errors, and deterministic benchmarks with **`chunking_sample_documents`**. **`test_agents_langgraph.py`** asserts **`stage_outputs["chunking"]["status"] == "complete"`** and extended **`agent_trace`** after **`invoke_autopilot_bootstrap`**.
+
+### What is the next task after P6-3?
+
+**P6-4 · Embedding Tester Agent** — benchmark embedding models against cost/latency/quality goals.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

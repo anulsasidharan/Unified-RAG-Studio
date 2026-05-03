@@ -1,4 +1,4 @@
-"""LangChain tools registered for Autopilot agents (P6-1 scaffolding + P6-2 analyst)."""
+"""LangChain tools registered for Autopilot agents (P6-1 + P6-2 analyst + P6-3 chunking optimizer)."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from typing import Any
 
 from langchain_core.tools import tool
 
+from app.core.agents.chunking_optimizer import run_chunking_optimizer_from_json
 from app.core.agents.document_analyst import (
     build_corpus_summary,
     recommend_chunking,
@@ -103,6 +104,13 @@ def recommend_chunking_from_summary_json(summary_json: str, requirements_json: s
     return json.dumps(rec, ensure_ascii=False)
 
 
+@tool
+def chunking_optimizer_run(analyze_json: str, requirements_json: str) -> str:
+    """P6-3: benchmark chunking configs from a completed analyze JSON payload; returns optimizer JSON."""
+
+    return run_chunking_optimizer_from_json(analyze_json, requirements_json)
+
+
 def get_autopilot_bootstrap_tools() -> list[Any]:
     """Tools bound to the bootstrap graph / future orchestrator LLM."""
 
@@ -112,4 +120,5 @@ def get_autopilot_bootstrap_tools() -> list[Any]:
         document_corpus_analyze,
         summarize_corpus_profiles_json,
         recommend_chunking_from_summary_json,
+        chunking_optimizer_run,
     ]

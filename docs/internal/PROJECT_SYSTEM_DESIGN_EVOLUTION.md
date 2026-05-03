@@ -485,3 +485,47 @@ flowchart LR
 After P6-1 the graph only **validated LangGraph wiring**. After P6-2 the first **real Autopilot stage** (`analyze` in **`AUTOPILOT_STAGE_ORDER`**) produces **actionable machine output** for the Chunking Optimizer (P6-3) while remaining **LLM-free** for reproducibility.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-3 · Chunking Optimizer Agent)
+
+**P6-3** adds **`app/core/agents/chunking_optimizer.py`**: expands **`chunking_recommendation`** into deduped **`ChunkingConfig`** candidates (primary, alternates, and light **`optimize_for`** variants), runs **`ChunkingService.chunk`** on a **signal-aware synthetic corpus** (or **`requirements["chunking_sample_documents"]`**), scores chunks via **`ChunkQualityScorer`**, and writes **`stage_outputs["chunking"]`** (`selected`, `candidates_tried`, `alternatives_tested`). The compiled graph is **linear**: **`bootstrap_prepare` → `bootstrap_finalize` → `document_analyst` → `chunking_optimizer` → END**. Terminal **`current_stage`** is **`chunking_complete`**. Tooling adds **`chunking_optimizer_run`** for future LLM tool loops.
+
+### P6-3 — Graph topology (bootstrap + analyze + chunking)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> chunking_optimizer
+  chunking_optimizer --> [*]
+```
+
+### P6-3 — Data flow (analyze → chunk benchmarks → stage_outputs)
+
+```mermaid
+flowchart LR
+  subgraph Prior["From P6-2"]
+    A["stage_outputs.analyze"]
+  end
+  subgraph Opt["chunking_optimizer.py"]
+    C[build_optimizer_candidates]
+    S[ChunkingService.chunk]
+    Q[ChunkQualityScorer]
+  end
+  subgraph Out["AutopilotGraphState"]
+    CH["stage_outputs.chunking"]
+    TR[agent_trace]
+  end
+  A --> C
+  C --> S
+  S --> Q
+  Q --> CH
+  C --> TR
+```
+
+### Evolution note (P6-2 → P6-3)
+
+After P6-2, Autopilot produced **recommendations only**. After P6-3, the same build run **executes real chunkers** on a bounded corpus and selects a **measured** configuration, bridging **heuristic analyst output** to **service-level validation** before embedding work in P6-4.
+
+---
