@@ -25,7 +25,7 @@ export function StageNavigator() {
           Pipeline builder
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Move through stages; configuration panels arrive in upcoming P5 tasks.
+          Move through stages to configure your pipeline. More stage panels ship in upcoming P5 tasks.
         </p>
       </div>
 

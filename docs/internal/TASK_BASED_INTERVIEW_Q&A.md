@@ -3886,4 +3886,51 @@ Unit-test the JSON in CI, run **`pytest`** with fixture files, dry-run in stagin
 
 ---
 
+## Phase 5 · P5-2 Cloud Provider Selector
+
+### What does P5-2 deliver?
+
+A **first-stage configuration UI** in Designer mode that lets users choose **AWS**, **GCP**, **Azure**, or **Multi-Cloud** using metadata from the committed **`data/cloud-providers.json`** catalog (not hard-coded strings in the component). The selection updates **`draft.cloudProvider`** in **`useDesignerStore`** via **`patchDraft`**, so it persists with the rest of the pipeline draft (Zustand **`persist`** → localStorage).
+
+### Where is the catalog loaded and why import JSON instead of fetching?
+
+**`apps/web/src/lib/cloud-providers-catalog.ts`** imports the JSON **at build time**. That keeps the catalog **versioned with the repo**, avoids an extra runtime fetch, and guarantees types align with **`CloudProviderMeta`** in **`apps/web/src/types/models.ts`**. Vitest tests assert provider **`id`** values match the **`CloudProvider`** union in **`pipeline.ts`**.
+
+### How does the UI surface catalog fields?
+
+**`CloudProviderSelector`** renders a **radiogroup** of cards (logo, short name, pricing tier badge, description excerpt). The selected provider shows a **detail panel**: **bestFor**, **strengths**, grouped **nativeServices**, **ragStudioDefaults** (hints for later stages), and **compliance** chips — all straight from the JSON.
+
+### Why are there files under `apps/web/public/logos/`?
+
+The catalog references **`/logos/aws.svg`** (and similar). Those paths resolve from **`public/`** in Next.js. **P5-2** adds lightweight SVG marks so **`next/image`** does not 404; **`onError`** falls back to **shortName** initials if an asset is missing.
+
+### How does this connect to the backend?
+
+**`PipelineConfiguration.cloudProvider`** on the frontend mirrors **`CloudProvider`** in **`apps/api/app/schemas/pipeline.py`**. Saving or exporting the designer draft sends the same string the API expects (`aws`, `gcp`, `azure`, `multi-cloud`). Cost and export code already branch on **`cloud_provider`**.
+
+### Should selecting a cloud auto-change vector store defaults?
+
+**P5-2** intentionally **does not** overwrite **`stages.vectorStore`** automatically — users may have already tuned later stages; upcoming selectors (e.g. P5-6) can apply **`ragStudioDefaults`** explicitly. The UI **surfaces** defaults as **hints** only.
+
+### What accessibility choices were made?
+
+Cards use **`role="radiogroup"`** / **`role="radio"`** with **`aria-checked`**. Keyboard focus uses **`focus-visible`** ring styles on each card button.
+
+### What tests cover P5-2?
+
+**`apps/web/src/lib/__tests__/cloud-providers-catalog.test.ts`** — catalog shape, four providers, id narrowing, **`ragStudioDefaults`** presence.
+
+### How would you add a new cloud (e.g. Oracle) end-to-end?
+
+1. Extend **`CloudProvider`** in TS and Python enums if the product adds a fifth provider.  
+2. Append an entry to **`data/cloud-providers.json`** with the same **`id`**.  
+3. Add a logo under **`public/logos/`** if using **`logo`** paths.  
+4. Run **`npm run test`** and regression-test designer save/export.
+
+### What is the main limitation of P5-2 alone?
+
+Only the **cloud** stage is fully interactive; other stages still use **`DesignerStagePlaceholder`** until their P5 tasks ship. The **navigator** copy reflects that rollout.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
