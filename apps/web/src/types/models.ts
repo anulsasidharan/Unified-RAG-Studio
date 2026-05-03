@@ -149,9 +149,10 @@ export interface VectorStoreMeta {
 
 export interface RetrievalStrategyParameter {
   name: string;
-  type: 'integer' | 'float' | 'boolean' | 'string';
+  type: 'integer' | 'float' | 'boolean' | 'string' | 'array';
   min?: number;
   max?: number;
+  options?: string[];
   default: unknown;
   description: string;
 }

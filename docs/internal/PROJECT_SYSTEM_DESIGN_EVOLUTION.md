@@ -159,3 +159,32 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-7)
+
+**P5-7** adds **retrieval and reranking** configuration: **`RetrievalConfigurator`** on **`/designer/retrieval`** reads **`data/retrieval-strategies.json`** via **`retrieval-strategies-catalog.ts`**, applies **`retrievalDefaultsFromCatalog`**, and writes **`updateStages({ retrieval })`** (strategy, top-k, optional score threshold, hybrid α, parent–child sizes, multi-query variants + LLM id, metadata filters). **Reranking** uses **`data/models/rerankers.json`** via **`rerankers-catalog.ts`** and **`updateStages({ reranking })`**. The **`/designer/reranking`** route uses **`variant="rerank-focus"`** for a compact retrieval summary plus full reranking controls. Client validation uses **Zod** (**`RetrievalConfigSchema`**, **`RerankingConfigSchema`**); execution stays in **`RetrievalService` (P2-5)**.
+
+```mermaid
+flowchart TB
+  subgraph Data["Shared JSON"]
+    RS[data/retrieval-strategies.json]
+    RR[data/models/rerankers.json]
+  end
+  subgraph Web["apps/web"]
+    L1[retrieval-strategies-catalog.ts]
+    L2[rerankers-catalog.ts]
+    C[RetrievalConfigurator]
+    V[Zod retrieval + reranking]
+    Z[(draft.stages.retrieval + reranking)]
+  end
+  RS --> L1
+  RR --> L2
+  L1 --> C
+  L2 --> C
+  C -->|"updateStages"| Z
+  C -.->|safeParse| V
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---
