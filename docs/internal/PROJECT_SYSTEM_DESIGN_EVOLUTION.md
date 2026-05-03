@@ -119,3 +119,18 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 — P5-5 UX refinement (pinned selection, 2026-05-02)
+
+When **search/filters** exclude the model already stored on **`draft.stages.embedding`**, the UI must not make the active choice disappear from the card grid. **`EmbeddingConfigurator`** therefore **prepends** the current catalog entry to the visible list and labels it **“Current · outside filters”**, with a short **aria-live** note in the filter summary. The main P5-5 dataflow is unchanged; this is a **client-only discoverability** layer on top of **`embeddings-catalog.ts`** and **`updateStages({ embedding })`**.
+
+```mermaid
+flowchart LR
+  F[Active filters + search] --> L[Filtered list]
+  S[(draft.stages.embedding.model)]
+  S -->|if not in L| P[Prepend current row]
+  L --> M[displayModels = P + L or L]
+  M --> Cards[Model card grid]
+```
+
+---

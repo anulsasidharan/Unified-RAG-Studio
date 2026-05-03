@@ -95,6 +95,8 @@ flowchart LR
   Cmp -.->|safeParse| V
 ```
 
+**Refinement (same design level):** if the **filtered** set omits the **currently selected** catalog id, **`EmbeddingConfigurator`** prepends that row to the grid and marks **“Current · outside filters”** so configuration state stays visible.
+
 ---
 
 ## Future levels (placeholder)
