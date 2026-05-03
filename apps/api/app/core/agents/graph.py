@@ -1,4 +1,4 @@
-"""LangGraph construction — bootstrap through Retrieval Optimizer (P6-5)."""
+"""LangGraph construction — bootstrap through Evaluation Agent (P6-6)."""
 
 from __future__ import annotations
 
@@ -22,10 +22,15 @@ from app.core.agents.embedding_tester import (
     human_readable_embedding_message,
     run_embedding_tester,
 )
+from app.core.agents.evaluation_agent import (
+    human_readable_evaluation_message,
+    run_evaluation_agent,
+)
 from app.core.agents.prompts import (
     CHUNKING_OPTIMIZER_PROMPT,
     DOCUMENT_ANALYST_PROMPT,
     EMBEDDING_TESTER_PROMPT,
+    EVALUATION_AGENT_PROMPT,
     ORCHESTRATOR_SYSTEM_PROMPT,
     RETRIEVAL_OPTIMIZER_PROMPT,
 )
@@ -39,6 +44,7 @@ logger = structlog.get_logger(__name__)
 _CHUNKING_OPT_HINT = CHUNKING_OPTIMIZER_PROMPT[:120]
 _EMBEDDING_TESTER_HINT = EMBEDDING_TESTER_PROMPT[:120]
 _RETRIEVAL_OPT_HINT = RETRIEVAL_OPTIMIZER_PROMPT[:120]
+_EVAL_AGENT_HINT = EVALUATION_AGENT_PROMPT[:120]
 
 
 def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
@@ -54,7 +60,7 @@ def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
         "Autopilot graph online. "
         f"Documents queued: {trace['document_count']}. "
         "Running document analyst, chunking optimizer, embedding tester, retrieval optimizer, "
-        "then later subgraphs per AUTOPILOT_STAGE_ORDER."
+        "evaluation agent, then later subgraphs per AUTOPILOT_STAGE_ORDER."
     )
     return {
         "messages": [
@@ -89,8 +95,125 @@ def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
                 "then": "chunking_optimizer",
                 "then_embedding": "embedding_tester",
                 "then_retrieval": "retrieval_optimizer",
+                "then_evaluation": "evaluation_agent",
             },
         },
+    }
+
+
+def _evaluation_agent_node(state: AutopilotGraphState) -> dict[str, Any]:
+    """P6-6: offline eval + failure analysis; write ``stage_outputs['evaluation']``."""
+
+    merged = state.get("stage_outputs") or {}
+    retrieval = merged.get("retrieval")
+    chunking = merged.get("chunking")
+    analyze = merged.get("analyze")
+    if not retrieval or retrieval.get("status") != "complete":
+        trace = {
+            "event": "evaluation_agent",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_retrieval",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Evaluation agent skipped: retrieval stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "evaluation",
+                        "evaluation_prompt_hint": _EVAL_AGENT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "evaluation_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "evaluation": {
+                    "status": "failed",
+                    "reason": "missing_retrieval",
+                },
+            },
+        }
+
+    if not chunking or chunking.get("status") != "complete":
+        trace = {
+            "event": "evaluation_agent",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_chunking",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Evaluation agent skipped: chunking stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "evaluation",
+                        "evaluation_prompt_hint": _EVAL_AGENT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "evaluation_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "evaluation": {
+                    "status": "failed",
+                    "reason": "missing_chunking",
+                },
+            },
+        }
+
+    if not analyze or analyze.get("status") != "complete":
+        trace = {
+            "event": "evaluation_agent",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_analyze",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Evaluation agent skipped: analyze stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "evaluation",
+                        "evaluation_prompt_hint": _EVAL_AGENT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "evaluation_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "evaluation": {
+                    "status": "failed",
+                    "reason": "missing_analyze",
+                },
+            },
+        }
+
+    payload = run_evaluation_agent(
+        retrieval_payload=dict(retrieval),
+        chunking_payload=dict(chunking),
+        analyze_payload=dict(analyze),
+        requirements=dict(state.get("requirements") or {}),
+        pipeline_config=state.get("pipeline_config"),
+    )
+    trace = {
+        "event": "evaluation_agent",
+        "build_id": state["build_id"],
+        "project_id": state["project_id"],
+        "meets_targets": payload.get("meets_targets"),
+        "eval_status": payload.get("status"),
+    }
+    text = human_readable_evaluation_message(payload)
+    return {
+        "messages": [
+            AIMessage(
+                content=text,
+                additional_kwargs={
+                    "stage": "evaluation",
+                    "evaluation_prompt_hint": _EVAL_AGENT_HINT,
+                },
+            ),
+        ],
+        "current_stage": "evaluation_complete",
+        "agent_trace": [trace],
+        "stage_outputs": {"evaluation": payload},
     }
 
 
@@ -385,7 +508,7 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
-    """Compile linear graph through retrieval_optimizer (optional ``MemorySaver``)."""
+    """Compile linear graph through evaluation_agent (optional ``MemorySaver``)."""
 
     graph = StateGraph(AutopilotGraphState)
     graph.add_node("bootstrap_prepare", _bootstrap_prepare)
@@ -394,13 +517,15 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
     graph.add_node("chunking_optimizer", _chunking_optimizer_node)
     graph.add_node("embedding_tester", _embedding_tester_node)
     graph.add_node("retrieval_optimizer", _retrieval_optimizer_node)
+    graph.add_node("evaluation_agent", _evaluation_agent_node)
     graph.set_entry_point("bootstrap_prepare")
     graph.add_edge("bootstrap_prepare", "bootstrap_finalize")
     graph.add_edge("bootstrap_finalize", "document_analyst")
     graph.add_edge("document_analyst", "chunking_optimizer")
     graph.add_edge("chunking_optimizer", "embedding_tester")
     graph.add_edge("embedding_tester", "retrieval_optimizer")
-    graph.add_edge("retrieval_optimizer", END)
+    graph.add_edge("retrieval_optimizer", "evaluation_agent")
+    graph.add_edge("evaluation_agent", END)
     compiled = graph.compile(checkpointer=checkpointer)
     logger.debug("autopilot_bootstrap_graph_compiled", checkpointer=bool(checkpointer))
     return compiled
@@ -412,7 +537,7 @@ def invoke_autopilot_bootstrap(
     thread_id: str = "bootstrap-test",
     checkpointer: MemorySaver | None = None,
 ) -> AutopilotGraphState:
-    """Run bootstrap + analyst + chunking + embedding + retrieval optimizer once; return merged terminal state."""
+    """Run bootstrap + analyst + chunking + embedding + retrieval + evaluation once; return merged terminal state."""
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
     if checkpointer is not None:

@@ -1,4 +1,4 @@
-"""P6-1 … P6-5 LangGraph agent infrastructure — bootstrap through retrieval optimizer + tools."""
+"""P6-1 … P6-6 LangGraph agent infrastructure — bootstrap through evaluation agent + tools."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from app.core.agents.tools import (
     chunking_optimizer_run,
     document_corpus_analyze,
     embedding_tester_run,
+    evaluation_agent_run,
     retrieval_optimizer_run,
     summarize_requirements_snapshot,
 )
@@ -80,7 +81,7 @@ def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
         requirements={"embedding_max_benchmarks": 2},
     )
     out = invoke_autopilot_bootstrap(st, checkpointer=None)
-    assert out["current_stage"] == "retrieval_complete"
+    assert out["current_stage"] == "evaluation_complete"
     assert out["iteration"] == 1
     assert out["stage_outputs"]["bootstrap"]["status"] == "complete"
     assert out["stage_outputs"]["analyze"]["status"] == "complete"
@@ -90,8 +91,11 @@ def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
     assert (out["stage_outputs"]["embedding"].get("selected") or {}).get("model")
     assert out["stage_outputs"]["retrieval"]["status"] == "complete"
     assert (out["stage_outputs"]["retrieval"].get("selected") or {}).get("strategy")
-    assert len(out["messages"]) >= 5
-    assert len(out["agent_trace"]) >= 6
+    assert out["stage_outputs"]["evaluation"]["status"] == "complete"
+    assert (out["stage_outputs"]["evaluation"].get("metrics") or {}).get("faithfulness") is not None
+    assert "failure_analysis" in out["stage_outputs"]["evaluation"]
+    assert len(out["messages"]) >= 6
+    assert len(out["agent_trace"]) >= 7
 
 
 @patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
@@ -119,7 +123,7 @@ def test_compile_returns_runnable(mock_bench_cls):
         requirements={"embedding_max_benchmarks": 2},
     )
     final = app.invoke(st)
-    assert final["current_stage"] == "retrieval_complete"
+    assert final["current_stage"] == "evaluation_complete"
 
 
 def test_stub_tools():
@@ -130,7 +134,7 @@ def test_stub_tools():
 
 def test_tool_registry_non_empty():
     tools = get_autopilot_bootstrap_tools()
-    assert len(tools) == 8
+    assert len(tools) == 9
 
 
 def test_document_corpus_analyze_tool_smoke():
@@ -208,6 +212,48 @@ def test_retrieval_optimizer_tool_smoke(mock_bench_cls):
     assert out.get("status") == "complete"
     assert out.get("selected", {}).get("strategy")
     assert out.get("selected", {}).get("top_k") is not None
+
+
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_evaluation_agent_tool_smoke(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
+    analyze_raw = document_corpus_analyze.invoke(
+        {"document_ids_json": json.dumps(["1"]), "requirements_json": "{}"},
+    )
+    analyze = json.loads(analyze_raw)
+    chunk_raw = chunking_optimizer_run.invoke(
+        {"analyze_json": json.dumps(analyze), "requirements_json": "{}"},
+    )
+    chunking = json.loads(chunk_raw)
+    emb_raw = embedding_tester_run.invoke(
+        {
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": json.dumps({"embedding_max_benchmarks": 2}),
+        },
+    )
+    embedding = json.loads(emb_raw)
+    ret_raw = retrieval_optimizer_run.invoke(
+        {
+            "embedding_json": json.dumps(embedding),
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": json.dumps({"retrieval_max_benchmarks": 6}),
+        },
+    )
+    retrieval = json.loads(ret_raw)
+    ev_raw = evaluation_agent_run.invoke(
+        {
+            "retrieval_json": json.dumps(retrieval),
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": "{}",
+        },
+    )
+    ev = json.loads(ev_raw)
+    assert ev.get("status") == "complete"
+    assert ev.get("metrics", {}).get("faithfulness") is not None
+    assert ev.get("failure_analysis", {}).get("summary")
 
 
 def test_format_stage_delegation_contains_ids():

@@ -4822,3 +4822,31 @@ The optimizer **duplicates** the single chunk with a small suffix so BM25 and ra
 **P6-6 · Evaluation Agent** — synthetic or curated test sets, pipeline evaluation, and failure diagnosis.
 
 ---
+
+## Phase 6 · P6-6 · Evaluation Agent
+
+### What does the Evaluation Agent add to the Autopilot graph?
+
+**P6-6** appends an **`evaluation_agent`** node after **`retrieval_optimizer`**. The terminal **`current_stage`** is **`evaluation_complete`**, and **`stage_outputs["evaluation"]`** holds **offline lexical proxies** for **faithfulness**, **answer_relevance**, **context_precision**, and **context_recall**, plus **`failure_analysis`** (from **`analyze_failures`**), **`meets_targets`**, optional **`target_gaps`** vs **`requirements["target_metrics"]`**, **`per_row_scores`**, and a short **`rationale`**.
+
+### Why use proxies instead of calling the P2-7 RAGAS engine inside the graph?
+
+Autopilot’s LangGraph bootstrap must stay **deterministic and CI-safe** without API keys. **RAGAS** (real LLM judges) runs asynchronously via **Celery** **`run_evaluation`** when persisted **`EvaluationExample`** rows exist. The agent reuses **P6-5 chunk texts** and the **selected retrieval ranking** to fabricate **extractive answers** and score **token-overlap** stand-ins that correlate with “did retrieval surface the oracle chunk?” — enough to drive **`failure_analysis`** and **target gating** before deployment agents.
+
+### How are test rows constructed?
+
+For each query from **`_build_eval_queries`** (or **`requirements["retrieval_eval_queries"]`**), the code sets **oracle** = **BM25 argmax** chunk, **contexts** = top-**k** chunks from **`_rank_indices_for_candidate`** using the **winning retrieval profile**, and **answer** = a trimmed excerpt from the **rank-1** chunk. That yields one **per-row** dict with scores the failure analyzer already understands.
+
+### Which LangChain tool exposes P6-6?
+
+**`evaluation_agent_run(retrieval_json, chunking_json, analyze_json, requirements_json, pipeline_config_json?)`** — mirrors graph inputs so a **tool-calling LLM** can rerun or explain evaluation without the full graph.
+
+### Interview trap: does `meets_targets` default to true when no targets are set?
+
+**Yes.** If **`requirements["target_metrics"]`** omits thresholds, nothing fails the gate; **`target_gaps`** stays empty. Tight **`faithfulness`** / **`answer_relevance`** / **`context_precision`** / **`context_recall`** values make **`meets_targets`** false when any proxy falls short.
+
+### What is the next task after P6-6?
+
+**P6-7 · Deployment Agent** — packaging/deployment artefacts and cloud deployer stubs.
+
+---
