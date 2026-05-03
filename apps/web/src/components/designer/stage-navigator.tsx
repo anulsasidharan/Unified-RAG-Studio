@@ -8,6 +8,7 @@ import { DESIGNER_STAGES } from '@/lib/constants';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { cn } from '@/lib/utils';
 import { getEmbeddingModelMeta } from '@/lib/embeddings-catalog';
+import { getGenerationModelMeta } from '@/lib/generation-catalog';
 import { getVectorStoreMeta } from '@/lib/vector-stores-catalog';
 import { useDesignerStore } from '@/stores/designer-store';
 import type { ChunkingStrategy, DataIngestionConfig, RetrievalStrategy } from '@/types/pipeline';
@@ -72,6 +73,16 @@ function rerankingHint(enabled?: boolean, model?: string): string {
   const m = model?.trim();
   if (!m) return 'On';
   return m.length > 24 ? `${m.slice(0, 22)}…` : m;
+}
+
+function generationHint(modelId?: string, temperature?: number, maxTokens?: number): string {
+  if (!modelId) return '';
+  const meta = getGenerationModelMeta(modelId);
+  const label = meta?.name ?? modelId;
+  const short = label.length > 22 ? `${label.slice(0, 20)}…` : label;
+  const t = temperature != null ? ` · T${temperature.toFixed(1)}` : '';
+  const mt = maxTokens != null ? ` · ${maxTokens} tok` : '';
+  return `${short}${t}${mt}`;
 }
 
 export function StageNavigator() {
@@ -181,6 +192,14 @@ export function StageNavigator() {
                   ) : stage.id === 'reranking' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {rerankingHint(draft.stages.reranking?.enabled, draft.stages.reranking?.model)}
+                    </span>
+                  ) : stage.id === 'generation' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {generationHint(
+                        draft.stages.generation?.model,
+                        draft.stages.generation?.temperature,
+                        draft.stages.generation?.maxTokens
+                      )}
                     </span>
                   ) : null}
                 </span>

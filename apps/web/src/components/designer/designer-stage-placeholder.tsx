@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import type { DesignerStageId } from '@/lib/constants';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
@@ -8,6 +10,7 @@ import { CloudProviderSelector } from './cloud-provider-selector';
 import { DataIngestionConfigurator } from './data-ingestion-configurator';
 import { EmbeddingConfigurator } from './embedding-configurator';
 import { RetrievalConfigurator } from './retrieval-configurator';
+import { GenerationConfigurator } from './generation-configurator';
 import { VectorStoreConfigurator } from './vector-store-configurator';
 
 function phaseNoteFor(stageId: DesignerStageId): string {
@@ -27,7 +30,7 @@ function phaseNoteFor(stageId: DesignerStageId): string {
     case 'reranking':
       return 'Focused reranking controls (same draft as Retrieval); use the Retrieval stage for full strategy and filters.';
     case 'generation':
-      return 'Generation model UI — P5-8.';
+      return 'Pick an LLM from the catalog, tune temperature, max tokens, optional top-p, system prompt, and output format — saved on your pipeline draft.';
     case 'routing':
     case 'memory':
     case 'evaluation':
@@ -77,6 +80,8 @@ export function DesignerStagePlaceholder({
         <RetrievalConfigurator className="mt-8" variant="full" />
       ) : stageId === 'reranking' ? (
         <RetrievalConfigurator className="mt-8" variant="rerank-focus" />
+      ) : stageId === 'generation' ? (
+        <GenerationConfigurator className="mt-8" />
       ) : (
         <div className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground dark:border-neutral-600">
           Configuration UI for “{meta.label}” will appear in the numbered Phase 5 task above.

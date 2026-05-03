@@ -4221,4 +4221,56 @@ Stages **generation** through **review** stay dashed until **P5-8+**. **Cloud** 
 
 ---
 
+## Phase 5 · P5-8 · Generation Model Selector
+
+### What problem does the Generation stage solve in Designer mode?
+
+Users must pick the **LLM** that will **answer** from retrieved context: **model id**, **provider**, and **inference** settings (**temperature**, **max output tokens**, optional **top-p**, optional **system prompt**, optional **output format**). **P5-8** surfaces **`data/models/generation.json`** through **`generation-catalog.ts`**, writing **`updateStages({ generation })`** so the draft matches **`GenerationConfig`** and **`GenerationConfigSchema`**.
+
+### Where do generation model metadata and pricing come from?
+
+**`data/models/generation.json`** is bundled like embeddings: **`apps/web/src/lib/generation-catalog.ts`** imports the JSON, exposes **`listGenerationModels`**, **`getGenerationModelMeta`**, and **`isGenerationProvider`**. Each entry includes **context window**, **max output tokens**, **cost per 1M in/out**, **tier**, **latency**, and capability flags (**supportsStreaming**, **supportsToolUse**, **supportsJsonMode**).
+
+### How does selecting a model update **`draft.stages.generation`**?
+
+**`generationConfigFromCatalogEntry(modelId, current)`** returns **`model`**, **`provider`**, and a **max token** value: **preserves** the user’s current **`maxTokens`** when it still fits the new model; otherwise **caps** to **`maxOutputTokens`** from the catalog (and floors at **64** to satisfy Zod). **Temperature**, **topP**, **systemPrompt**, and **outputFormat** are **not** cleared on model change — they are merged in the component with **`mergeGeneration`**.
+
+### Why is the current model “pinned” when filters hide it?
+
+Same pattern as **P5-5**: if **search/filters** exclude the **already selected** model, the card grid **prepends** that row and labels it **“Current · outside filters”** so the selection never disappears.
+
+### Which inference controls does the UI expose?
+
+- **Temperature**: slider **0–2** (step **0.05**).  
+- **Max output tokens**: range **64** to **`min(32768, catalog maxOutputTokens)`** for the active model.  
+- **Top-p**: optional; checkbox **“Use nucleus sampling”** toggles **`topP`** between **undefined** (omit from payload / provider default) and a **0–1** slider (default **0.95** when enabled).  
+- **Output format**: **text** | **json** | **markdown** (**`OutputFormat`**).  
+- **System prompt**: optional textarea; empty string clears **`systemPrompt`** (**`undefined`**).
+
+### How does **`StageNavigator`** summarize the Generation stage?
+
+**`generationHint`** shows **catalog display name** (or id), **temperature** (**`T0.1`**), and **max tokens** (**`1024 tok`**), using **`getGenerationModelMeta`**.
+
+### How does this relate to **P2-6 Generation Service**?
+
+The Designer stores **configuration only**. Actual provider calls, streaming, and tool execution live in backend **`GenerationService`** and related workers; this stage is the **contract** for codegen, cost APIs, and exports.
+
+### What validation applies?
+
+**`GenerationConfigSchema`**: **model** non-empty; **provider** enum; **temperature** **0–2**; **maxTokens** **64–32768**; **topP** **0–1** optional; **systemPrompt** max **10,000** chars; **outputFormat** optional enum.
+
+### What tests cover this task?
+
+**`apps/web/src/lib/__tests__/generation-catalog.test.ts`** covers model **count**, **lookup**, **`isGenerationProvider`**, and **`generationConfigFromCatalogEntry`** (including **capping** max tokens to a model’s **maxOutputTokens**).
+
+### What remains placeholder after P5-8?
+
+Stages **routing** through **review** stay dashed until **P5-9+**. **Cloud** through **generation** are interactive in the Designer.
+
+### How do you add a new generation model to the product?
+
+1. Add a row to **`data/models/generation.json`** with **`provider`** in **`GenerationProviderSchema`**. 2. If the **id** is new, ensure **exports** and **codegen** (e.g. **`pythonCodeGenerator`**) can map it or treat it as a string model id. 3. Bump **`generation-catalog.test.ts`** expected **count** if the test asserts it.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

@@ -188,3 +188,28 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-8)
+
+**P5-8** adds the **Generation** stage: **`GenerationConfigurator`** on **`/designer/generation`** reads **`data/models/generation.json`** via **`generation-catalog.ts`** and writes **`updateStages({ generation })`**. Users **search** and **filter** (provider, tier, open source, JSON mode, tool use), pick a **model card**, and tune **temperature**, **max output tokens** (capped by catalog **maxOutputTokens**), optional **top-p** (checkbox + slider), **output format**, and **system prompt**. **Pinned selection** matches **P5-5** when filters exclude the active model. **`StageNavigator`** shows **`generationHint`** (name · temperature · tokens). Execution remains in **`GenerationService` (P2-6)**.
+
+```mermaid
+flowchart TB
+  subgraph Catalog["Shared catalog"]
+    GM[data/models/generation.json]
+  end
+  subgraph Web["apps/web"]
+    Lib[generation-catalog.ts]
+    Cmp[GenerationConfigurator]
+    V[Zod GenerationConfigSchema]
+    Z[(useDesignerStore draft.stages.generation)]
+  end
+  GM --> Lib
+  Lib --> Cmp
+  Cmp -->|"updateStages(generation)"| Z
+  Cmp -.->|safeParse| V
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

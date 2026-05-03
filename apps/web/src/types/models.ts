@@ -49,6 +49,9 @@ export interface GenerationModel {
   supportsToolUse: boolean;
   supportsJsonMode: boolean;
   releaseDate: string;
+  promptCaching?: boolean;
+  selfHosted?: boolean;
+  ragOptimized?: boolean;
 }
 
 // ─── Reranker Models (data/models/rerankers.json) ────────────────────────────
