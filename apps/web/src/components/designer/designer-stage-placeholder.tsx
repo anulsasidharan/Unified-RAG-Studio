@@ -15,6 +15,7 @@ import { RetrievalConfigurator } from './retrieval-configurator';
 import { GenerationConfigurator } from './generation-configurator';
 import { RoutingConfigurator } from './routing-configurator';
 import { VectorStoreConfigurator } from './vector-store-configurator';
+import { DesignerReviewPage } from './designer-review-page';
 
 function phaseNoteFor(stageId: DesignerStageId): string {
   switch (stageId) {
@@ -41,7 +42,7 @@ function phaseNoteFor(stageId: DesignerStageId): string {
     case 'evaluation':
       return 'Toggle evaluation, pick metrics, test set size, and schedule — saved on your pipeline draft.';
     case 'review':
-      return 'Full review surface — P5-13.';
+      return 'Jump to the live graph, cost strip, and export — or edit any prior stage from the checklist.';
     default:
       return '';
   }
@@ -58,6 +59,10 @@ export function DesignerStagePlaceholder({
   const index = DESIGNER_STAGES.findIndex((s) => s.id === stageId);
   const prev = index > 0 ? DESIGNER_STAGES[index - 1] : null;
   const next = index < DESIGNER_STAGES.length - 1 ? DESIGNER_STAGES[index + 1] : null;
+
+  if (stageId === 'review') {
+    return <DesignerReviewPage className={className} />;
+  }
 
   return (
     <div className={cn('mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:py-10', className)}>

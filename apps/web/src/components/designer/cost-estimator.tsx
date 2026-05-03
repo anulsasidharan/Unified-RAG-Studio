@@ -45,8 +45,11 @@ function clampInt(n: number, min: number, max: number): number {
 
 export function CostEstimator({
   className,
+  id,
 }: Readonly<{
   className?: string;
+  /** Optional DOM id for in-page navigation (e.g. Designer Review). */
+  id?: string;
 }>) {
   const draft = useDesignerStore((s) => s.draft);
 
@@ -128,8 +131,9 @@ export function CostEstimator({
 
   return (
     <section
+      id={id}
       className={cn(
-        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800',
+        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800 scroll-mt-4',
         className
       )}
       aria-labelledby="cost-estimator-heading"

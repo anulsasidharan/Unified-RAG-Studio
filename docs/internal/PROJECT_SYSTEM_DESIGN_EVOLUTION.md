@@ -335,3 +335,35 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-13)
+
+**P5-13** completes the **Designer Review** stage: **`DesignerStagePlaceholder`** renders **`DesignerReviewPage`** at **`/designer/review`**. The page shows **draft title**, **metadata timestamps**, a **grid of summary cards** (cloud through evaluation), **flow bullets** via **`generatePipelineHighlights`**, a **checklist of deep links** to prior stages, and **actions** — smooth-scroll jumps to the three footer **`section`** elements (**cost**, **export**, **pipeline**), **clipboard** copies for text summary and full **JSON** draft, and **confirm-gated** **`resetDraft`**. Shared DOM ids live in **`apps/web/src/lib/designer-section-anchors.ts`**; **`CostEstimator`**, **`CodeExporter`**, and **`PipelineVisualizer`** accept optional **`id`** and **`scroll-mt-4`** for predictable **`scrollIntoView`**. The shell layout is unchanged: Review content scrolls in **`main`**; the live cost/export/diagram strips remain the single integration point with **`POST /api/utilities/cost`** and **`POST /api/designer/export`**.
+
+```mermaid
+flowchart TB
+  subgraph Route["/designer/review"]
+    RV[DesignerReviewPage]
+  end
+  subgraph Shell["DesignerShell"]
+    M[main scroll area]
+    CE["CostEstimator #designer-section-cost"]
+    CX["CodeExporter #designer-section-export"]
+    PV["PipelineVisualizer #designer-section-pipeline"]
+  end
+  subgraph State["Zustand"]
+    D[(draft persist)]
+  end
+  M --> RV
+  RV -->|"scrollIntoView"| CE
+  RV -->|"scrollIntoView"| CX
+  RV -->|"scrollIntoView"| PV
+  D --> RV
+  D --> CE
+  D --> CX
+  D --> PV
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

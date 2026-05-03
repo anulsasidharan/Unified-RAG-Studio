@@ -184,8 +184,10 @@ function ZoomToolbar({
 
 export function PipelineVisualizer({
   className,
+  id,
 }: Readonly<{
   className?: string;
+  id?: string;
 }>) {
   const draft = useDesignerStore((s) => s.draft);
   const diagramMaxVisitedStageIndex = useDesignerStore((s) => s.diagramMaxVisitedStageIndex);
@@ -343,8 +345,9 @@ export function PipelineVisualizer({
 
   return (
     <section
+      id={id}
       className={cn(
-        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800',
+        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800 scroll-mt-4',
         className
       )}
       aria-labelledby="pipeline-viz-heading"
