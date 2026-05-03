@@ -8,7 +8,7 @@ import { DESIGNER_STAGES } from '@/lib/constants';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { DataIngestionConfig } from '@/types/pipeline';
+import type { ChunkingStrategy, DataIngestionConfig } from '@/types/pipeline';
 
 function ingestionSourceHint(source?: DataIngestionConfig['sourceType']): string {
   if (!source) return '';
@@ -22,6 +22,21 @@ function ingestionSourceHint(source?: DataIngestionConfig['sourceType']): string
     api: 'API',
   };
   return labels[source];
+}
+
+function chunkingHint(strategy?: ChunkingStrategy, chunkSize?: number, overlap?: number): string {
+  if (!strategy || chunkSize === undefined) return '';
+  const o = overlap ?? 0;
+  const short: Record<ChunkingStrategy, string> = {
+    'fixed-size': 'Fixed',
+    'recursive-character': 'Recursive',
+    semantic: 'Semantic',
+    'markdown-header': 'MD headers',
+    'sentence-based': 'Sentences',
+    'paragraph-based': 'Paragraphs',
+    'code-aware': 'Code',
+  };
+  return `${short[strategy] ?? strategy} · ${chunkSize}/${o}`;
 }
 
 export function StageNavigator() {
@@ -107,6 +122,14 @@ export function StageNavigator() {
                   ) : stage.id === 'ingestion' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {ingestionSourceHint(draft.stages.dataIngestion?.sourceType)}
+                    </span>
+                  ) : stage.id === 'chunking' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {chunkingHint(
+                        draft.stages.chunking?.strategy,
+                        draft.stages.chunking?.chunkSize,
+                        draft.stages.chunking?.chunkOverlap
+                      )}
                     </span>
                   ) : null}
                 </span>
