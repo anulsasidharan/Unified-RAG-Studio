@@ -2,7 +2,7 @@ import type { ModelTier, PipelineConfiguration } from './pipeline';
 
 // ─── Embedding Models (data/models/embeddings.json) ──────────────────────────
 
-export type ModelSpeed = 'fast' | 'medium' | 'slow';
+export type ModelSpeed = 'very-fast' | 'fast' | 'medium' | 'slow';
 export type ModelQuality = 'excellent' | 'good' | 'fair';
 
 export interface EmbeddingModel {
@@ -22,6 +22,9 @@ export interface EmbeddingModel {
   languageSupport: string[];
   normalizable?: boolean;
   selfHosted?: boolean;
+  deprecated?: boolean;
+  inputTypes?: string[];
+  modelCard?: string;
 }
 
 // ─── Generation Models (data/models/generation.json) ─────────────────────────

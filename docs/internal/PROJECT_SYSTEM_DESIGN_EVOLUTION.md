@@ -94,3 +94,28 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-5)
+
+**P5-5** adds the **Embedding** stage: **`EmbeddingConfigurator`** reads **`data/models/embeddings.json`** (via **`embeddings-catalog.ts`**) and writes **`updateStages({ embedding })`**. Users discover models with **search** and **filters** (provider, tier, quality, speed, open-source, hide deprecated), select a **catalog-backed model** for **`model` / `provider` / `dimensions` / `maxTokens`**, and adjust **`batchSize`** within Zod bounds. **`StageNavigator`** shows a compact **name · dimensions** hint. Embedding execution stays in backend **`EmbeddingService` (P2-3)**; the UI captures deployable intent.
+
+```mermaid
+flowchart TB
+  subgraph Catalog["Shared catalog"]
+    EM[data/models/embeddings.json]
+  end
+  subgraph Designer["apps/web"]
+    Lib[embeddings-catalog.ts]
+    Cmp[EmbeddingConfigurator]
+    V[Zod EmbeddingConfigSchema]
+    Z[(useDesignerStore draft.stages.embedding)]
+  end
+  EM --> Lib
+  Lib --> Cmp
+  Cmp -->|"updateStages(embedding)"| Z
+  Cmp -.->|safeParse| V
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { ChunkingConfigurator } from './chunking-configurator';
 import { CloudProviderSelector } from './cloud-provider-selector';
 import { DataIngestionConfigurator } from './data-ingestion-configurator';
+import { EmbeddingConfigurator } from './embedding-configurator';
 
 function phaseNoteFor(stageId: DesignerStageId): string {
   switch (stageId) {
@@ -16,7 +17,7 @@ function phaseNoteFor(stageId: DesignerStageId): string {
     case 'chunking':
       return 'Choose a strategy from the catalog, tune token size and overlap, and optional chunk metadata — saved on your pipeline draft.';
     case 'embedding':
-      return 'Embedding selector — P5-5.';
+      return 'Pick an embedding model from the catalog, filter by provider and quality, tune batch size — saved on your pipeline draft.';
     case 'vectorstore':
       return 'Vector store UI — P5-6.';
     case 'retrieval':
@@ -66,6 +67,8 @@ export function DesignerStagePlaceholder({
         <DataIngestionConfigurator className="mt-8" />
       ) : stageId === 'chunking' ? (
         <ChunkingConfigurator className="mt-8" />
+      ) : stageId === 'embedding' ? (
+        <EmbeddingConfigurator className="mt-8" />
       ) : (
         <div className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground dark:border-neutral-600">
           Configuration UI for “{meta.label}” will appear in the numbered Phase 5 task above.

@@ -7,6 +7,7 @@ import { Check } from 'lucide-react';
 import { DESIGNER_STAGES } from '@/lib/constants';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { cn } from '@/lib/utils';
+import { getEmbeddingModelMeta } from '@/lib/embeddings-catalog';
 import { useDesignerStore } from '@/stores/designer-store';
 import type { ChunkingStrategy, DataIngestionConfig } from '@/types/pipeline';
 
@@ -37,6 +38,15 @@ function chunkingHint(strategy?: ChunkingStrategy, chunkSize?: number, overlap?:
     'code-aware': 'Code',
   };
   return `${short[strategy] ?? strategy} · ${chunkSize}/${o}`;
+}
+
+function embeddingHint(modelId?: string, dimensions?: number): string {
+  if (!modelId) return '';
+  const meta = getEmbeddingModelMeta(modelId);
+  const label = meta?.name ?? modelId;
+  const short = label.length > 22 ? `${label.slice(0, 20)}…` : label;
+  if (dimensions === undefined) return short;
+  return `${short} · ${dimensions}d`;
 }
 
 export function StageNavigator() {
@@ -130,6 +140,10 @@ export function StageNavigator() {
                         draft.stages.chunking?.chunkSize,
                         draft.stages.chunking?.chunkOverlap
                       )}
+                    </span>
+                  ) : stage.id === 'embedding' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {embeddingHint(draft.stages.embedding?.model, draft.stages.embedding?.dimensions)}
                     </span>
                   ) : null}
                 </span>
