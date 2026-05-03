@@ -442,3 +442,46 @@ stateDiagram-v2
 Before P6-1, Autopilot progress was **time-sliced stub updates** in **`run_pipeline_build`** with no shared agent memory. After P6-1, the codebase has a **single state schema** and a **compiled graph** pattern; subsequent phases add **real nodes** per stage and replace the stub with orchestrated execution.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-2 · Document Analyst Agent)
+
+**P6-2** adds **`app/core/agents/document_analyst.py`**: deterministic **corpus summarisation** and **chunking recommendations** from optional **`requirements["corpus_profiles"]`** (or synthetic unknown profiles per **`document_id`**). The compiled graph is now **linear**: **`bootstrap_prepare` → `bootstrap_finalize` → `document_analyst` → END**. **`stage_outputs["analyze"]`** holds `corpus_summary`, `chunking_recommendation` (primary/alternate strategy ids, rationale, suggested parameters), and trace-friendly **`agent_trace`** entries. **`tools.py`** exposes **`document_corpus_analyze`**, **`summarize_corpus_profiles_json`**, and **`recommend_chunking_from_summary_json`** for future LLM tool-calling without duplicating rules.
+
+### P6-2 — Graph topology (bootstrap + analyze)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> [*]
+```
+
+### P6-2 — Data flow (profiles → stage_outputs)
+
+```mermaid
+flowchart LR
+  subgraph Inputs["Build state"]
+    R["requirements.corpus_profiles?"]
+    D[document_ids]
+  end
+  subgraph Analyst["document_analyst.py"]
+    S[build_corpus_summary]
+    REC[recommend_chunking]
+  end
+  subgraph Out["AutopilotGraphState"]
+    SO["stage_outputs.analyze"]
+    TR[agent_trace]
+  end
+  R --> S
+  D --> S
+  S --> REC
+  REC --> SO
+  REC --> TR
+```
+
+### Evolution note (P6-1 → P6-2)
+
+After P6-1 the graph only **validated LangGraph wiring**. After P6-2 the first **real Autopilot stage** (`analyze` in **`AUTOPILOT_STAGE_ORDER`**) produces **actionable machine output** for the Chunking Optimizer (P6-3) while remaining **LLM-free** for reproducibility.
+
+---
