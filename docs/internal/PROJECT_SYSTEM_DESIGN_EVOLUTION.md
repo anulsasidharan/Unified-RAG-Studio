@@ -301,3 +301,37 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-12)
+
+**P5-12** adds a **code export** strip in **`DesignerShell`** between **`CostEstimator`** and **`PipelineVisualizer`**. **`CodeExporter`** reads **`useDesignerStore`** **`draft`**, lets users pick an export **format** (**python**, **yaml**, **terraform**, **docker-compose**, **k8s**), and **`POST`s** **`/api/designer/export`** with **`{ config, format }`**. The API returns **`code`**, **`filename`**, **`format`**, and **`contentType`** (camelCase). The UI offers **copy** and **blob download** of the artefact plus a **Deploy hints** disclosure with format-specific starter commands (**`deploy-hints.ts`**) and a second **copy** action for those commands. Draft edits are **debounced** (~450 ms); switching format **refetches immediately**. **`DesignerExportFormat`** / **`DesignerExportResponse`** live in **`apps/web/src/types/pipeline.ts`**.
+
+```mermaid
+flowchart TB
+  subgraph Shell["DesignerShell footer stack"]
+    CE[CostEstimator]
+    CX[CodeExporter]
+    PV[PipelineVisualizer]
+  end
+  subgraph Web["apps/web"]
+    Z[(useDesignerStore draft)]
+    AC[apiClient.post]
+    H[deploy-hints.ts]
+  end
+  subgraph API["apps/api"]
+    E["POST /api/designer/export"]
+    EX[ExportService + generators]
+  end
+  Z --> CE
+  Z --> CX
+  Z --> PV
+  CX -->|"config + format"| AC
+  AC --> E
+  E --> EX
+  EX -->|"DesignerExportResponse"| CX
+  CX -.->|suggested commands| H
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

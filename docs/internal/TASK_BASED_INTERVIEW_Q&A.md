@@ -4443,4 +4443,64 @@ Use **SWR** / **TanStack Query** with a **`queryKey`** of **`[ 'cost', digest ]`
 
 ---
 
+## Phase 5 · P5-12 — Code Export Component
+
+### What does **P5-12** deliver?
+
+A **Designer-mode export viewer** mounted in **`DesignerShell`** between **`CostEstimator`** and **`PipelineVisualizer`**. Users pick one of five **formats** aligned with **`ExportFormat`** in **`apps/api/app/schemas/designer.py`**: **python**, **yaml**, **terraform**, **docker-compose**, **k8s**. The UI shows generated **source text**, **copy** and **download** actions, and optional **deploy hints** (starter shell commands, copyable separately).
+
+### Which endpoint does the UI call?
+
+**`POST /api/designer/export`** on the FastAPI **`designer`** router (**prefix** **`/api/designer`**). The Next.js app uses **same-origin** **`apiClient.post('/api/designer/export', …)`** so **`next.config.js`** rewrites proxy to the backend without CORS issues.
+
+### What is the JSON contract?
+
+**Request**: **`{ config, format }`** where **`config`** is the full **`PipelineConfiguration`** from **`useDesignerStore`** (camelCase keys, **`RAGBaseModel`** symmetry with Pydantic). **Response**: **`DesignerExportResponse`** — **`code`**, **`filename`**, **`format`**, **`contentType`** — matching **`ExportResponse`** with **camelCase** aliases.
+
+### How does debouncing interact with format changes?
+
+**`draftDigest`** is **`JSON.stringify(draft)`**. An effect schedules **`fetchExport`** with **~450 ms** debounce when the digest changes (user editing stages). When **`format`** alone changes, **`prevFormat`** detects a **tab switch** and uses **0 ms** delay so the new artefact appears immediately.
+
+### Why keep export output out of Zustand?
+
+Export blobs can be **large** and change on every keystroke if stored globally. Keeping **`result`** in **local React state** avoids **`localStorage`** **`persist`** bloat and keeps the store focused on the **editable** pipeline contract.
+
+### How do **Copy** and **Download** work?
+
+**Copy** uses **`navigator.clipboard.writeText(result.code)`** with a short **“Copied”** affordance. **Download** builds a **`Blob`** from **`result.code`** with **`result.contentType`**, then triggers an **`<a download={filename}>`** programmatic click and revokes the object URL.
+
+### What does **Deploy hints** mean if we do not auto-deploy?
+
+**No cloud APIs** run from the browser. **`deploy-hints.ts`** returns **educational** commands (e.g. **`docker compose -f … up`**, **`kubectl apply -f …`**, **`terraform init`**) so operators have a **starting checklist**. Users must still supply **secrets**, **kube context**, and **TF backend** configuration.
+
+### Why sanitize filenames in deploy hints?
+
+User-controlled **`draft.name`** flows into suggested **`filename`** values from **`ExportService._filename_for`**. **`deployHintCommand`** replaces characters outside a safe set when interpolating into shell snippets to reduce **copy-paste injection** surprises (defence in depth; not a substitute for reviewing commands).
+
+### How does this relate to **P3** code generators?
+
+**P4-4** server-side **`ExportService`** is the **source of truth** for downloadable artefacts. **P3** TypeScript generators (**`pythonCodeGenerator`**, **`yamlGenerator`**, etc.) support **client-side previews** and **consistency tests**; the **Designer export UI** always displays **API-generated** output so **deployable bytes** match what operators save from the backend.
+
+### Interview trap: **`/api/utilities/export`**?
+
+There is **no** utilities export route in this codebase — exports live under **`/api/designer/export`** because they are **Designer pipeline** artefacts. **Cost** optionally uses **`/api/utilities/cost`** for shared access, but export is **Designer-scoped**.
+
+### How would you add **zip multi-file export**?
+
+Extend **`ExportService`** with a **`format: "bundle"`** that streams a **zip** (Python + compose + k8s), return **`contentType: application/zip`**, and teach the frontend to **download** binary **`ArrayBuffer`** instead of UTF-8 text only.
+
+### How would you add **syntax highlighting**?
+
+Integrate **Prism** (already a dependency) or **Shiki** in a **`useEffect`** that highlights **`result.code`** when **`format`** changes; guard **SSR** (highlight runs client-only).
+
+### What automated tests cover the new behaviour?
+
+**`deploy-hints.test.ts`** (**Vitest**) asserts command strings for **python**, **docker-compose**, **k8s**, and partial checks for **terraform**. The **React** layer can be covered later with **RTL** + **MSW** if you want to mock **`/api/designer/export`**.
+
+### What remains after **P5-12**?
+
+**P5-13** review page and **P5-14** template gallery.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

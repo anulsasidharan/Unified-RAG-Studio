@@ -5,9 +5,9 @@
 # removed docs from a branch could not restore your copies from git. Commit paths
 # under docs/public/, docs/internal/, etc. so they survive rebases and merges.
 #
-# Keep prompt logs local unless you intend to share them:
-prompt_history/
-prompt_history/prompt_history.md
+# Prompt logs: ignore scratch files, but allow the consolidated append-only log (P5-12).
+prompt_history/*
+!prompt_history/prompt_history.md
 
 # ============================================================
 # Node / Next.js

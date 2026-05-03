@@ -189,4 +189,26 @@ flowchart LR
 
 ---
 
-*Append new “Design level” sections at the end as P5-11+ ship.*
+## Design level 11 — Export viewer & deploy hints (after P5-12)
+
+**`CodeExporter`** mirrors the **cost** strip pattern: shared **`draft`**, **debounced** refetch on JSON digest changes, **immediate** refetch when the user switches **format** tabs. It does **not** persist export output in **Zustand** (ephemeral view). **Deploy** is intentionally **non-destructive**: collapsible **hints** plus **clipboard** copy — no cloud API calls from the browser. **`ExportService`** (Phase 4) remains authoritative for bytes on the wire.
+
+```mermaid
+flowchart LR
+  subgraph UI["CodeExporter"]
+    T[Format tabs]
+    A[Copy / Download]
+    D[Deploy hints details]
+  end
+  subgraph API["POST /api/designer/export"]
+    G[python / yaml / tf / compose / k8s generators]
+  end
+  T -->|"format"| API
+  Z[(draft)] -->|"PipelineConfiguration"| API
+  API -->|"code + filename"| A
+  API --> D
+```
+
+---
+
+*Append new “Design level” sections at the end as P5-13+ ship.*
