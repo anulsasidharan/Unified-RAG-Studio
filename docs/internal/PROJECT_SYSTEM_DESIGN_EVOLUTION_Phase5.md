@@ -74,17 +74,40 @@ flowchart LR
 
 ---
 
+## Design level 5 — Embedding catalog bound to `draft.stages.embedding` (after P5-5)
+
+The **Embedding** stage renders **`EmbeddingConfigurator`**, which reads **`data/models/embeddings.json`** via **`apps/web/src/lib/embeddings-catalog.ts`**. Users **search** and **filter** (provider, tier, quality, speed, open-source, hide deprecated), pick a **model card**, and tune **`batchSize`** within **`EmbeddingConfigSchema`**. Selection calls **`embeddingConfigFromCatalogEntry`** so **`model`**, **`provider`**, **`dimensions`**, and **`maxTokens`** stay aligned with the catalog record. **`StageNavigator`** shows **`embeddingHint`** (display name · dimensions).
+
+```mermaid
+flowchart LR
+  subgraph Repo["Monorepo"]
+    JSON[(data/models/embeddings.json)]
+  end
+  subgraph Next["apps/web"]
+    Lib[embeddings-catalog.ts]
+    Cmp[EmbeddingConfigurator]
+    V[Zod EmbeddingConfigSchema]
+    Z[(draft.stages.embedding)]
+  end
+  JSON --> Lib
+  Lib --> Cmp
+  Cmp -->|"updateStages"| Z
+  Cmp -.->|safeParse| V
+```
+
+---
+
 ## Future levels (placeholder)
 
-Later P5 tasks add panels for embeddings, vector store, retrieval, generation, routing/memory/evaluation, visualizer, cost, export, review, and templates — each **`patchDraft`** / **`updateStages`** onto the same **`draft`** object consumed by Phase 4 APIs.
+Remaining P5 tasks add panels for **vector store**, **retrieval**, **generation**, **routing/memory/evaluation**, **visualizer**, **cost**, **export**, **review**, and **templates** — each **`updateStages`** / **`patchDraft`** onto the same **`draft`** consumed by Phase 4 APIs.
 
 ```mermaid
 flowchart TB
   Draft[PipelineConfiguration draft]
-  Draft --> Emb[P5-5 embedding …]
+  Draft --> VS[P5-6 vector store …]
   Draft --> Later[Later P5 stages …]
 ```
 
 ---
 
-*Append new “Design level” sections at the end as P5-5+ ship.*
+*Append new “Design level” sections at the end as P5-6+ ship.*

@@ -4041,4 +4041,56 @@ Stages **embedding** through **review** still ship as dashed placeholders until 
 
 ---
 
+## Phase 5 · P5-5 · Embedding Model Selector
+
+### What problem does the Embedding stage solve in Designer mode?
+
+Users must pick **which embedding model** drives vectorization: **provider**, **output dimensions**, **context length**, and cost/quality tradeoffs. **P5-5** surfaces **`data/models/embeddings.json`** with **search** and **filters** so the draft’s **`EmbeddingConfig`** matches **`pipeline.ts`** and **`EmbeddingConfigSchema`** (Zod).
+
+### Where does embedding catalog metadata come from?
+
+**`data/models/embeddings.json`** is imported at build time through **`apps/web/src/lib/embeddings-catalog.ts`** (same pattern as **`chunking-strategies-catalog.ts`**). The UI lists **name**, **description**, **tier**, **quality**, **dimensions**, **speed**, and flags like **deprecated** and **open source**.
+
+### How does selecting a model update the draft?
+
+**`embeddingConfigFromCatalogEntry(modelId, { batchSize })`** returns **`model`**, **`provider`**, **`dimensions`**, **`maxTokens`**, and optional **`batchSize`**. **`EmbeddingConfigurator`** calls **`updateStages({ embedding: merge(...) })`** so nested **`EmbeddingConfig`** replaces fields consistently with the catalog row.
+
+### Which fields can users tune in the UI?
+
+**Model choice** (from catalog cards), **`batchSize`** (slider **1–2048**). **Dimensions**, **provider**, and **max tokens** follow the catalog entry for the selected **`model` id — they are shown read-only in the summary panel to avoid schema drift.
+
+### How does filtering work?
+
+Client-side **`useMemo`** over **`listEmbeddingModels()``**: optional **text search** (id, name, description, **bestFor**, languages), dropdowns for **provider**, **tier**, **quality**, **speed**, **open source** (all / yes / no), and a **hide deprecated** toggle (default on).
+
+### Does the UI call the embedding API?
+
+**No.** Configuration only. Actual embedding runs in backend **`EmbeddingService`** (**P2-3**) during builds or workers.
+
+### How does the sidebar summarize embedding?
+
+**`StageNavigator`** prints **`embeddingHint`**: short display **name** (from catalog) plus **`dimensions`** (e.g. **text-embedding-3-small · 1536d**).
+
+### Why extend **`ModelSpeed`** with **very-fast**?
+
+The catalog includes **`all-MiniLM-L6-v2`** with **`speed: "very-fast"`**. **`EmbeddingModel`** in **`types/models.ts`** aligns with catalog values so the filter and badges stay type-safe.
+
+### What validation rules apply?
+
+**`EmbeddingConfigSchema`**: **model** non-empty string, **provider** enum, **dimensions** **1–8192**, **batchSize** optional **1–2048**, **maxTokens** optional **≥ 1**. Invalid drafts show the same alert pattern as **Chunking**.
+
+### What accessibility patterns are used?
+
+Model grid uses **`role="radiogroup"`** / **`role="radio"`** / **`aria-checked`**. Search has a visible label via **`sr-only`**. Filter sections use **`aria-labelledby`**.
+
+### What tests cover this task?
+
+**`apps/web/src/lib/__tests__/embeddings-catalog.test.ts`** asserts model **count**, **lookup**, **`isEmbeddingProvider`**, **`embeddingConfigFromCatalogEntry`** mapping, and unknown ids. **`EmbeddingConfigurator`** relies on existing **`EmbeddingConfigSchema`** tests in **`validators`** tests.
+
+### What remains placeholder after P5-5?
+
+Stages **vector store** through **review** still use dashed placeholders until **P5-6+**. **Cloud**, **ingestion**, **chunking**, and **embedding** are interactive.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
