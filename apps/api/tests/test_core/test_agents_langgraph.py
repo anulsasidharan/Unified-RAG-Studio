@@ -1,8 +1,9 @@
-"""P6-1 / P6-2 LangGraph agent infrastructure — bootstrap + document analyst + tools."""
+"""P6-1 … P6-4 LangGraph agent infrastructure — bootstrap through embedding tester + tools."""
 
 from __future__ import annotations
 
 import json
+from unittest.mock import patch
 
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -18,8 +19,35 @@ from app.core.agents.tools import (
     autopilot_health_ping,
     chunking_optimizer_run,
     document_corpus_analyze,
+    embedding_tester_run,
     summarize_requirements_snapshot,
 )
+from app.core.embedding.benchmarker import BenchmarkResult
+
+
+def _fake_embedding_benchmark_results() -> list[BenchmarkResult]:
+    return [
+        BenchmarkResult(
+            provider="huggingface",
+            model="all-minilm-l6-v2",
+            dimensions=384,
+            total_texts=2,
+            total_time_s=0.05,
+            texts_per_second=40.0,
+            avg_latency_ms=25.0,
+            embedding_sample=[0.01] * 384,
+        ),
+        BenchmarkResult(
+            provider="openai",
+            model="text-embedding-3-small",
+            dimensions=1536,
+            total_texts=2,
+            total_time_s=0.1,
+            texts_per_second=20.0,
+            avg_latency_ms=50.0,
+            embedding_sample=[0.001] * 1536,
+        ),
+    ]
 
 
 def test_initial_state_shapes():
@@ -41,56 +69,65 @@ def test_autopilot_stage_order_matches_worker_stub():
     assert AUTOPILOT_STAGE_ORDER[-1] == "evaluation"
 
 
-def test_bootstrap_graph_runs_without_checkpointer():
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
     st = initial_autopilot_graph_state(
         build_id="b2",
         project_id="p2",
         document_ids=["doc1"],
-        requirements={},
+        requirements={"embedding_max_benchmarks": 2},
     )
     out = invoke_autopilot_bootstrap(st, checkpointer=None)
-    assert out["current_stage"] == "chunking_complete"
+    assert out["current_stage"] == "embedding_complete"
     assert out["iteration"] == 1
     assert out["stage_outputs"]["bootstrap"]["status"] == "complete"
     assert out["stage_outputs"]["analyze"]["status"] == "complete"
     assert out["stage_outputs"]["chunking"]["status"] == "complete"
     assert (out["stage_outputs"]["chunking"].get("selected") or {}).get("strategy")
-    assert len(out["messages"]) >= 3
-    assert len(out["agent_trace"]) >= 4
+    assert out["stage_outputs"]["embedding"]["status"] == "complete"
+    assert (out["stage_outputs"]["embedding"].get("selected") or {}).get("model")
+    assert len(out["messages"]) >= 4
+    assert len(out["agent_trace"]) >= 5
 
 
-def test_bootstrap_graph_with_memory_checkpointer():
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_bootstrap_graph_with_memory_checkpointer(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
     st = initial_autopilot_graph_state(
         build_id="b3",
         project_id="p3",
         document_ids=[],
-        requirements={"max_iterations": 3},
+        requirements={"max_iterations": 3, "embedding_max_benchmarks": 2},
     )
     mem = MemorySaver()
     out = invoke_autopilot_bootstrap(st, thread_id="unit-thread", checkpointer=mem)
     assert out["build_id"] == "b3"
 
 
-def test_compile_returns_runnable():
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_compile_returns_runnable(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
     app = compile_autopilot_bootstrap_graph()
     st = initial_autopilot_graph_state(
         build_id="b4",
         project_id="p4",
         document_ids=["x"],
-        requirements={},
+        requirements={"embedding_max_benchmarks": 2},
     )
     final = app.invoke(st)
-    assert final["current_stage"] == "chunking_complete"
+    assert final["current_stage"] == "embedding_complete"
 
 
 def test_stub_tools():
     assert autopilot_health_ping.invoke({}) == "autopilot_tools_ok"
-    assert "requirements_bytes=" in summarize_requirements_snapshot.invoke({"requirements_json": "{}"})
+    snap = summarize_requirements_snapshot.invoke({"requirements_json": "{}"})
+    assert "requirements_bytes=" in snap
 
 
 def test_tool_registry_non_empty():
     tools = get_autopilot_bootstrap_tools()
-    assert len(tools) == 6
+    assert len(tools) == 7
 
 
 def test_document_corpus_analyze_tool_smoke():
@@ -111,6 +148,30 @@ def test_chunking_optimizer_tool_smoke():
     out = json.loads(out_raw)
     assert out.get("status") == "complete"
     assert out.get("selected", {}).get("strategy")
+
+
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_embedding_tester_tool_smoke(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
+    analyze_raw = document_corpus_analyze.invoke(
+        {"document_ids_json": json.dumps(["1"]), "requirements_json": "{}"},
+    )
+    analyze = json.loads(analyze_raw)
+    chunk_raw = chunking_optimizer_run.invoke(
+        {"analyze_json": json.dumps(analyze), "requirements_json": "{}"},
+    )
+    chunking = json.loads(chunk_raw)
+    out_raw = embedding_tester_run.invoke(
+        {
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": json.dumps({"embedding_max_benchmarks": 2}),
+        },
+    )
+    out = json.loads(out_raw)
+    assert out.get("status") == "complete"
+    assert out.get("selected", {}).get("provider")
+    assert out.get("selected", {}).get("model")
 
 
 def test_format_stage_delegation_contains_ids():

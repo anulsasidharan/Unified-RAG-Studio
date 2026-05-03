@@ -1,4 +1,4 @@
-"""LangChain tools registered for Autopilot agents (P6-1 + P6-2 analyst + P6-3 chunking optimizer)."""
+"""LangChain tools registered for Autopilot agents (P6-1 … P6-4 embedding tester)."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from app.core.agents.document_analyst import (
     recommend_chunking,
     run_document_analyst,
 )
+from app.core.agents.embedding_tester import run_embedding_tester_from_json
 
 
 @tool
@@ -106,9 +107,26 @@ def recommend_chunking_from_summary_json(summary_json: str, requirements_json: s
 
 @tool
 def chunking_optimizer_run(analyze_json: str, requirements_json: str) -> str:
-    """P6-3: benchmark chunking configs from a completed analyze JSON payload; returns optimizer JSON."""
+    """P6-3: run chunking benchmarks from analyze JSON; returns optimizer JSON."""
 
     return run_chunking_optimizer_from_json(analyze_json, requirements_json)
+
+
+@tool
+def embedding_tester_run(
+    chunking_json: str,
+    analyze_json: str,
+    requirements_json: str,
+    pipeline_config_json: str = "",
+) -> str:
+    """P6-4: benchmark embeddings from chunking + analyze JSON; returns stage JSON."""
+
+    return run_embedding_tester_from_json(
+        chunking_json,
+        analyze_json,
+        requirements_json,
+        pipeline_config_json,
+    )
 
 
 def get_autopilot_bootstrap_tools() -> list[Any]:
@@ -121,4 +139,5 @@ def get_autopilot_bootstrap_tools() -> list[Any]:
         summarize_corpus_profiles_json,
         recommend_chunking_from_summary_json,
         chunking_optimizer_run,
+        embedding_tester_run,
     ]
