@@ -4555,4 +4555,60 @@ Add a button that **`POST`s** **`/api/designer/config`** (or projects sub-resour
 
 ---
 
+## Phase 5 · P5-14 · Template Gallery Page
+
+### What user problem does the Template Gallery solve?
+
+Operators often want a **known-good baseline** (chunk sizes, models, vector store) instead of configuring eleven stages from scratch. The gallery surfaces **catalog metadata** (use case, complexity, cost band, tags, providers) and offers **one-click persistence** via the **Templates** and **Projects** APIs, then hands off to **Designer** with the saved **`PipelineConfiguration`**.
+
+### Where does the UI live?
+
+**`/templates`** is implemented by **`apps/web/src/app/templates/page.tsx`**, which renders **`TemplateGallery`** (**`apps/web/src/components/templates/template-gallery.tsx`**). The route is already linked from the **navbar**, **Designer** placeholders, and **Review** cross-links.
+
+### Which backend endpoints does the gallery call?
+
+- **`GET /api/templates`** — returns **`TemplatesCatalogResponse`** (version, description, **`templates[]`** with full **`config`** per entry, camelCase JSON).  
+- **`GET /api/projects?page=1&page_size=50`** — populates the **“Existing project”** dropdown when applying a template.  
+- **`POST /api/projects/`** — optional when the user chooses **“New project”** before apply.  
+- **`POST /api/templates/{templateId}/apply`** — body **`{ projectId, name? }`**; responds **201** with **`ApplyTemplateResponse`** (saved config row plus **`templateId`**).
+
+### Why both “Use template” and “Preview locally”?
+
+**Preview locally** only calls **`loadPipeline(template.config)`** and navigates to **`/designer/review`** — no database row, useful for demos when the API is down. **Use template** persists a **Designer config** against a **real project UUID** so the pipeline can be reloaded, shared, and extended in later phases.
+
+### How is client state kept consistent with the server?
+
+After a successful apply, **`loadPipeline(applied.config)`** hydrates **`useDesignerStore`**. **`useProjectStore`** is updated: **`addProject`** when the server project is new to this browser, or **`updateProject`** with **`linkedPipelineId`** when the UUID already exists locally, then **`setActiveProject`**.
+
+### Why default “New project” in the apply dialog?
+
+The **sidebar project list** is still primarily **local-first**; not every browser session has already fetched server projects. Defaulting to **create** avoids an empty **Existing** selection and matches the common “start a workspace from this preset” mental model.
+
+### How do search and complexity filters work?
+
+Filtering is **client-side** over the catalog payload: a case-insensitive substring match across **name**, **description**, **useCase**, and **tags**, plus an optional **complexity** chip (**all / beginner / intermediate / advanced**).
+
+### What UX stack is used for the apply modal?
+
+**Radix Dialog** (**`@radix-ui/react-dialog`**) provides focus management and overlay semantics, consistent with other Radix usage in the app (**dropdown menu** in the navbar).
+
+### Interview trap: does **`GET /api/templates`** return only summaries?
+
+No — each catalog entry includes the **full** embedded **`config`** (same shape as **`PipelineConfiguration`**). The UI only *displays* metadata on cards to keep the layout light; **Preview** / **Apply** reuse the embedded object without a second **`GET /api/templates/{id}`** round trip.
+
+### What error states should you expect?
+
+- **Catalog load failure** — misconfigured **`TEMPLATES_CATALOG_PATH`**, missing **`data/templates.json`**, or API offline; the page shows a destructive-styled alert with the **proxy hint** from **`apiClient`**.  
+- **Apply failure** — invalid **`projectId`**, unknown template id, or DB constraint; **`ApiError`** **`detail`** is surfaced in-dialog.
+
+### What automated tests already guard this flow?
+
+**`apps/api/tests/test_templates.py`** covers list/get/apply happy paths and 404 cases. Frontend tests could add **MSW** + **RTL** for **`TemplateGallery`** fetch/apply if you want CI coverage without a live API.
+
+### What remains after **P5-14**?
+
+**Phase 6** Autopilot (**LangGraph** agents and orchestration).
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

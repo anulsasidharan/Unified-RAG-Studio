@@ -367,3 +367,35 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Template Gallery (after P5-14)
+
+**P5-14** replaces the **`/templates`** placeholder with **`TemplateGallery`**: **`GET /api/templates`** loads the **JSON catalog** (validated server-side as **`TemplatesCatalogResponse`**). Cards support **search**, **complexity** filters, **“Preview locally”** (**`loadPipeline`** + **`/designer/review`** only), and **“Use template”** which opens a **Radix Dialog** to either **`POST /api/projects/`** (new workspace) or reuse an existing server **`projectId`**, then **`POST /api/templates/{id}/apply`** (**201**) to persist **`PipelineConfig`**. On success the client **rehydrates `useDesignerStore`**, **merges `useProjectStore`** (**`linkedPipelineId`**), and **redirects to Review**. This closes the **Designer ↔ Templates API** loop opened in **P4-5** without duplicating catalog files in the browser bundle.
+
+```mermaid
+flowchart LR
+  subgraph Web["apps/web /templates"]
+    TG[TemplateGallery]
+    ZD[(useDesignerStore)]
+    ZP[(useProjectStore)]
+  end
+  subgraph API["apps/api"]
+    TLIST["GET /api/templates"]
+    PLIST["GET /api/projects"]
+    PNEW["POST /api/projects"]
+    TAPP["POST /api/templates/{id}/apply"]
+    DB[(PipelineConfig + Project rows)]
+  end
+  TG -->|"catalog"| TLIST
+  TG -->|"list"| PLIST
+  TG -->|"optional"| PNEW
+  TG -->|"apply"| TAPP
+  TAPP --> DB
+  PNEW --> DB
+  TAPP -->|"ApplyTemplateResponse.config"| ZD
+  TAPP --> ZP
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---
