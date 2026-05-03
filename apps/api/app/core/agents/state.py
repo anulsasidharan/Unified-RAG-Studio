@@ -59,7 +59,7 @@ def initial_autopilot_graph_state(
     requirements: dict[str, Any],
     pipeline_config: dict[str, Any] | None = None,
 ) -> AutopilotGraphState:
-    """Build a valid initial state for ``compile_autopilot_bootstrap_graph`` (through embedding tester)."""
+    """Build a valid initial state for ``compile_autopilot_bootstrap_graph`` (through retrieval optimizer)."""
 
     return AutopilotGraphState(
         messages=[],

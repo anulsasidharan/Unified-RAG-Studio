@@ -576,3 +576,51 @@ flowchart LR
 After P6-3, Autopilot had a **measured chunking triple** but only **static** embedding intent from the Designer draft. After P6-4, the run **exercises real embedders** on representative chunk text (when providers succeed), ranks candidates with **explicit trade-offs** against **`optimize_for`**, and emits a **catalog-aligned** `provider` / `model` / `dimensions` choice for downstream retrieval tuning in **P6-5**.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-5 · Retrieval Optimizer Agent)
+
+**P6-5** adds **`app/core/agents/retrieval_optimizer.py`**: builds **chunk texts** consistent with P6-4, generates a bounded set of **retrieval + rerank** candidates (pipeline **`stages.retrieval`** / **`reranking`** when present, else catalog of **similarity / hybrid / MMR / multi-query / ensemble**), scores them with **BM25-oracle MRR** plus a **latency proxy**, and writes **`stage_outputs["retrieval"]`**. The bootstrap graph is **linear** through **`retrieval_optimizer`**; terminal **`current_stage`** is **`retrieval_complete`**. Tooling adds **`retrieval_optimizer_run`**.
+
+### P6-5 — Graph topology (bootstrap + analyze + chunking + embedding + retrieval)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> chunking_optimizer
+  chunking_optimizer --> embedding_tester
+  embedding_tester --> retrieval_optimizer
+  retrieval_optimizer --> [*]
+```
+
+### P6-5 — Data flow (chunk texts + offline scores → retrieval decision)
+
+```mermaid
+flowchart LR
+  subgraph Prior["From P6-2 … P6-4"]
+    A["stage_outputs.analyze"]
+    CH["stage_outputs.chunking"]
+    E["stage_outputs.embedding"]
+  end
+  subgraph RMod["retrieval_optimizer.py"]
+    T[Chunk texts corpus]
+    S[BM25 + dense proxy + fusion]
+  end
+  subgraph Out["AutopilotGraphState"]
+    R["stage_outputs.retrieval"]
+    TR[agent_trace]
+  end
+  A --> T
+  CH --> T
+  E --> S
+  T --> S
+  S --> R
+  S --> TR
+```
+
+### Evolution note (P6-4 → P6-5)
+
+After P6-4, Autopilot had a **chosen embedding model** but retrieval was still **Designer defaults**. After P6-5, the run emits a **measured retrieval configuration** (strategy, **top_k**, hybrid/MMR knobs, rerank on/off) aligned to **`optimize_for`**, ready for **generation / evaluation** agents in P6-6+.
+
+---
