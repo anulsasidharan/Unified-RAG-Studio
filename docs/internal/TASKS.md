@@ -27,3 +27,4 @@
 | P5-6 · Vector Store Selector | `feature/p5-vectorstore-selector` | ✅ done |
 | P5-7 · Retrieval Configuration | `feature/p5-retrieval-config` | ✅ done |
 | P5-8 · Generation Model Selector | `feature/p5-generation-selector` | ✅ done |
+| P5-9 · Routing, Memory & Evaluation Config | `feature/p5-routing-memory-eval` | ✅ done |

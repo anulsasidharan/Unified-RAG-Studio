@@ -1,4 +1,4 @@
-import { DesignerStagePlaceholder } from '@/components/designer/designer-stage-placeholder';
+import { DesignerStepView } from './designer-step-view';
 import { stageIdFromStepParams } from '@/lib/designer-routes';
 
 type PageProps = {
@@ -7,5 +7,5 @@ type PageProps = {
 
 export default function DesignerStepPage({ params }: PageProps) {
   const stageId = stageIdFromStepParams(params.step);
-  return <DesignerStagePlaceholder stageId={stageId} />;
+  return <DesignerStepView stageId={stageId} />;
 }

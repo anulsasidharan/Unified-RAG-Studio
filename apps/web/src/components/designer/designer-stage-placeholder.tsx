@@ -9,8 +9,11 @@ import { ChunkingConfigurator } from './chunking-configurator';
 import { CloudProviderSelector } from './cloud-provider-selector';
 import { DataIngestionConfigurator } from './data-ingestion-configurator';
 import { EmbeddingConfigurator } from './embedding-configurator';
+import { EvaluationConfigurator } from './evaluation-configurator';
+import { MemoryConfigurator } from './memory-configurator';
 import { RetrievalConfigurator } from './retrieval-configurator';
 import { GenerationConfigurator } from './generation-configurator';
+import { RoutingConfigurator } from './routing-configurator';
 import { VectorStoreConfigurator } from './vector-store-configurator';
 
 function phaseNoteFor(stageId: DesignerStageId): string {
@@ -32,9 +35,11 @@ function phaseNoteFor(stageId: DesignerStageId): string {
     case 'generation':
       return 'Pick an LLM from the catalog, tune temperature, max tokens, optional top-p, system prompt, and output format — saved on your pipeline draft.';
     case 'routing':
+      return 'Optional conditional routing to different LLMs (rules + fallback) — saved on your pipeline draft.';
     case 'memory':
+      return 'Choose memory mode (none, buffer, summary, vector) and session options — saved on your pipeline draft.';
     case 'evaluation':
-      return 'Routing, memory & evaluation UI — P5-9.';
+      return 'Toggle evaluation, pick metrics, test set size, and schedule — saved on your pipeline draft.';
     case 'review':
       return 'Full review surface — P5-13.';
     default:
@@ -82,6 +87,12 @@ export function DesignerStagePlaceholder({
         <RetrievalConfigurator className="mt-8" variant="rerank-focus" />
       ) : stageId === 'generation' ? (
         <GenerationConfigurator className="mt-8" />
+      ) : stageId === 'routing' ? (
+        <RoutingConfigurator className="mt-8" />
+      ) : stageId === 'memory' ? (
+        <MemoryConfigurator className="mt-8" />
+      ) : stageId === 'evaluation' ? (
+        <EvaluationConfigurator className="mt-8" />
       ) : (
         <div className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground dark:border-neutral-600">
           Configuration UI for “{meta.label}” will appear in the numbered Phase 5 task above.

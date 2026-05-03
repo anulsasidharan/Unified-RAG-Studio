@@ -4273,4 +4273,69 @@ Stages **routing** through **review** stay dashed until **P5-9+**. **Cloud** thr
 
 ---
 
+## Phase 5 · P5-9 · Routing, Memory & Evaluation Config
+
+### What problem do the Routing, Memory, and Evaluation stages solve in Designer mode?
+
+**Routing** lets operators **send different user queries to different LLMs** (e.g. cheap model for simple FAQs, larger model for complex reasoning) using **ordered rules** and a **fallback** model. **Memory** configures **multi-turn context** (none vs buffer vs summary vs vector-backed memory) for conversational RAG. **Evaluation** defines **quality metrics**, **test set size**, and **schedule** intent for the **Evaluation Engine (P2-7)** and CI. **P5-9** surfaces all three on separate routes and persists them via **`updateStages({ routing | memory | evaluation })`**.
+
+### How does **`RoutingConfigurator`** align with the shared types?
+
+It edits **`RoutingConfig`**: **`enabled`**, optional **`defaultModel`**, optional **`rules`** (**`RoutingRule`**: **`condition`** — keyword | query-length | semantic-complexity; optional **`keywords`**, **`threshold`**; **`targetModel`**). **`RoutingConfigSchema`** in **`validators.ts`** validates the shape. **Target** and **fallback** models are chosen from **`listGenerationModels()`** so ids stay consistent with **`Generation`** and **`data/models/generation.json`**.
+
+### Why reuse the generation catalog for routing models?
+
+Routing **`targetModel`** / **`defaultModel`** must be **provider-executable model ids** already used elsewhere in the draft. Reusing **`generation-catalog.ts`** avoids free-text drift and keeps exports (**`pythonCodeGenerator`**) aligned with **LangChain** / provider constructors.
+
+### How are routing rules ordered?
+
+The UI displays rules **top to bottom**; the narrative matches typical engines (**first match wins**). The backend orchestrator interprets the saved JSON; the Designer captures **declarative** intent for YAML/Python export.
+
+### What does each **memory type** mean?
+
+- **`none`**: Stateless RAG (no chat memory).  
+- **`conversation-buffer`**: Sliding window of recent messages (**`windowSize`**).  
+- **`summary-buffer`**: Summarize history; **`windowSize`** and optional **`maxTokens`** cap cost.  
+- **`vector-memory`**: Embed/store past turns for retrieval-style memory; optional **`maxTokens`**.
+
+**`MemoryConfigSchema`** constrains **`windowSize`** (1–100) and **`MemoryType`** enum.
+
+### How does **Python codegen** use memory?
+
+**`pythonCodeGenerator.ts`** emits **`ConversationBufferWindowMemory`** (and related wiring) when **`stages.memory.type !== 'none'`**, using **`windowSize`** as **`k`**. The Designer only sets **configuration**; runtime libraries execute memory.
+
+### Which evaluation metrics can users select?
+
+**`EvaluationMetricName`**: **faithfulness**, **answer_relevance**, **context_precision**, **context_recall**, **latency**. The UI toggles checkboxes; **`metrics`** is stored as an array. **`testSetSize`** is clamped **10–1000** by schema; **`schedule`** is **on-demand** or **continuous** (continuous assumes worker/cron support later).
+
+### What validation applies?
+
+- **`RoutingConfigSchema`**: **`enabled`** boolean; each rule has **`condition`** enum, **`targetModel`** non-empty; optional **`threshold`**, **`keywords`**.  
+- **`MemoryConfigSchema`**: **`type`** enum; optional **`windowSize`**, **`maxTokens`**, **`sessionPersistence`**.  
+- **`EvaluationConfigSchema`**: **`enabled`**; optional **`metrics`** array of allowed metric names; **`testSetSize`** optional int range; **`schedule`** optional enum.
+
+### How does **`StageNavigator`** summarize these stages?
+
+- **`routingHint`**: **Off** / **On · N rules** (or **no rules** when enabled but empty).  
+- **`memoryHint`**: Short label (**None**, **Buffer**, **Summary**, **Vector**).  
+- **`evaluationHint`**: **Off** / **On · N metrics**.
+
+### How do these stages relate to **P2-6 / P2-7** backend services?
+
+**Generation** execution remains **`GenerationService`**. **Evaluation** configuration informs **`Evaluation Engine`** jobs and RAGAS-style runs but does not execute tests inside the Designer. **Routing** may be realized in application code or LangGraph; the draft is the **contract** for export.
+
+### What remains placeholder after P5-9?
+
+Only **Review** and later **P5-10+** tasks (**pipeline visualizer**, **cost**, **export**, **template gallery**) remain as separate milestones; **routing** through **evaluation** are interactive.
+
+### How would you add a new routing condition type?
+
+1. Extend **`RoutingRule.condition`** in **`pipeline.ts`** and **`RoutingRuleSchema`** in **`validators.ts`**. 2. Add UI controls in **`RoutingConfigurator`** for the new branch. 3. Update **`pythonCodeGenerator`** / **`yamlGenerator`** / **`mermaidGenerator`** if exports should emit logic for that condition.
+
+### How would you add a new evaluation metric?
+
+1. Add to **`EvaluationMetricName`** and **`EvaluationMetricNameSchema`**. 2. Add a checkbox row in **`EvaluationConfigurator`**. 3. Teach **`Evaluation Engine`** (backend) to compute it.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
