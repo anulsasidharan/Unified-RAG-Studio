@@ -4788,3 +4788,37 @@ By default the service **re-chunks** the same **signal-aware synthetic corpus** 
 ---
 
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*
+
+---
+
+## Phase 6 · P6-5 · Retrieval Optimizer Agent
+
+### What does the Retrieval Optimizer add to the Autopilot graph?
+
+**P6-5** extends the compiled bootstrap graph with a **`retrieval_optimizer`** node after **`embedding_tester`**. The terminal **`current_stage`** becomes **`retrieval_complete`**, and **`stage_outputs["retrieval"]`** holds the winning **strategy**, **top_k**, optional **hybrid α / fusion**, **MMR λ**, and **reranking** flags plus **`candidates_tried`** and a short **rationale**.
+
+### Why benchmark retrieval without calling `RetrievalService` or a vector DB?
+
+Autopilot runs **before** a project may have a populated index. The optimizer therefore reuses the **same chunk texts** as P6-4 (synthetic corpus + winning chunker, or **`requirements["retrieval_sample_texts"]`**), scores **hashing-vector “dense”** similarity and **BM25** lexically, and applies the same **fusion patterns** as production (**RRF**, **weighted** hybrid, **MMR**, **multi-query** RRF, **ensemble** RRF). That yields a **deterministic, CI-safe** trade-off surface; live Qdrant/PG paths remain in **P2-5** for runtime.
+
+### How is a “good” retrieval setting measured offline?
+
+For each evaluation query, the code treats the **BM25 argmax chunk** as a lexical oracle and computes **mean reciprocal rank (MRR)** of that chunk in the candidate ranking. That score is normalised across candidates and fused with a **latency proxy** (heavier strategies and higher **top_k** cost more) using **`optimize_for`** (`quality`, `latency`, `cost`, `balanced`) — analogous to the embedding tester’s composite.
+
+### What happens if chunking yields only one chunk?
+
+The optimizer **duplicates** the single chunk with a small suffix so BM25 and ranking logic always have **≥2** documents, avoiding degenerate benchmarks while still reflecting the real chunk content.
+
+### Which LangChain tool exposes P6-5?
+
+**`retrieval_optimizer_run(embedding_json, chunking_json, analyze_json, requirements_json, pipeline_config_json?)`** returns JSON aligned with **`stage_outputs["retrieval"]`**, so a future tool-calling LLM can re-run or explain the stage.
+
+### Interview trap: does the graph still end at `embedding_complete` after P6-5?
+
+**No.** Successful runs end at **`retrieval_complete`**. The embedding node still sets **`embedding_complete`** on that hop, but the graph’s **final** `current_stage` after **`retrieval_optimizer`** is **`retrieval_complete`**.
+
+### What is the next task after P6-5?
+
+**P6-6 · Evaluation Agent** — synthetic or curated test sets, pipeline evaluation, and failure diagnosis.
+
+---

@@ -1,4 +1,4 @@
-"""LangGraph construction — bootstrap through Embedding Tester (P6-4)."""
+"""LangGraph construction — bootstrap through Retrieval Optimizer (P6-5)."""
 
 from __future__ import annotations
 
@@ -27,12 +27,18 @@ from app.core.agents.prompts import (
     DOCUMENT_ANALYST_PROMPT,
     EMBEDDING_TESTER_PROMPT,
     ORCHESTRATOR_SYSTEM_PROMPT,
+    RETRIEVAL_OPTIMIZER_PROMPT,
+)
+from app.core.agents.retrieval_optimizer import (
+    human_readable_retrieval_message,
+    run_retrieval_optimizer,
 )
 from app.core.agents.state import AutopilotGraphState
 
 logger = structlog.get_logger(__name__)
 _CHUNKING_OPT_HINT = CHUNKING_OPTIMIZER_PROMPT[:120]
 _EMBEDDING_TESTER_HINT = EMBEDDING_TESTER_PROMPT[:120]
+_RETRIEVAL_OPT_HINT = RETRIEVAL_OPTIMIZER_PROMPT[:120]
 
 
 def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
@@ -47,7 +53,7 @@ def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
     text = (
         "Autopilot graph online. "
         f"Documents queued: {trace['document_count']}. "
-        "Running document analyst, chunking optimizer, embedding tester, "
+        "Running document analyst, chunking optimizer, embedding tester, retrieval optimizer, "
         "then later subgraphs per AUTOPILOT_STAGE_ORDER."
     )
     return {
@@ -82,8 +88,124 @@ def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
                 "next": "document_analyst",
                 "then": "chunking_optimizer",
                 "then_embedding": "embedding_tester",
+                "then_retrieval": "retrieval_optimizer",
             },
         },
+    }
+
+
+def _retrieval_optimizer_node(state: AutopilotGraphState) -> dict[str, Any]:
+    """P6-5: tune retrieval; write ``stage_outputs['retrieval']``."""
+
+    merged = state.get("stage_outputs") or {}
+    embedding = merged.get("embedding")
+    chunking = merged.get("chunking")
+    analyze = merged.get("analyze")
+    if not embedding or embedding.get("status") != "complete":
+        trace = {
+            "event": "retrieval_optimizer",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_embedding",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Retrieval optimizer skipped: embedding stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "retrieval",
+                        "retrieval_prompt_hint": _RETRIEVAL_OPT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "retrieval_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "retrieval": {
+                    "status": "failed",
+                    "reason": "missing_embedding",
+                },
+            },
+        }
+
+    if not chunking or chunking.get("status") != "complete":
+        trace = {
+            "event": "retrieval_optimizer",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_chunking",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Retrieval optimizer skipped: chunking stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "retrieval",
+                        "retrieval_prompt_hint": _RETRIEVAL_OPT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "retrieval_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "retrieval": {
+                    "status": "failed",
+                    "reason": "missing_chunking",
+                },
+            },
+        }
+
+    if not analyze or analyze.get("status") != "complete":
+        trace = {
+            "event": "retrieval_optimizer",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_analyze",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Retrieval optimizer skipped: analyze stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "retrieval",
+                        "retrieval_prompt_hint": _RETRIEVAL_OPT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "retrieval_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "retrieval": {
+                    "status": "failed",
+                    "reason": "missing_analyze",
+                },
+            },
+        }
+
+    payload = run_retrieval_optimizer(
+        embedding_payload=dict(embedding),
+        chunking_payload=dict(chunking),
+        analyze_payload=dict(analyze),
+        requirements=dict(state.get("requirements") or {}),
+        pipeline_config=state.get("pipeline_config"),
+    )
+    trace = {
+        "event": "retrieval_optimizer",
+        "build_id": state["build_id"],
+        "project_id": state["project_id"],
+        "selected_strategy": (payload.get("selected") or {}).get("strategy"),
+    }
+    text = human_readable_retrieval_message(payload)
+    return {
+        "messages": [
+            AIMessage(
+                content=text,
+                additional_kwargs={
+                    "stage": "retrieval",
+                    "retrieval_prompt_hint": _RETRIEVAL_OPT_HINT,
+                },
+            ),
+        ],
+        "current_stage": "retrieval_complete",
+        "agent_trace": [trace],
+        "stage_outputs": {"retrieval": payload},
     }
 
 
@@ -263,7 +385,7 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
-    """Compile linear graph through embedding_tester (optional ``MemorySaver``)."""
+    """Compile linear graph through retrieval_optimizer (optional ``MemorySaver``)."""
 
     graph = StateGraph(AutopilotGraphState)
     graph.add_node("bootstrap_prepare", _bootstrap_prepare)
@@ -271,12 +393,14 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
     graph.add_node("document_analyst", _document_analyst_node)
     graph.add_node("chunking_optimizer", _chunking_optimizer_node)
     graph.add_node("embedding_tester", _embedding_tester_node)
+    graph.add_node("retrieval_optimizer", _retrieval_optimizer_node)
     graph.set_entry_point("bootstrap_prepare")
     graph.add_edge("bootstrap_prepare", "bootstrap_finalize")
     graph.add_edge("bootstrap_finalize", "document_analyst")
     graph.add_edge("document_analyst", "chunking_optimizer")
     graph.add_edge("chunking_optimizer", "embedding_tester")
-    graph.add_edge("embedding_tester", END)
+    graph.add_edge("embedding_tester", "retrieval_optimizer")
+    graph.add_edge("retrieval_optimizer", END)
     compiled = graph.compile(checkpointer=checkpointer)
     logger.debug("autopilot_bootstrap_graph_compiled", checkpointer=bool(checkpointer))
     return compiled
@@ -288,7 +412,7 @@ def invoke_autopilot_bootstrap(
     thread_id: str = "bootstrap-test",
     checkpointer: MemorySaver | None = None,
 ) -> AutopilotGraphState:
-    """Run bootstrap + analyst + chunking + embedding tester once; return merged terminal state."""
+    """Run bootstrap + analyst + chunking + embedding + retrieval optimizer once; return merged terminal state."""
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
     if checkpointer is not None:
