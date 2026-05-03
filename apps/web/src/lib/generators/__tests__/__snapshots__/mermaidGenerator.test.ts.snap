@@ -18,15 +18,14 @@ exports[`generateMermaidDiagram > matches snapshot for full config 1`] = `
     MEM[("💾 Memory\\nconversation-buffer")]
     QUERY --> MEM
     RET["🔎 Retrieve\\nhybrid · top-10"]
+    MEM --> RET
     RNK["⚡ Rerank\\ncohere-rerank-v3 · top-5"]
     RET --> RNK
     GEN["🤖 Generate\\nclaude-sonnet-4-6\\nt=0"]
     ANSWER[/"💬 Answer"/]
-    MEM --> RET
-    QUERY --> RET
-    RNK --> GEN --> ANSWER
     ROUTER{"🔀 Route"}
-    QUERY --> ROUTER --> GEN
+    RNK --> ROUTER
+    ROUTER --> GEN --> ANSWER
     EVAL["📊 Evaluate"]
     ANSWER --> EVAL
   end
@@ -47,9 +46,9 @@ exports[`generateMermaidDiagram > matches snapshot for minimal config 1`] = `
     direction LR
     QUERY[/"🔍 User Query"/]
     RET["🔎 Retrieve\\nsimilarity · top-5"]
+    QUERY --> RET
     GEN["🤖 Generate\\ngpt-4o-mini\\nt=0.1"]
     ANSWER[/"💬 Answer"/]
-    QUERY --> RET
     RET --> GEN --> ANSWER
   end
   VS --> RET"

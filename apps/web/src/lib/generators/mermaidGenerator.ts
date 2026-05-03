@@ -56,17 +56,18 @@ export function generateMermaidDiagram(
 
   lines.push('    QUERY[/"🔍 User Query"/]');
 
-  // Optional memory
+  let queryToRetTail = 'QUERY';
   if (stages.memory && stages.memory.type !== 'none') {
     const memLabel = `💾 Memory\\n${q(stages.memory.type)}`;
     lines.push(`    MEM[("${memLabel}")]`);
     lines.push('    QUERY --> MEM');
+    queryToRetTail = 'MEM';
   }
 
   const retLabel = `🔎 Retrieve\\n${q(stages.retrieval.strategy)} · top-${stages.retrieval.topK}`;
   lines.push(`    RET["${retLabel}"]`);
+  lines.push(`    ${queryToRetTail} --> RET`);
 
-  // Reranking (conditional)
   let beforeGen = 'RET';
   if (stages.reranking?.enabled) {
     const rnkModel = stages.reranking.model ? q(stages.reranking.model) : 'reranker';
@@ -78,22 +79,16 @@ export function generateMermaidDiagram(
 
   const genLabel = `🤖 Generate\\n${q(stages.generation.model)}\\nt=${stages.generation.temperature}`;
   lines.push(`    GEN["${genLabel}"]`);
-
   lines.push('    ANSWER[/"💬 Answer"/]');
 
-  if (stages.memory && stages.memory.type !== 'none') {
-    lines.push('    MEM --> RET');
-  }
-  lines.push(`    QUERY --> RET`);
-  lines.push(`    ${beforeGen} --> GEN --> ANSWER`);
-
-  // Optional routing
   if (stages.routing?.enabled) {
     lines.push('    ROUTER{"🔀 Route"}');
-    lines.push('    QUERY --> ROUTER --> GEN');
+    lines.push(`    ${beforeGen} --> ROUTER`);
+    lines.push('    ROUTER --> GEN --> ANSWER');
+  } else {
+    lines.push(`    ${beforeGen} --> GEN --> ANSWER`);
   }
 
-  // Optional evaluation
   if (stages.evaluation?.enabled) {
     lines.push('    EVAL["📊 Evaluate"]');
     lines.push('    ANSWER --> EVAL');
@@ -122,4 +117,38 @@ export function generatePipelineSummary(stages: PipelineStages): string {
   }
   parts.push(stages.generation.model);
   return parts.join(' → ');
+}
+
+/**
+ * Short bullet lines for the Designer pipeline visualizer summary panel.
+ */
+export function generatePipelineHighlights(
+  stages: PipelineStages,
+  cloudProvider: string
+): string[] {
+  const cloud = PROVIDER_LABEL[cloudProvider] ?? cloudProvider;
+  const lines: string[] = [
+    `Cloud: ${cloud}`,
+    ...(stages.dataIngestion
+      ? [`Ingestion: ${stages.dataIngestion.sourceType}`]
+      : []),
+    `Chunking: ${stages.chunking.strategy} · ${stages.chunking.chunkSize} tok / ${stages.chunking.chunkOverlap} overlap`,
+    `Embedding: ${stages.embedding.model} · ${stages.embedding.dimensions}d`,
+    `Vector store: ${stages.vectorStore.provider} · ${stages.vectorStore.indexName}`,
+    `Retrieval: ${stages.retrieval.strategy} · top-${stages.retrieval.topK}`,
+    stages.reranking?.enabled
+      ? `Reranking: on${stages.reranking.model ? ` · ${stages.reranking.model}` : ''}`
+      : 'Reranking: off',
+    `Generation: ${stages.generation.model} · T=${stages.generation.temperature}`,
+    stages.routing?.enabled
+      ? `Routing: on · ${stages.routing.rules?.length ?? 0} rule(s)`
+      : 'Routing: off',
+    stages.memory
+      ? `Memory: ${stages.memory.type}`
+      : 'Memory: none',
+    stages.evaluation?.enabled
+      ? `Evaluation: on · ${stages.evaluation.metrics?.length ?? 0} metric(s)`
+      : 'Evaluation: off',
+  ];
+  return lines;
 }

@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { generateMermaidDiagram, generatePipelineSummary } from '../mermaidGenerator';
+import {
+  generateMermaidDiagram,
+  generatePipelineHighlights,
+  generatePipelineSummary,
+} from '../mermaidGenerator';
 import { minimalConfig, fullConfig } from './fixtures';
 
 describe('generateMermaidDiagram', () => {
@@ -118,5 +122,21 @@ describe('generatePipelineSummary', () => {
   it('omits reranker when reranking is disabled', () => {
     const result = generatePipelineSummary(minimalConfig.stages);
     expect(result).not.toContain('cohere');
+  });
+});
+
+describe('generatePipelineHighlights', () => {
+  it('lists cloud, stages, and toggles for minimal draft', () => {
+    const lines = generatePipelineHighlights(minimalConfig.stages, minimalConfig.cloudProvider);
+    expect(lines.some((l) => l.startsWith('Cloud:'))).toBe(true);
+    expect(lines.some((l) => l.includes('Reranking: off'))).toBe(true);
+    expect(lines.some((l) => l.includes('Routing: off'))).toBe(true);
+  });
+
+  it('includes routing and evaluation when enabled', () => {
+    const lines = generatePipelineHighlights(fullConfig.stages, fullConfig.cloudProvider);
+    expect(lines.some((l) => l.includes('Reranking: on'))).toBe(true);
+    expect(lines.some((l) => l.includes('Routing: on'))).toBe(true);
+    expect(lines.some((l) => l.includes('Evaluation: on'))).toBe(true);
   });
 });

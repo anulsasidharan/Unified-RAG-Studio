@@ -4338,4 +4338,60 @@ Only **Review** and later **P5-10+** tasks (**pipeline visualizer**, **cost**, *
 
 ---
 
+## Phase 5 · P5-10 · Pipeline Visualizer
+
+### What does **P5-10** deliver?
+
+A **live pipeline preview** in Designer mode: a **text summary** (one-line chain plus bullets) and a **Mermaid flowchart** that updates whenever **`draft`** changes in **`useDesignerStore`**. It appears **below the stage list** on **`lg+`** and as a **collapsible “Pipeline preview”** above the main panel on **narrow** screens.
+
+### Where is it mounted?
+
+**`DesignerShell`** renders **`PipelineVisualizer`** with **`placement="sidebar"`** next to **`StageNavigator`** and **`placement="main"`** above **`children`**. Only one placement is visible per breakpoint so **Mermaid** runs once.
+
+### How is the diagram produced?
+
+**`generateMermaidDiagram(stages, cloudProvider)`** in **`apps/web/src/lib/generators/mermaidGenerator.ts`** builds a **`flowchart LR`** string with **`subgraph`** blocks for **Indexing** (source → chunk → embed → vector store) and **Query** (user query → optional memory → retrieve → optional rerank → optional router → generate → answer → optional evaluate). **`VS --> RET`** connects the index to retrieval across subgraphs.
+
+### Why fix edges for memory and routing?
+
+Earlier drafts duplicated **`QUERY --> RET`** when memory was on and attached **`ROUTER`** directly from **`QUERY`**, which misrepresented runtime order. The generator now chains **memory between query and retrieval** and places **routing between the post-retrieval tail and generation**.
+
+### What is **`generatePipelineHighlights`**?
+
+A companion helper returning **short bullet strings** (cloud, ingestion, chunking, embedding, vector store, retrieval, reranking, generation, routing, memory, evaluation) for the **summary list** next to the SVG.
+
+### How does client rendering work?
+
+**`mermaid.render(id, definition)`** runs in **`useEffect`** after **`mermaid.initialize({ theme, securityLevel: 'loose' })`**. Theme follows **`.dark`** on **`documentElement`** and **`prefers-color-scheme`**. A **loader** shows while **SVG** is generated; errors surface inline.
+
+### Does the visualizer persist anything?
+
+No. It **reads** **`draft`** only; persistence stays **`persist`** middleware on **`useDesignerStore`** (same as other configurators).
+
+### How does this relate to **exports**?
+
+**`generateMermaidDiagram`** is shared with **codegen / export** flows from **P3** utilities; the Designer preview uses the **same canonical graph** shape as exported diagrams where applicable.
+
+### Trade-offs of **Mermaid in the browser**
+
+**Pros**: Diagram stays aligned with **shared generator** logic; no extra graph library. **Cons**: Bundle includes **mermaid**; **SSR** does not render SVG (client-only). Mitigation: diagram mounts only after breakpoint selection and shows a **loading** state.
+
+### Accessibility notes
+
+The SVG container uses **`role="img"`** with **`aria-label="Pipeline flow diagram"`**; the collapsible mobile panel uses a **`summary`** control with **focus-visible** ring.
+
+### How would you add **guardrails** to the picture?
+
+Extend **`generateMermaidDiagram`** (or pass **`guardrails`** into a wrapper) to draw optional nodes for **input / retrieval / output** guard stages when **`draft.guardrails`** is non-null, matching **`GuardrailsConfig`** in **`pipeline.ts`**.
+
+### Interview trap: why **`placement`** props instead of CSS-only hide?
+
+Hiding with **`hidden`** still mounts children; **two** **Mermaid** instances would **double-render** and fight for **`innerHTML`**. **`placement`** plus **`matchMedia`** ensures **one** active diagram instance.
+
+### What remains after **P5-10** for Designer polish?
+
+**Cost estimator** (**P5-11**), **code export UI** (**P5-12**), **review page** (**P5-13**), **template gallery** (**P5-14**) remain separate milestones.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

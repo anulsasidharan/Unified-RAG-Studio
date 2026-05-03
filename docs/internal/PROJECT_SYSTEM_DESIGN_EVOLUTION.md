@@ -240,3 +240,34 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-10)
+
+**P5-10** adds a **live pipeline visualizer** on every Designer route. **`DesignerShell`** groups the left column (**`StageNavigator`** + **`PipelineVisualizer placement=sidebar`**) and places **`PipelineVisualizer placement=main`** above **`main`** for small viewports. The visualizer subscribes to **`useDesignerStore`**, shows **`generatePipelineSummary`**, **`generatePipelineHighlights`**, and a **Mermaid** diagram from **`generateMermaidDiagram`**. The **mermaid** package renders **SVG** client-side with **theme** synced to **`.dark`** / **`prefers-color-scheme`**. The **indexing** and **query** subgraphs in **`mermaidGenerator.ts`** use a single coherent path: **query → (memory) → retrieve → (rerank) → (route) → generate → answer → (evaluate)**; **`VS --> RET`** links the index to retrieval.
+
+```mermaid
+flowchart TB
+  subgraph DS["DesignerShell"]
+    Nav[StageNavigator]
+    PVS[PipelineVisualizer sidebar]
+    PVM[PipelineVisualizer main]
+    Main[Page content]
+  end
+  subgraph W["apps/web"]
+    MM[mermaid]
+    MG[mermaidGenerator.ts]
+    Z[(useDesignerStore draft)]
+  end
+  Nav --> Z
+  Z --> MG
+  MG --> PVS
+  MG --> PVM
+  PVS --> MM
+  PVM --> MM
+  PVM --> Main
+  PVS -.-> Main
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---
