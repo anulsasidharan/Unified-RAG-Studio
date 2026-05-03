@@ -624,3 +624,52 @@ flowchart LR
 After P6-4, Autopilot had a **chosen embedding model** but retrieval was still **Designer defaults**. After P6-5, the run emits a **measured retrieval configuration** (strategy, **top_k**, hybrid/MMR knobs, rerank on/off) aligned to **`optimize_for`**, ready for **generation / evaluation** agents in P6-6+.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-6 · Evaluation Agent)
+
+**P6-6** adds **`app/core/agents/evaluation_agent.py`**: reuses **P6-5** chunk corpus and **selected retrieval** ranking, builds **per-query** rows with an **extractive** simulated answer, computes **deterministic metric proxies**, runs **`analyze_failures`**, compares aggregates to **`requirements["target_metrics"]`**, and writes **`stage_outputs["evaluation"]`**. The bootstrap graph ends at **`evaluation_agent` → END**; terminal **`current_stage`** is **`evaluation_complete`**. Tooling adds **`evaluation_agent_run`**.
+
+### P6-6 — Graph topology (bootstrap … retrieval → evaluation)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> chunking_optimizer
+  chunking_optimizer --> embedding_tester
+  embedding_tester --> retrieval_optimizer
+  retrieval_optimizer --> evaluation_agent
+  evaluation_agent --> [*]
+```
+
+### P6-6 — Data flow (retrieval decision + chunks → eval payload)
+
+```mermaid
+flowchart LR
+  subgraph Prior["From P6-2 … P6-5"]
+    A["stage_outputs.analyze"]
+    CH["stage_outputs.chunking"]
+    R["stage_outputs.retrieval"]
+  end
+  subgraph EMod["evaluation_agent.py"]
+    Q[Eval queries + BM25 oracle]
+    S[Lexical proxies + failure_analysis]
+  end
+  subgraph Out["AutopilotGraphState"]
+    EV["stage_outputs.evaluation"]
+    TR[agent_trace]
+  end
+  A --> Q
+  CH --> Q
+  R --> Q
+  Q --> S
+  S --> EV
+  S --> TR
+```
+
+### Evolution note (P6-5 → P6-6)
+
+After P6-5, Autopilot could **rank** chunks but had **no closed-loop quality signal** for the composed stack. After P6-6, each run emits a **structured evaluation payload** (metrics, **meets_targets**, **failure_analysis**) suitable for **orchestrator iteration** and UI explainability, while **full RAGAS** remains on the **async evaluation** path (**P2-7** / jobs) for production-grade scoring.
+
+---

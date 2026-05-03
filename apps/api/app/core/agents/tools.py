@@ -1,4 +1,4 @@
-"""LangChain tools registered for Autopilot agents (P6-1 … P6-5 retrieval optimizer)."""
+"""LangChain tools registered for Autopilot agents (P6-1 … P6-6 evaluation agent)."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from app.core.agents.document_analyst import (
     run_document_analyst,
 )
 from app.core.agents.embedding_tester import run_embedding_tester_from_json
+from app.core.agents.evaluation_agent import run_evaluation_agent_from_json
 from app.core.agents.retrieval_optimizer import run_retrieval_optimizer_from_json
 
 
@@ -149,6 +150,25 @@ def retrieval_optimizer_run(
     )
 
 
+@tool
+def evaluation_agent_run(
+    retrieval_json: str,
+    chunking_json: str,
+    analyze_json: str,
+    requirements_json: str,
+    pipeline_config_json: str = "",
+) -> str:
+    """P6-6: offline RAG-style metric proxies + failure analysis from prior stage JSON."""
+
+    return run_evaluation_agent_from_json(
+        retrieval_json,
+        chunking_json,
+        analyze_json,
+        requirements_json,
+        pipeline_config_json,
+    )
+
+
 def get_autopilot_bootstrap_tools() -> list[Any]:
     """Tools bound to the bootstrap graph / future orchestrator LLM."""
 
@@ -161,4 +181,5 @@ def get_autopilot_bootstrap_tools() -> list[Any]:
         chunking_optimizer_run,
         embedding_tester_run,
         retrieval_optimizer_run,
+        evaluation_agent_run,
     ]
