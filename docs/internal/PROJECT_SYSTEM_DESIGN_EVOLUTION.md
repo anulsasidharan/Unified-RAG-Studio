@@ -399,3 +399,46 @@ flowchart LR
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-1)
+
+**P6-1** adds **`apps/api/app/core/agents/`**: a shared **`AutopilotGraphState`** (messages + build metadata + **`agent_trace`** + **`stage_outputs`** reducers), **central prompts**, a **stub tool registry**, and a **bootstrap LangGraph** (`bootstrap_prepare` → `bootstrap_finalize`) that runs without an LLM to validate the stack. The Celery **`run_pipeline_build`** stub now imports **`AUTOPILOT_STAGE_ORDER`** from the same module so UI/worker stage names stay aligned with the graph roadmap. Specialist subgraphs (P6-2 onward) will compile into a parent orchestrator (P6-8); APIs (P6-9) will stream **`agent_trace`** / **`messages`** to the client.
+
+### P6-1 — Component view
+
+```mermaid
+flowchart TB
+  subgraph Worker["Celery worker (transitional)"]
+    T[run_pipeline_build stub]
+  end
+  subgraph Agents["app/core/agents"]
+    ST[AutopilotGraphState + AUTOPILOT_STAGE_ORDER]
+    PR[prompts.py]
+    TL[tools.py]
+    GR[graph.py bootstrap graph]
+  end
+  subgraph LG["LangGraph runtime"]
+    N1[bootstrap_prepare]
+    N2[bootstrap_finalize]
+  end
+  T -->|"imports stage order"| ST
+  GR --> N1 --> N2
+  ST --> GR
+  PR --> GR
+  TL -.->|"future LLM bind"| GR
+```
+
+### P6-1 — Bootstrap graph (minimal executable)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> [*]
+```
+
+### Evolution note
+
+Before P6-1, Autopilot progress was **time-sliced stub updates** in **`run_pipeline_build`** with no shared agent memory. After P6-1, the codebase has a **single state schema** and a **compiled graph** pattern; subsequent phases add **real nodes** per stage and replace the stub with orchestrated execution.
+
+---

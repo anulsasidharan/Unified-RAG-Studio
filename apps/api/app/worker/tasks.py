@@ -12,6 +12,7 @@ from typing import Any
 
 import structlog
 
+from app.core.agents.state import AUTOPILOT_STAGE_ORDER
 from app.core.evaluation.service import EvaluationEngine
 from app.core.evaluation.strategies import EvaluationExample
 from app.models import AutopilotBuild, Deployment, EvaluationRun
@@ -26,8 +27,8 @@ def _iso_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-# Stages iterated for Autopilot build progress until LangGraph replaces this stub (Phase 6).
-_AUTOPILOT_STAGE_KEYS = ("analyze", "chunking", "embedding", "retrieval", "generation", "evaluation")
+# Stages iterated for Autopilot build progress until the LangGraph orchestrator replaces this stub (Phase 6).
+_AUTOPILOT_STAGE_KEYS = AUTOPILOT_STAGE_ORDER
 
 
 @celery_app.task(bind=True, name="jobs.run_pipeline_build")

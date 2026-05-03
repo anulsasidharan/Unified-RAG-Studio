@@ -1,11 +1,13 @@
-# Prompt history (append-only)
+# Prompt history — Unified RAG Studio
+
+Session log of user prompts (append-only).
 
 ---
 
-## 2026-05-03T08:35:00Z
+## 2026-05-03T12:35:01-04:00
 
-Go ahead and complete the P5-14 · Template Gallery Page	
-I am currently in Branch: feature/p5-template-gallery
+Go ahead and complete the P6-1 · LangGraph Agent Infrastructure	
+I am currently in Branch: feature/p6-langgraph-infrastructure
 
 Once completed do the following tasks:
 
