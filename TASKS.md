@@ -64,3 +64,4 @@
 | P5-11 · Cost Estimator Component | `feature/p5-cost-estimator` | ✅ done |
 | P5-12 · Code Export Component | `feature/p5-code-exporter` | ✅ done |
 | P5-13 · Designer Review Page | `feature/p5-designer-review` | ✅ done |
+| P5-14 · Template Gallery Page | `feature/p5-template-gallery` | ✅ done |
