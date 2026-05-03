@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
+import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
 import { useDesignerStore } from '@/stores/designer-store';
@@ -44,9 +45,9 @@ export function DesignerShell({
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
         </div>
       </div>
-      <CostEstimator className="w-full" />
-      <CodeExporter className="w-full" />
-      <PipelineVisualizer className="w-full" />
+      <CostEstimator id={DESIGNER_DOM_SECTION_IDS.cost} className="w-full" />
+      <CodeExporter id={DESIGNER_DOM_SECTION_IDS.export} className="w-full" />
+      <PipelineVisualizer id={DESIGNER_DOM_SECTION_IDS.pipeline} className="w-full" />
     </div>
   );
 }

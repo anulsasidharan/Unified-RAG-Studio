@@ -21,8 +21,10 @@ const FORMAT_OPTIONS: { id: DesignerExportFormat; label: string; short: string }
 
 export function CodeExporter({
   className,
+  id,
 }: Readonly<{
   className?: string;
+  id?: string;
 }>) {
   const draft = useDesignerStore((s) => s.draft);
   const [format, setFormat] = useState<DesignerExportFormat>('python');
@@ -130,8 +132,9 @@ export function CodeExporter({
 
   return (
     <section
+      id={id}
       className={cn(
-        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800',
+        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800 scroll-mt-4',
         className
       )}
       aria-labelledby="code-exporter-heading"

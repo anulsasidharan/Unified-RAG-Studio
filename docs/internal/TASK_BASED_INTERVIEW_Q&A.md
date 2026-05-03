@@ -4499,7 +4499,59 @@ Integrate **Prism** (already a dependency) or **Shiki** in a **`useEffect`** tha
 
 ### What remains after **P5-12**?
 
-**P5-13** review page and **P5-14** template gallery.
+**P5-14** template gallery (and later phases).
+
+---
+
+## Phase 5 · P5-13 · Designer Review Page
+
+### What problem does the Review stage solve?
+
+After eleven configuration stages, operators need a **single checkpoint** that surfaces the **whole draft** (names, key parameters, flow bullets) without hunting through each step again, while keeping **cost**, **export**, and **live Mermaid** one scroll away. Review also wires **deep links** into the existing footer strips so we do not duplicate API calls or diagram rendering logic.
+
+### Where does the Review UI live in the component tree?
+
+**`/designer/review`** resolves through **`apps/web/src/app/designer/[[...step]]/page.tsx`** → **`DesignerStepView`** → **`DesignerStagePlaceholder`**, which **early-returns** **`DesignerReviewPage`** when **`stageId === 'review'`**. **`DesignerShell`** still wraps all designer routes and continues to mount **`CostEstimator`**, **`CodeExporter`**, and **`PipelineVisualizer`** below the scrollable main pane.
+
+### Why add **`designer-section-anchors.ts`**?
+
+Three stable DOM **`id`** values (**`designer-section-cost`**, **`designer-section-export`**, **`designer-section-pipeline`**) are shared between **`DesignerShell`** (passed into each footer **`section`**) and **`DesignerReviewPage`** (scroll targets). A tiny module avoids string drift and keeps Review buttons aligned with the visual stack order (**cost → export → graph**).
+
+### How does smooth scrolling behave with a sticky layout?
+
+Each footer **`section`** accepts an optional **`id`** and adds **`scroll-mt-4`** so **`scrollIntoView({ behavior: 'smooth', block: 'start' })`** leaves a small offset under fixed chrome / borders and the target is not flush-hidden at the viewport edge.
+
+### How is the textual summary produced?
+
+**`generatePipelineSummary`** and **`generatePipelineHighlights`** from **`mermaidGenerator.ts`** are called with **`maxVisitedStageIndex = DESIGNER_STAGES.length - 1`** so Review always reflects the **full draft**, even if the progressive diagram still reflects a lower **`diagramMaxVisitedStageIndex`** until the user has navigated through every stage.
+
+### What actions are offered besides jumping to footer strips?
+
+- **Copy text summary** — pipeline name, one-line flow, and bullet list (clipboard).  
+- **Copy draft JSON** — pretty-printed **`PipelineConfiguration`** for tickets or API replays.  
+- **Reset draft** — calls **`resetDraft()`** after **`window.confirm`** (clears persisted Zustand state in the browser).  
+- **Stage checklist** — links back to each non-review **`DESIGNER_STAGES`** path for quick edits.  
+- Footer links: **home**, **templates**, **projects**.
+
+### Why not embed a second Mermaid instance inside Review?
+
+**`PipelineVisualizer`** already owns Mermaid init, zoom, PiP, and invalidation. Duplicating it would double CPU work and risk theme drift. Review **navigates** to the existing section instead.
+
+### Interview trap: does Review save to PostgreSQL?
+
+Not in this task. The draft is still **`persist`**’d **`useDesignerStore`** to **`localStorage`**; **Projects** / **Designer Config API** persistence is a separate workflow. The Review page links to **`ROUTES.projects`** for discoverability only.
+
+### How would you add “Save to project” on Review?
+
+Add a button that **`POST`s** **`/api/designer/config`** (or projects sub-resource) with **`draft`**, handle loading/errors, show toast, and optionally redirect to **`/projects/{id}`** — keeping Review as an orchestration surface, not a second source of truth.
+
+### What automated tests would you add next?
+
+**RTL** test that **`DesignerReviewPage`** renders summary cards from a **hydrated** store fixture; **Playwright** journey that lands on **`/designer/review`** and asserts **`#designer-section-cost`** exists after clicking **“Cost estimate”**.
+
+### What remains after **P5-13**?
+
+**P5-14** template gallery.
 
 ---
 
