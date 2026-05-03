@@ -85,6 +85,30 @@ function generationHint(modelId?: string, temperature?: number, maxTokens?: numb
   return `${short}${t}${mt}`;
 }
 
+function routingHint(enabled?: boolean, ruleCount?: number): string {
+  if (!enabled) return 'Off';
+  const n = ruleCount ?? 0;
+  return n === 0 ? 'On · no rules' : `On · ${n} rule${n === 1 ? '' : 's'}`;
+}
+
+const MEMORY_SHORT: Record<string, string> = {
+  none: 'None',
+  'conversation-buffer': 'Buffer',
+  'summary-buffer': 'Summary',
+  'vector-memory': 'Vector',
+};
+
+function memoryHint(type?: string): string {
+  if (!type) return '';
+  return MEMORY_SHORT[type] ?? type;
+}
+
+function evaluationHint(enabled?: boolean, metricCount?: number): string {
+  if (!enabled) return 'Off';
+  const n = metricCount ?? 0;
+  return n === 0 ? 'On · no metrics' : `On · ${n} metric${n === 1 ? '' : 's'}`;
+}
+
 export function StageNavigator() {
   const pathname = usePathname();
   const router = useRouter();
@@ -200,6 +224,18 @@ export function StageNavigator() {
                         draft.stages.generation?.temperature,
                         draft.stages.generation?.maxTokens
                       )}
+                    </span>
+                  ) : stage.id === 'routing' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {routingHint(draft.stages.routing?.enabled, draft.stages.routing?.rules?.length)}
+                    </span>
+                  ) : stage.id === 'memory' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {memoryHint(draft.stages.memory?.type)}
+                    </span>
+                  ) : stage.id === 'evaluation' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {evaluationHint(draft.stages.evaluation?.enabled, draft.stages.evaluation?.metrics?.length)}
                     </span>
                   ) : null}
                 </span>

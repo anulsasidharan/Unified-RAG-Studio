@@ -135,4 +135,33 @@ flowchart TB
 
 ---
 
-*Append new “Design level” sections at the end as P5-6+ ship.*
+## Design level 9 — Routing, memory & evaluation bound to `draft.stages` (after P5-9)
+
+The **Routing**, **Memory**, and **Evaluation** routes render dedicated configurators that edit **`routing`** (**enabled**, **rules** with **condition** / **keywords** / **threshold** / **targetModel**, **defaultModel**), **`memory`** (**type**, **windowSize**, **maxTokens**, **sessionPersistence**), and **`evaluation`** (**enabled**, **metrics**, **testSetSize**, **schedule**). **Routing** model pickers reuse **`data/models/generation.json`** via **`generation-catalog.ts`** (same ids as **Generation**). Client validation uses existing **Zod** schemas; **Python**/**YAML**/**Mermaid** generators already referenced these shapes. **`StageNavigator`** shows compact hints (**routing**: on/off + rule count; **memory**: short type label; **evaluation**: on/off + metric count).
+
+```mermaid
+flowchart LR
+  subgraph Routes["Designer routes"]
+    RTG[/designer/routing]
+    MEM[/designer/memory]
+    EVL[/designer/evaluation]
+  end
+  subgraph Cmp["Components"]
+    RC[RoutingConfigurator]
+    MC[MemoryConfigurator]
+    EC[EvaluationConfigurator]
+  end
+  subgraph State["Zustand draft"]
+    S[(stages.routing memory evaluation)]
+  end
+  RTG --> RC
+  MEM --> MC
+  EVL --> EC
+  RC --> S
+  MC --> S
+  EC --> S
+```
+
+---
+
+*Append new “Design level” sections at the end as P5-10+ ship.*
