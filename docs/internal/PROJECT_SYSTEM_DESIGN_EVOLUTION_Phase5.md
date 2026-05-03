@@ -1,6 +1,6 @@
 # Project system design evolution — Phase 5 (Designer UI)
 
-> **Append-only.** Phase 5 adds the visual pipeline builder experience in **Designer mode**. This file starts simple and deepens as sub-phases land (P5-1 layout → P5-2 cloud selector → …).
+> **Append-only.** Phase 5 adds the visual pipeline builder experience in **Designer mode**. This file starts simple and deepens as sub-phases land (P5-1 layout → P5-2 cloud selector → P5-3 ingestion → …).
 
 ---
 
@@ -42,18 +42,32 @@ flowchart LR
 
 ---
 
+## Design level 3 — Data ingestion bound to `draft.stages.dataIngestion` (after P5-3)
+
+The **Data Ingestion** stage renders **`DataIngestionConfigurator`**, which edits **`DataIngestionConfig`** fields aligned with **`apps/web/src/types/pipeline.ts`** and **`apps/api/app/schemas/pipeline.py`**. Updates flow through **`updateStages`** (nested merge for preprocessing/metadata). **`connectionConfig`** holds non-secret hints only (bucket, prefix, host, etc.). **`StageNavigator`** surfaces a compact **source type** label next to the ingestion step.
+
+```mermaid
+flowchart LR
+  subgraph UI["apps/web"]
+    Cmp[DataIngestionConfigurator]
+    Store[(draft.stages.dataIngestion)]
+  end
+  Cmp -->|"updateStages"| Store
+```
+
+---
+
 ## Future levels (placeholder)
 
-Later P5 tasks add panels for ingestion, chunking, embeddings, vector store, retrieval, generation, routing/memory/evaluation, visualizer, cost, export, review, and templates — each **`patchDraft`** / **`updateStages`** onto the same **`draft`** object consumed by Phase 4 APIs.
+Later P5 tasks add panels for chunking, embeddings, vector store, retrieval, generation, routing/memory/evaluation, visualizer, cost, export, review, and templates — each **`patchDraft`** / **`updateStages`** onto the same **`draft`** object consumed by Phase 4 APIs.
 
 ```mermaid
 flowchart TB
   Draft[PipelineConfiguration draft]
-  Draft --> Ingestion[P5-3 …]
-  Draft --> Chunk[P5-4 …]
+  Draft --> Chunk[P5-4 chunking …]
   Draft --> Later[Later P5 stages …]
 ```
 
 ---
 
-*Append new “Design level” sections at the end as P5-3+ ship.*
+*Append new “Design level” sections at the end as P5-4+ ship.*

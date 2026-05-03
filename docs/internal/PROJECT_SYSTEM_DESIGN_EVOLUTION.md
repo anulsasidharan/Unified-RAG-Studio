@@ -46,3 +46,26 @@ flowchart LR
 Long-form diagrams and evolving design levels for Phase 5 live in **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-3)
+
+**P5-3** adds the **Data Ingestion** stage UI: users configure **`PipelineStages.dataIngestion`** (source type, file types, preprocessing, metadata, connection hints). **`DataIngestionConfigurator`** calls **`updateStages({ dataIngestion })`** so the nested config persists beside **`draft.cloudProvider`**. Validation uses shared **Zod** (`DataIngestionConfigSchema`). Runtime ingestion remains in backend **`IngestionService`**; the Designer captures deployable intent for exports and APIs.
+
+```mermaid
+flowchart TB
+  subgraph Designer["Designer /designer/ingestion"]
+    DI[DataIngestionConfigurator]
+    V[Zod DataIngestionConfigSchema]
+  end
+  subgraph State["Client state"]
+    Z[(useDesignerStore draft)]
+  end
+  subgraph Backend["Existing services"]
+    IS[IngestionService P2]
+  end
+  DI -->|"updateStages(dataIngestion)"| Z
+  DI -.->|safeParse| V
+  Z -.->|export / save pipeline JSON| IS
+```
+
+---
