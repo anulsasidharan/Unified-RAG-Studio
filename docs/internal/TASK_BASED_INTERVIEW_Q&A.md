@@ -4611,4 +4611,41 @@ No — each catalog entry includes the **full** embedded **`config`** (same shap
 
 ---
 
+## Phase 6 · P6-1 · LangGraph Agent Infrastructure
+
+### Why introduce LangGraph for Autopilot instead of a single Celery loop?
+
+Autopilot coordinates **multiple decision steps** (corpus analysis, chunking search, embedding benchmarks, retrieval tuning, evaluation). LangGraph gives a **first-class state machine**: explicit nodes, conditional edges, **checkpointing** for resume/cancel, and **message history** compatible with LangChain chat models. A flat Celery task is fine for linear stubs, but it does not model **branching, retries, or human-in-the-loop** without reinventing a graph runtime.
+
+### What lives under `app/core/agents/`?
+
+| Module | Role |
+|--------|------|
+| `state.py` | **`AutopilotGraphState`** TypedDict with reducers: **`add_messages`**, **`operator.add`** for `agent_trace`, **`merge_stage_outputs`** for `stage_outputs`. |
+| `prompts.py` | Shared **system** and **stage** prompt strings plus **`format_stage_delegation`** for consistent logging / LLM context. |
+| `tools.py` | **`@tool`** definitions and **`get_autopilot_bootstrap_tools()`** registry (stubs until P6-2+ wire real services). |
+| `graph.py` | **`compile_autopilot_bootstrap_graph`** — minimal **prepare → finalize** graph proving imports, reducers, and optional **`MemorySaver`** checkpointer. |
+
+### How does `AutopilotGraphState` map to the database?
+
+`AutopilotBuild` already stores **`requirements`**, **`stages`**, **`messages`**, **`result`**. The graph state is the **in-memory execution view**: `agent_trace` entries can be appended to **`messages`** JSON on the ORM row; `stage_outputs` keys align with **`stages`** and future **`AgentDecisionSchema`**. `pipeline_config` mirrors optional **`PipelineConfiguration`** from Designer handoff.
+
+### What is `AUTOPILOT_STAGE_ORDER` and why import it from the worker?
+
+It is the **canonical ordered tuple** of specialist stages (`analyze` … `evaluation`). **`app.worker.tasks`** previously duplicated the tuple as `_AUTOPILOT_STAGE_KEYS`; P6-1 **imports the same tuple** so stub progress and LangGraph subgraph ordering **cannot drift**.
+
+### Interview trap: why `Annotated[list[AnyMessage], add_messages]`?
+
+LangGraph merges node outputs per key. Without a reducer, the last write would **replace** the entire message list. **`add_messages`** concatenates and dedupes by message id so **LLM and tool messages** accumulate correctly across turns.
+
+### How do you test a graph without an LLM?
+
+The bootstrap nodes return **`AIMessage`** and dict updates only — **no model call**. Tests invoke **`invoke_autopilot_bootstrap`** with and without **`MemorySaver`** to validate compilation, reducers, and terminal **`current_stage == bootstrap_complete`**.
+
+### What is the next task after P6-1?
+
+**P6-2 · Document Analyst Agent** — first specialist node that reads corpus metadata and recommends chunking strategies.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

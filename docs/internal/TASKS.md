@@ -33,3 +33,9 @@
 | P5-12 · Code Export Component | `feature/p5-code-exporter` | ✅ done |
 | P5-13 · Designer Review Page | `feature/p5-designer-review` | ✅ done |
 | P5-14 · Template Gallery Page | `feature/p5-template-gallery` | ✅ done |
+
+## Phase 6 — Autopilot (LangGraph)
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P6-1 · LangGraph Agent Infrastructure | `feature/p6-langgraph-infrastructure` | ✅ done |
