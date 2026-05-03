@@ -1,4 +1,4 @@
-"""LangChain tools registered for Autopilot agents (P6-1 … P6-6 evaluation agent)."""
+"""LangChain tools registered for Autopilot agents (P6-1 … P6-7 deployment agent)."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from app.core.agents.document_analyst import (
     run_document_analyst,
 )
 from app.core.agents.embedding_tester import run_embedding_tester_from_json
+from app.core.agents.deployment_agent import run_deployment_agent_from_json
 from app.core.agents.evaluation_agent import run_evaluation_agent_from_json
 from app.core.agents.retrieval_optimizer import run_retrieval_optimizer_from_json
 
@@ -169,6 +170,31 @@ def evaluation_agent_run(
     )
 
 
+@tool
+def deployment_agent_run(
+    evaluation_json: str,
+    retrieval_json: str,
+    chunking_json: str,
+    embedding_json: str,
+    requirements_json: str,
+    pipeline_config_json: str,
+    build_id: str,
+    project_id: str,
+) -> str:
+    """P6-7: Docker/K8s/Terraform previews plus gated cloud deployer stubs from prior stage JSON."""
+
+    return run_deployment_agent_from_json(
+        evaluation_json,
+        retrieval_json,
+        chunking_json,
+        embedding_json,
+        requirements_json,
+        pipeline_config_json,
+        build_id,
+        project_id,
+    )
+
+
 def get_autopilot_bootstrap_tools() -> list[Any]:
     """Tools bound to the bootstrap graph / future orchestrator LLM."""
 
@@ -182,4 +208,5 @@ def get_autopilot_bootstrap_tools() -> list[Any]:
         embedding_tester_run,
         retrieval_optimizer_run,
         evaluation_agent_run,
+        deployment_agent_run,
     ]

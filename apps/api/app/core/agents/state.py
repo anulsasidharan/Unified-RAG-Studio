@@ -48,6 +48,7 @@ AUTOPILOT_STAGE_ORDER: tuple[str, ...] = (
     "retrieval",
     "generation",
     "evaluation",
+    "deployment",
 )
 
 
@@ -59,7 +60,7 @@ def initial_autopilot_graph_state(
     requirements: dict[str, Any],
     pipeline_config: dict[str, Any] | None = None,
 ) -> AutopilotGraphState:
-    """Build a valid initial state for ``compile_autopilot_bootstrap_graph`` (through evaluation agent)."""
+    """Build a valid initial state for ``compile_autopilot_bootstrap_graph`` (through deployment agent)."""
 
     return AutopilotGraphState(
         messages=[],

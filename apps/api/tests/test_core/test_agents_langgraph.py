@@ -1,4 +1,4 @@
-"""P6-1 … P6-6 LangGraph agent infrastructure — bootstrap through evaluation agent + tools."""
+"""P6-1 … P6-7 LangGraph agent infrastructure — bootstrap through deployment agent + tools."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ from app.core.agents.prompts import format_stage_delegation
 from app.core.agents.tools import (
     autopilot_health_ping,
     chunking_optimizer_run,
+    deployment_agent_run,
     document_corpus_analyze,
     embedding_tester_run,
     evaluation_agent_run,
@@ -68,7 +69,7 @@ def test_initial_state_shapes():
 
 def test_autopilot_stage_order_matches_worker_stub():
     assert AUTOPILOT_STAGE_ORDER[0] == "analyze"
-    assert AUTOPILOT_STAGE_ORDER[-1] == "evaluation"
+    assert AUTOPILOT_STAGE_ORDER[-1] == "deployment"
 
 
 @patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
@@ -81,7 +82,7 @@ def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
         requirements={"embedding_max_benchmarks": 2},
     )
     out = invoke_autopilot_bootstrap(st, checkpointer=None)
-    assert out["current_stage"] == "evaluation_complete"
+    assert out["current_stage"] == "deployment_complete"
     assert out["iteration"] == 1
     assert out["stage_outputs"]["bootstrap"]["status"] == "complete"
     assert out["stage_outputs"]["analyze"]["status"] == "complete"
@@ -94,8 +95,13 @@ def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
     assert out["stage_outputs"]["evaluation"]["status"] == "complete"
     assert (out["stage_outputs"]["evaluation"].get("metrics") or {}).get("faithfulness") is not None
     assert "failure_analysis" in out["stage_outputs"]["evaluation"]
-    assert len(out["messages"]) >= 6
-    assert len(out["agent_trace"]) >= 7
+    assert out["stage_outputs"]["deployment"]["status"] == "complete"
+    assert "docker_compose" in (out["stage_outputs"]["deployment"].get("artefacts") or {})
+    assert (out["stage_outputs"]["deployment"].get("cloud_deployers") or {}).get("aws", {}).get(
+        "apply_gated"
+    )
+    assert len(out["messages"]) >= 7
+    assert len(out["agent_trace"]) >= 8
 
 
 @patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
@@ -123,7 +129,7 @@ def test_compile_returns_runnable(mock_bench_cls):
         requirements={"embedding_max_benchmarks": 2},
     )
     final = app.invoke(st)
-    assert final["current_stage"] == "evaluation_complete"
+    assert final["current_stage"] == "deployment_complete"
 
 
 def test_stub_tools():
@@ -134,7 +140,7 @@ def test_stub_tools():
 
 def test_tool_registry_non_empty():
     tools = get_autopilot_bootstrap_tools()
-    assert len(tools) == 9
+    assert len(tools) == 10
 
 
 def test_document_corpus_analyze_tool_smoke():
@@ -254,6 +260,61 @@ def test_evaluation_agent_tool_smoke(mock_bench_cls):
     assert ev.get("status") == "complete"
     assert ev.get("metrics", {}).get("faithfulness") is not None
     assert ev.get("failure_analysis", {}).get("summary")
+
+
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_deployment_agent_tool_smoke(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
+    analyze_raw = document_corpus_analyze.invoke(
+        {"document_ids_json": json.dumps(["1"]), "requirements_json": "{}"},
+    )
+    analyze = json.loads(analyze_raw)
+    chunk_raw = chunking_optimizer_run.invoke(
+        {"analyze_json": json.dumps(analyze), "requirements_json": "{}"},
+    )
+    chunking = json.loads(chunk_raw)
+    emb_raw = embedding_tester_run.invoke(
+        {
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": json.dumps({"embedding_max_benchmarks": 2}),
+        },
+    )
+    embedding = json.loads(emb_raw)
+    ret_raw = retrieval_optimizer_run.invoke(
+        {
+            "embedding_json": json.dumps(embedding),
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": json.dumps({"retrieval_max_benchmarks": 6}),
+        },
+    )
+    retrieval = json.loads(ret_raw)
+    ev_raw = evaluation_agent_run.invoke(
+        {
+            "retrieval_json": json.dumps(retrieval),
+            "chunking_json": json.dumps(chunking),
+            "analyze_json": json.dumps(analyze),
+            "requirements_json": "{}",
+        },
+    )
+    evaluation = json.loads(ev_raw)
+    dep_raw = deployment_agent_run.invoke(
+        {
+            "evaluation_json": json.dumps(evaluation),
+            "retrieval_json": json.dumps(retrieval),
+            "chunking_json": json.dumps(chunking),
+            "embedding_json": json.dumps(embedding),
+            "requirements_json": "{}",
+            "pipeline_config_json": "",
+            "build_id": "test-build-id",
+            "project_id": "test-project-id",
+        },
+    )
+    dep = json.loads(dep_raw)
+    assert dep.get("status") == "complete"
+    assert dep.get("artefacts", {}).get("docker_compose")
+    assert dep.get("cloud_deployers", {}).get("aws", {}).get("apply_gated") is True
 
 
 def test_format_stage_delegation_contains_ids():

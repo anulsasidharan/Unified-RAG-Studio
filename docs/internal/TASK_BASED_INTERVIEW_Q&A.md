@@ -4850,3 +4850,39 @@ For each query from **`_build_eval_queries`** (or **`requirements["retrieval_eva
 **P6-7 · Deployment Agent** — packaging/deployment artefacts and cloud deployer stubs.
 
 ---
+
+## Phase 6 · P6-7 · Deployment Agent
+
+### What does the Deployment Agent add to the Autopilot graph?
+
+**P6-7** appends a **`deployment_agent`** node after **`evaluation_agent`**. The terminal **`current_stage`** is **`deployment_complete`**, and **`stage_outputs["deployment"]`** holds **`artefacts`** (`docker_compose`, `kubernetes_manifest`, `terraform_stub` strings), **`cloud_deployers`** (AWS/GCP/Azure **stub** records with **`apply_gated: true`**), **`synthesized_from`** (`pipeline_config` vs **`stage_outputs_fallback`**), optional **`warnings`**, **`rationale`**, and **`operator_notes`**.
+
+### When does the agent use real P4 export generators vs fallback sketches?
+
+If **`pipeline_config`** in graph state **`model_validate`s** as **`PipelineConfigurationSchema`**, the agent calls **`generate_docker_compose`**, **`generate_kubernetes`**, and **`generate_terraform`** from **`app.services.export_generators`**. If validation fails or config is absent, it emits **compact fallback** YAML/HCL derived from **`stage_outputs`** retrieval/embedding/chunking **`selected`** fields so CI still gets deterministic text.
+
+### Why are cloud deployers “stubs”?
+
+**Terraform apply**, **`kubectl apply`**, and cloud control-plane calls require **credentials, approvals, and network** access that must not run inside an unreviewed Autopilot graph tick. The payload therefore lists **`would_run`** commands and documentation links while **`apply_gated`** stays **true** until an operator promotes artefacts through your org’s pipeline (**P8-4** / **P12**).
+
+### Does deployment require evaluation to succeed?
+
+**No.** The graph always runs **after** the evaluation node, but **`run_deployment_agent`** only needs **complete** retrieval, embedding, and chunking stages. If **`evaluation.status` ≠ `complete`**, the payload adds a **warning** and still produces artefacts using the upstream selections.
+
+### Which LangChain tool exposes P6-7?
+
+**`deployment_agent_run(evaluation_json, retrieval_json, chunking_json, embedding_json, requirements_json, pipeline_config_json, build_id, project_id)`** — JSON in/out aligned with **`stage_outputs["deployment"]`**.
+
+### What changed in `AUTOPILOT_STAGE_ORDER` for worker stub builds?
+
+**`deployment`** is appended after **`evaluation`**, so **`jobs.run_pipeline_build`**’s Celery stub iterates **one more** stage key for progress messages until the real orchestrator replaces the stub.
+
+### Interview trap: will Autopilot accidentally provision my AWS account?
+
+**Not from this agent.** There are **no boto3 / google / azure SDK calls** here—only text generation and structured **“would run”** hints. Real provisioning belongs behind **explicit** deployment APIs and credentials (**Phase 8 / 12**).
+
+### What is the next task after P6-7?
+
+**P6-8 · Autopilot Orchestrator** — end-to-end LangGraph orchestration with iteration logic and progress events.
+
+---

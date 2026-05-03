@@ -44,3 +44,4 @@
 | P6-4 · Embedding Tester Agent | `feature/p6-embedding-tester-agent` | ✅ done |
 | P6-5 · Retrieval Optimizer Agent | `feature/p6-retrieval-optimizer-agent` | ✅ done |
 | P6-6 · Evaluation Agent | `feature/p6-evaluation-agent` | ✅ done |
+| P6-7 · Deployment Agent | `feature/p6-deployment-agent` | ✅ done |
