@@ -4390,7 +4390,56 @@ Hiding with **`hidden`** still mounts children; **two** **Mermaid** instances wo
 
 ### What remains after **P5-10** for Designer polish?
 
-**Cost estimator** (**P5-11**), **code export UI** (**P5-12**), **review page** (**P5-13**), **template gallery** (**P5-14**) remain separate milestones.
+**Code export UI** (**P5-12**), **review page** (**P5-13**), and **template gallery** (**P5-14**) remain separate milestones. **P5-11** (cost estimator) is implemented — see the **Phase 5 · P5-11** section below.
+
+---
+
+## Phase 5 · P5-11 — Cost Estimator Component
+
+### What problem does the cost estimator solve?
+
+Designers need **approximate USD** visibility while tuning models, chunk sizes, **`top_k`**, vector store, and reranking so they can compare trade-offs before exporting or deploying. The UI shows **per-query** and **monthly** totals plus a **line-item breakdown** aligned with backend heuristics.
+
+### Which API does the frontend call — is `/api/designer/cost` different?
+
+**`POST /api/designer/cost`** and **`POST /api/utilities/cost`** both accept **`CostRequest`** and return **`CostEstimateSchema`** via the same **`CostEstimator`** / **`CostService`** logic. The **P5-11** UI calls **`/api/utilities/cost`** so Autopilot or other clients can share the same URL family for **validate / cost / rag-preview** without implying a persisted Designer project; either endpoint would be correct for a pure estimate.
+
+### What is in the request body?
+
+- **`config`**: full **`PipelineConfiguration`** from **`useDesignerStore`** (camelCase JSON).
+- **`queriesPerMonth`**, **`documentsCount`**, **`avgDocumentTokens`**: defaults **100_000**, **1_000**, **500** match **`CostRequest`** in **`apps/api/app/schemas/designer.py`** when omitted on the server; the UI exposes them so users can stress-test scale assumptions.
+
+### How does the backend compute costs?
+
+**`CostEstimator`** in **`apps/api/app/utils/cost_calculator.py`** loads **`pricing.json`**, then combines **query-path embedding** (chunk tokens × embedding $/1M, scaled by retrieval strategy variants), **generation** (context + output tokens × model input/output $/1M), optional **reranking** (**`costPer1KQueries`**), **monthly storage** (estimated vector GB × provider $/GB/mo), and **retrieval read/query** units where priced. It returns **`CostEstimateSchema`** with **`breakdown`** rows **`embedding`**, **`vector_storage`**, **`retrieval_ops`**, **`reranking`**, **`generation`**.
+
+### Why debounce the client requests?
+
+Every slider or text change updates **`draft`** frequently. A **~450 ms** debounce limits load on the API and avoids flickering numbers while the user is still dragging controls.
+
+### Why keep workload assumptions out of Zustand?
+
+**`persist`** middleware writes **localStorage** on each **`draft`** change. Bumping **`queriesPerMonth`** on every keystroke would **re-serialize** the whole pipeline object unnecessarily. Local **`useState`** in **`CostEstimator`** keeps assumptions ephemeral unless we later add an explicit “save assumptions” feature.
+
+### How are API errors surfaced?
+
+**`apiClient.post`** throws **`ApiError`** on non-2xx responses. The component reads **`detail`** from FastAPI JSON when present (e.g. **503** if **`pricing.json`** is missing) and renders an **`role="alert"`** banner.
+
+### How does the UI map cryptic breakdown **`component`** strings?
+
+**`componentLabel`** maps **`vector_storage`**, **`retrieval_ops`**, etc., to human-readable labels for the table; percentages come from the API (**`percentage`** field on each **`CostBreakdown`**).
+
+### Interview trap: **`per_month`** vs sum of category fields
+
+**`perMonth`** / **`total`** should match the sum of **monthly** category amounts (**embedding + storage + retrieval + reranking + generation**); **`breakdown`** rows use the same underlying totals with **percentage** split. If they diverge, that would be a backend bug — the UI displays API values as-is.
+
+### How would you cache or dedupe cost calls across tabs?
+
+Use **SWR** / **TanStack Query** with a **`queryKey`** of **`[ 'cost', digest ]`**, or a small server-side cache keyed by **hash(config)+assumptions** with short TTL — trade freshness vs load.
+
+### What remains after **P5-11**?
+
+**P5-12** code export UI, **P5-13** review page, **P5-14** template gallery.
 
 ---
 

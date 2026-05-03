@@ -29,3 +29,4 @@
 | P5-8 · Generation Model Selector | `feature/p5-generation-selector` | ✅ done |
 | P5-9 · Routing, Memory & Evaluation Config | `feature/p5-routing-memory-eval` | ✅ done |
 | P5-10 · Pipeline Visualizer | `feature/p5-pipeline-visualizer` | ✅ done |
+| P5-11 · Cost Estimator Component | `feature/p5-cost-estimator` | ✅ done |

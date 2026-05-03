@@ -271,3 +271,33 @@ flowchart TB
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
 ---
+
+## Phase 5 snapshot — Designer UI (after P5-11)
+
+**P5-11** adds a **live cost estimator** strip in **`DesignerShell`**, mounted **above** **`PipelineVisualizer`** (both are siblings reading the same **`draft`**). **`CostEstimator`** debounces changes (~450 ms) and **`POST`s** **`/api/utilities/cost`** with **`{ config, queriesPerMonth, documentsCount, avgDocumentTokens }`** (defaults align with **`CostRequest`** on the API). The response **`CostEstimate`** (camelCase from **`RAGBaseModel`**) drives **per-query** and **monthly** headline cards, **stacked bar** shares for embedding / storage / retrieval / reranking / generation, and a **tabular breakdown** (component id, unit cost, usage, monthly, percentage). Errors (e.g. missing **`pricing.json`**) surface as **`ApiError`** detail. Workload fields are **local UI state** (not persisted in **`draft`**) to avoid **`persist`** churn.
+
+```mermaid
+flowchart TB
+  subgraph Shell["DesignerShell"]
+    CE[CostEstimator]
+    PV[PipelineVisualizer]
+  end
+  subgraph Client["apps/web"]
+    Z[(useDesignerStore draft)]
+    AC[apiClient.post]
+  end
+  subgraph API["apps/api"]
+    U["POST /api/utilities/cost"]
+    P[pricing.json + CostEstimator]
+  end
+  Z --> CE
+  CE -->|"debounced JSON body"| AC
+  AC --> U
+  U --> P
+  P -->|"CostEstimate + breakdown"| CE
+  Z --> PV
+```
+
+Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
+
+---

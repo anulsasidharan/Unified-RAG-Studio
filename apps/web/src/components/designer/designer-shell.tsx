@@ -7,6 +7,7 @@ import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
 import { useDesignerStore } from '@/stores/designer-store';
 
+import { CostEstimator } from './cost-estimator';
 import { PipelineVisualizer } from './pipeline-visualizer';
 import { StageNavigator } from './stage-navigator';
 
@@ -42,6 +43,7 @@ export function DesignerShell({
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
         </div>
       </div>
+      <CostEstimator className="w-full" />
       <PipelineVisualizer className="w-full" />
     </div>
   );
