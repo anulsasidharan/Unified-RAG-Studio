@@ -13,6 +13,7 @@ export const DESIGNER_STAGES = [
   { id: 'routing',    label: 'Routing',            path: '/designer/routing' },
   { id: 'memory',     label: 'Memory',             path: '/designer/memory' },
   { id: 'evaluation', label: 'Evaluation',         path: '/designer/evaluation' },
+  { id: 'guardrails', label: 'Guardrails',         path: '/designer/guardrails' },
   { id: 'review',     label: 'Review',             path: '/designer/review' },
 ] as const;
 

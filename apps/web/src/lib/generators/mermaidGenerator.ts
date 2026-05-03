@@ -1,4 +1,5 @@
-import type { PipelineStages } from '@/types/pipeline';
+import { guardrailPolicyMermaidSubtitle, guardrailsHighlightBullet } from '@/lib/guardrails-summary';
+import type { GuardrailsConfig, PipelineStages } from '@/types/pipeline';
 
 const PROVIDER_LABEL: Record<string, string> = {
   aws: 'AWS',
@@ -29,7 +30,8 @@ function emptyDiagram(): string {
 export function generateMermaidDiagram(
   stages: PipelineStages,
   cloudProvider: string,
-  maxVisitedStageIndex: number = FULL_DIAGRAM
+  maxVisitedStageIndex: number = FULL_DIAGRAM,
+  guardrails?: GuardrailsConfig | null
 ): string {
   if (maxVisitedStageIndex < 0) {
     return emptyDiagram();
@@ -54,6 +56,8 @@ export function generateMermaidDiagram(
       maxVisitedStageIndex >= 9 &&
       Boolean(stages.memory && stages.memory.type !== 'none'),
     evaluation: maxVisitedStageIndex >= 10 && Boolean(stages.evaluation?.enabled),
+    /** Designer stage “Guardrails” — policy checks on query path (matches stage index 11). */
+    guardrails: maxVisitedStageIndex >= 11,
   };
 
   lines.push('flowchart LR');
@@ -140,6 +144,13 @@ export function generateMermaidDiagram(
       queryToRetTail = 'MEM';
     }
 
+    if (v.guardrails) {
+      const grSub = q(guardrailPolicyMermaidSubtitle(guardrails));
+      lines.push(`    GR["🛡️ Guardrails\\n${grSub}"]`);
+      lines.push(`    ${queryToRetTail} --> GR`);
+      queryToRetTail = 'GR';
+    }
+
     const retLabel = `🔎 Retrieve\\n${q(stages.retrieval.strategy)} · top-${stages.retrieval.topK}`;
     lines.push(`    RET["${retLabel}"]`);
     lines.push(`    ${queryToRetTail} --> RET`);
@@ -211,7 +222,8 @@ export function generatePipelineSummary(
 export function generatePipelineHighlights(
   stages: PipelineStages,
   cloudProvider: string,
-  maxVisitedStageIndex: number = FULL_DIAGRAM
+  maxVisitedStageIndex: number = FULL_DIAGRAM,
+  guardrails?: GuardrailsConfig | null
 ): string[] {
   const cloud = PROVIDER_LABEL[cloudProvider] ?? cloudProvider;
   const lines: string[] = [];
@@ -266,6 +278,9 @@ export function generatePipelineHighlights(
         ? `Evaluation: on · ${stages.evaluation.metrics?.length ?? 0} metric(s)`
         : 'Evaluation: off'
     );
+  }
+  if (maxVisitedStageIndex >= 11) {
+    lines.push(guardrailsHighlightBullet(guardrails));
   }
 
   return lines;

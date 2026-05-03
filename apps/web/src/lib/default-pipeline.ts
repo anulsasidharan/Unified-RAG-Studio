@@ -1,4 +1,4 @@
-import type { PipelineConfiguration } from '@/types/pipeline';
+import type { GuardrailsConfig, PipelineConfiguration } from '@/types/pipeline';
 import {
   DEFAULT_CHUNK_OVERLAP,
   DEFAULT_CHUNK_SIZE,
@@ -12,6 +12,38 @@ function newPipelineId(): string {
     return crypto.randomUUID();
   }
   return `pipeline-${Date.now()}`;
+}
+
+/** Matches API `GuardrailsConfigSchema` defaults — all stages and checks enabled. */
+export function createDefaultGuardrailsConfig(): GuardrailsConfig {
+  return {
+    input: {
+      enabled: true,
+      piiRedactionEnabled: true,
+      promptInjectionBlockEnabled: true,
+      toxicityBlockEnabled: true,
+    },
+    retrieval: {
+      enabled: true,
+      contentFilterEnabled: true,
+      sourceValidationEnabled: true,
+      biasDetectionEnabled: true,
+    },
+    output: {
+      enabled: true,
+      hallucinationHeuristicEnabled: true,
+      factualityCheckEnabled: true,
+      citationVerificationEnabled: true,
+    },
+  };
+}
+
+function mergeGuardrailsConfig(base: GuardrailsConfig, patch: Partial<GuardrailsConfig>): GuardrailsConfig {
+  return {
+    input: patch.input ? { ...base.input, ...patch.input } : base.input,
+    retrieval: patch.retrieval ? { ...base.retrieval, ...patch.retrieval } : base.retrieval,
+    output: patch.output ? { ...base.output, ...patch.output } : base.output,
+  };
 }
 
 /**
@@ -95,17 +127,31 @@ export function createDefaultPipelineConfiguration(
       version: '1.0.0',
       source: 'designer',
     },
+    guardrails: createDefaultGuardrailsConfig(),
   };
 
   if (!overrides) {
     return base;
   }
 
+  const {
+    stages: overrideStages,
+    metadata: overrideMetadata,
+    guardrails: overrideGuardrails,
+    ...restOverrides
+  } = overrides;
+
   return {
     ...base,
-    ...overrides,
+    ...restOverrides,
     id: overrides.id ?? base.id,
-    stages: overrides.stages ? { ...base.stages, ...overrides.stages } : base.stages,
-    metadata: overrides.metadata ? { ...base.metadata, ...overrides.metadata } : base.metadata,
+    stages: overrideStages ? { ...base.stages, ...overrideStages } : base.stages,
+    metadata: overrideMetadata ? { ...base.metadata, ...overrideMetadata } : base.metadata,
+    guardrails:
+      overrideGuardrails === undefined
+        ? base.guardrails
+        : overrideGuardrails === null
+          ? null
+          : mergeGuardrailsConfig(base.guardrails!, overrideGuardrails),
   };
 }

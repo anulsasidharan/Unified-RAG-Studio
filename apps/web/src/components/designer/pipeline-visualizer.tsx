@@ -228,11 +228,17 @@ export function PipelineVisualizer({
 
   /** String fingerprint so nested draft edits always invalidate (same topology can still produce new labels). */
   const stagesFingerprint = useMemo(() => JSON.stringify(draft.stages), [draft.stages]);
+  const guardrailsFingerprint = useMemo(() => JSON.stringify(draft.guardrails ?? null), [draft.guardrails]);
 
   const definition = useMemo(
     () =>
-      generateMermaidDiagram(draft.stages, draft.cloudProvider, diagramMaxVisitedStageIndex),
-    [stagesFingerprint, draft.cloudProvider, diagramMaxVisitedStageIndex]
+      generateMermaidDiagram(
+        draft.stages,
+        draft.cloudProvider,
+        diagramMaxVisitedStageIndex,
+        draft.guardrails
+      ),
+    [stagesFingerprint, guardrailsFingerprint, draft.cloudProvider, diagramMaxVisitedStageIndex, draft.guardrails]
   );
 
   const oneLine = useMemo(
@@ -241,8 +247,13 @@ export function PipelineVisualizer({
   );
   const bullets = useMemo(
     () =>
-      generatePipelineHighlights(draft.stages, draft.cloudProvider, diagramMaxVisitedStageIndex),
-    [draft.stages, draft.cloudProvider, diagramMaxVisitedStageIndex]
+      generatePipelineHighlights(
+        draft.stages,
+        draft.cloudProvider,
+        diagramMaxVisitedStageIndex,
+        draft.guardrails
+      ),
+    [draft.stages, draft.cloudProvider, diagramMaxVisitedStageIndex, draft.guardrails]
   );
 
   const openPip = useCallback(() => {
@@ -383,8 +394,8 @@ export function PipelineVisualizer({
           </div>
         <p className="text-[11px] leading-snug text-muted-foreground">
           The drawing starts empty on Cloud Provider; each stage you move into adds the next blocks. Labels use
-          your draft values; optional stages (rerank, routing, memory, evaluation) appear once those steps are
-          included.
+          your draft values; optional stages (rerank, routing, memory, evaluation, guardrails) appear once you reach
+          those steps.
         </p>
         </div>
 

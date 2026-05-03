@@ -10,8 +10,9 @@ import {
   ListChecks,
   Package,
 } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { guardrailPolicyMermaidSubtitle, resolveGuardrailsConfig } from '@/lib/guardrails-summary';
 import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
 import { generatePipelineHighlights, generatePipelineSummary } from '@/lib/generators/mermaidGenerator';
@@ -57,6 +58,13 @@ export function DesignerReviewPage({
   const resetDraft = useDesignerStore((s) => s.resetDraft);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
+  /** Avoid hydration mismatch: server vs client differ on `new Date().toLocaleString()` and default draft timestamps. */
+  const [lastUpdatedLabel, setLastUpdatedLabel] = useState('—');
+
+  useEffect(() => {
+    const iso = draft.metadata.updatedAt ?? draft.metadata.createdAt;
+    setLastUpdatedLabel(iso ? new Date(iso).toLocaleString() : '—');
+  }, [draft.metadata.updatedAt, draft.metadata.createdAt]);
 
   const meta = DESIGNER_STAGES.find((s) => s.id === 'review')!;
   const index = DESIGNER_STAGES.findIndex((s) => s.id === 'review');
@@ -70,8 +78,8 @@ export function DesignerReviewPage({
     [draft.stages]
   );
   const bullets = useMemo(
-    () => generatePipelineHighlights(draft.stages, draft.cloudProvider, fullStageIndex),
-    [draft.stages, draft.cloudProvider]
+    () => generatePipelineHighlights(draft.stages, draft.cloudProvider, fullStageIndex, draft.guardrails),
+    [draft.stages, draft.cloudProvider, draft.guardrails]
   );
 
   const copySummary = useCallback(async () => {
@@ -108,6 +116,7 @@ export function DesignerReviewPage({
 
   const stages = draft.stages;
   const di = stages.dataIngestion;
+  const gr = resolveGuardrailsConfig(draft.guardrails);
 
   return (
     <div className={cn('mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:py-10', className)}>
@@ -185,12 +194,7 @@ export function DesignerReviewPage({
           <p className="mt-2 text-sm text-muted-foreground">{draft.description}</p>
         ) : null}
         <p className="mt-3 text-xs text-muted-foreground">
-          Last updated:{' '}
-          {draft.metadata.updatedAt
-            ? new Date(draft.metadata.updatedAt).toLocaleString()
-            : draft.metadata.createdAt
-              ? new Date(draft.metadata.createdAt).toLocaleString()
-              : '—'}
+          Last updated: {lastUpdatedLabel}
         </p>
       </div>
 
@@ -259,6 +263,15 @@ export function DesignerReviewPage({
               ? `${stages.evaluation.metrics?.length ?? 0} metric(s)`
               : undefined
           }
+        />
+        <SummaryCard
+          title="Guardrails"
+          value={
+            [gr.input.enabled && 'Input', gr.retrieval.enabled && 'Retrieval', gr.output.enabled && 'Output']
+              .filter(Boolean)
+              .join(' · ') || 'All layers off'
+          }
+          sub={guardrailPolicyMermaidSubtitle(gr)}
         />
       </div>
 
