@@ -1,4 +1,4 @@
-"""LangGraph construction — bootstrap through Evaluation Agent (P6-6)."""
+"""LangGraph construction — bootstrap through Deployment Agent (P6-7)."""
 
 from __future__ import annotations
 
@@ -22,12 +22,17 @@ from app.core.agents.embedding_tester import (
     human_readable_embedding_message,
     run_embedding_tester,
 )
+from app.core.agents.deployment_agent import (
+    human_readable_deployment_message,
+    run_deployment_agent,
+)
 from app.core.agents.evaluation_agent import (
     human_readable_evaluation_message,
     run_evaluation_agent,
 )
 from app.core.agents.prompts import (
     CHUNKING_OPTIMIZER_PROMPT,
+    DEPLOYMENT_AGENT_PROMPT,
     DOCUMENT_ANALYST_PROMPT,
     EMBEDDING_TESTER_PROMPT,
     EVALUATION_AGENT_PROMPT,
@@ -45,6 +50,7 @@ _CHUNKING_OPT_HINT = CHUNKING_OPTIMIZER_PROMPT[:120]
 _EMBEDDING_TESTER_HINT = EMBEDDING_TESTER_PROMPT[:120]
 _RETRIEVAL_OPT_HINT = RETRIEVAL_OPTIMIZER_PROMPT[:120]
 _EVAL_AGENT_HINT = EVALUATION_AGENT_PROMPT[:120]
+_DEPLOYMENT_AGENT_HINT = DEPLOYMENT_AGENT_PROMPT[:120]
 
 
 def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
@@ -60,7 +66,7 @@ def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
         "Autopilot graph online. "
         f"Documents queued: {trace['document_count']}. "
         "Running document analyst, chunking optimizer, embedding tester, retrieval optimizer, "
-        "evaluation agent, then later subgraphs per AUTOPILOT_STAGE_ORDER."
+        "evaluation agent, deployment agent, then later subgraphs per AUTOPILOT_STAGE_ORDER."
     )
     return {
         "messages": [
@@ -96,8 +102,132 @@ def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
                 "then_embedding": "embedding_tester",
                 "then_retrieval": "retrieval_optimizer",
                 "then_evaluation": "evaluation_agent",
+                "then_deployment": "deployment_agent",
             },
         },
+    }
+
+
+def _deployment_agent_node(state: AutopilotGraphState) -> dict[str, Any]:
+    """P6-7: compose / K8s / Terraform previews + gated cloud stubs; ``stage_outputs['deployment']``."""
+
+    merged = state.get("stage_outputs") or {}
+    retrieval = merged.get("retrieval")
+    chunking = merged.get("chunking")
+    embedding = merged.get("embedding")
+    evaluation = merged.get("evaluation")
+
+    if not retrieval or retrieval.get("status") != "complete":
+        trace = {
+            "event": "deployment_agent",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_retrieval",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Deployment agent skipped: retrieval stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "deployment",
+                        "deployment_prompt_hint": _DEPLOYMENT_AGENT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "deployment_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "deployment": {
+                    "status": "failed",
+                    "reason": "missing_retrieval",
+                },
+            },
+        }
+
+    if not embedding or embedding.get("status") != "complete":
+        trace = {
+            "event": "deployment_agent",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_embedding",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Deployment agent skipped: embedding stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "deployment",
+                        "deployment_prompt_hint": _DEPLOYMENT_AGENT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "deployment_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "deployment": {
+                    "status": "failed",
+                    "reason": "missing_embedding",
+                },
+            },
+        }
+
+    if not chunking or chunking.get("status") != "complete":
+        trace = {
+            "event": "deployment_agent",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_chunking",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Deployment agent skipped: chunking stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "deployment",
+                        "deployment_prompt_hint": _DEPLOYMENT_AGENT_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "deployment_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "deployment": {
+                    "status": "failed",
+                    "reason": "missing_chunking",
+                },
+            },
+        }
+
+    eval_payload = dict(evaluation) if isinstance(evaluation, dict) else {}
+
+    payload = run_deployment_agent(
+        evaluation_payload=eval_payload,
+        retrieval_payload=dict(retrieval),
+        chunking_payload=dict(chunking),
+        embedding_payload=dict(embedding),
+        requirements=dict(state.get("requirements") or {}),
+        pipeline_config=state.get("pipeline_config"),
+        build_id=state["build_id"],
+        project_id=state["project_id"],
+    )
+    trace = {
+        "event": "deployment_agent",
+        "build_id": state["build_id"],
+        "project_id": state["project_id"],
+        "deploy_status": payload.get("status"),
+        "synthesized_from": payload.get("synthesized_from"),
+    }
+    text = human_readable_deployment_message(payload)
+    return {
+        "messages": [
+            AIMessage(
+                content=text,
+                additional_kwargs={
+                    "stage": "deployment",
+                    "deployment_prompt_hint": _DEPLOYMENT_AGENT_HINT,
+                },
+            ),
+        ],
+        "current_stage": "deployment_complete",
+        "agent_trace": [trace],
+        "stage_outputs": {"deployment": payload},
     }
 
 
@@ -508,7 +638,7 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
-    """Compile linear graph through evaluation_agent (optional ``MemorySaver``)."""
+    """Compile linear graph through deployment_agent (optional ``MemorySaver``)."""
 
     graph = StateGraph(AutopilotGraphState)
     graph.add_node("bootstrap_prepare", _bootstrap_prepare)
@@ -518,6 +648,7 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
     graph.add_node("embedding_tester", _embedding_tester_node)
     graph.add_node("retrieval_optimizer", _retrieval_optimizer_node)
     graph.add_node("evaluation_agent", _evaluation_agent_node)
+    graph.add_node("deployment_agent", _deployment_agent_node)
     graph.set_entry_point("bootstrap_prepare")
     graph.add_edge("bootstrap_prepare", "bootstrap_finalize")
     graph.add_edge("bootstrap_finalize", "document_analyst")
@@ -525,7 +656,8 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
     graph.add_edge("chunking_optimizer", "embedding_tester")
     graph.add_edge("embedding_tester", "retrieval_optimizer")
     graph.add_edge("retrieval_optimizer", "evaluation_agent")
-    graph.add_edge("evaluation_agent", END)
+    graph.add_edge("evaluation_agent", "deployment_agent")
+    graph.add_edge("deployment_agent", END)
     compiled = graph.compile(checkpointer=checkpointer)
     logger.debug("autopilot_bootstrap_graph_compiled", checkpointer=bool(checkpointer))
     return compiled
@@ -537,7 +669,7 @@ def invoke_autopilot_bootstrap(
     thread_id: str = "bootstrap-test",
     checkpointer: MemorySaver | None = None,
 ) -> AutopilotGraphState:
-    """Run bootstrap + analyst + chunking + embedding + retrieval + evaluation once; return merged terminal state."""
+    """Run bootstrap … evaluation + deployment once; return merged terminal state."""
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
     if checkpointer is not None:

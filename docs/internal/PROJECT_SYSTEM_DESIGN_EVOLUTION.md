@@ -673,3 +673,60 @@ flowchart LR
 After P6-5, Autopilot could **rank** chunks but had **no closed-loop quality signal** for the composed stack. After P6-6, each run emits a **structured evaluation payload** (metrics, **meets_targets**, **failure_analysis**) suitable for **orchestrator iteration** and UI explainability, while **full RAGAS** remains on the **async evaluation** path (**P2-7** / jobs) for production-grade scoring.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-7 · Deployment Agent)
+
+**P6-7** adds **`app/core/agents/deployment_agent.py`**: after evaluation, the graph emits **container/IaC text** (Docker Compose, Kubernetes multi-doc YAML, Terraform HCL) either by **reusing P4 export generators** on a valid **`PipelineConfigurationSchema`** or by **fallback sketches** parameterized from **`stage_outputs`** (retrieval / embedding / chunking selections). **`cloud_deployers`** holds per-provider **dry-run** metadata (**`apply_gated: true`**) so Autopilot never performs cloud apply. **`AUTOPILOT_STAGE_ORDER`** now ends with **`deployment`**, aligning the Celery **`run_pipeline_build`** stub loop with the LangGraph stage list. Tooling adds **`deployment_agent_run`**.
+
+### P6-7 — Graph topology (bootstrap … evaluation → deployment)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> chunking_optimizer
+  chunking_optimizer --> embedding_tester
+  embedding_tester --> retrieval_optimizer
+  retrieval_optimizer --> evaluation_agent
+  evaluation_agent --> deployment_agent
+  deployment_agent --> [*]
+```
+
+### P6-7 — Data flow (stages + optional Designer config → artefacts)
+
+```mermaid
+flowchart LR
+  subgraph Prior["From P6-2 … P6-6 + optional pipeline_config"]
+    EV["stage_outputs.evaluation"]
+    R["stage_outputs.retrieval"]
+    E["stage_outputs.embedding"]
+    CH["stage_outputs.chunking"]
+    PC["AutopilotGraphState.pipeline_config"]
+  end
+  subgraph DMod["deployment_agent.py"]
+    V[Validate PipelineConfigurationSchema?]
+    G[generate_docker_compose / k8s / terraform]
+    F[Fallback sketches from selected knobs]
+  end
+  subgraph Out["AutopilotGraphState"]
+    DEP["stage_outputs.deployment"]
+    TR[agent_trace]
+  end
+  EV --> V
+  R --> V
+  E --> V
+  CH --> V
+  PC --> V
+  V -->|valid| G
+  V -->|invalid or missing| F
+  G --> DEP
+  F --> DEP
+  DEP --> TR
+```
+
+### Evolution note (P6-6 → P6-7)
+
+After P6-6, Autopilot could **score** the stack but could not yet **package** it for operators. After P6-7, each run carries **reviewable deployment artefacts** and explicit **gated** cloud next-steps, bridging Autopilot output toward **Designer export** parity and future **deployment APIs** without introducing unmanaged side effects in the graph.
+
+---
