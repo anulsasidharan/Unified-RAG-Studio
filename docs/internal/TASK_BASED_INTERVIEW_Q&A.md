@@ -4169,4 +4169,56 @@ Stages **retrieval** through **review** still use dashed placeholders until **P5
 
 ---
 
+## Phase 5 · P5-7 · Retrieval Configuration
+
+### What problem does the Retrieval stage solve in Designer mode?
+
+Users must define **how chunks are retrieved** from the vector index: **strategy** (similarity, MMR, hybrid, parent–child, multi-query, ensemble), **top-k**, optional **score threshold**, optional **metadata filters**, and optional **reranking** (provider, model, top-n). **P5-7** surfaces **`data/retrieval-strategies.json`** and **`data/models/rerankers.json`**, writing **`updateStages({ retrieval, reranking })`** so the draft matches **`RetrievalConfig`** / **`RerankingConfig`** and **`RetrievalConfigSchema`** / **`RerankingConfigSchema`**.
+
+### Where do retrieval strategy descriptions come from?
+
+**`data/retrieval-strategies.json`** is bundled via **`apps/web/src/lib/retrieval-strategies-catalog.ts`**. Each row has **bestFor**, **pros/cons**, **implementationComplexity**, and **defaultConfig** used to seed **`retrievalDefaultsFromCatalog(strategy)`**.
+
+### How does choosing a strategy update **`draft.stages.retrieval`**?
+
+**`applyStrategy(id)`** merges **`retrievalDefaultsFromCatalog`** (including clearing **hybridSearch** / **parentChildConfig** / **multiQueryConfig** when switching away) while preserving **filters** unless the user edits them. **Hybrid** requires **`hybridSearch.alpha`** (slider). **Parent–child** sets **`parentChildConfig`**. **Multi-query** sets **`multiQueryConfig.numVariants`** and **`llmModel`** (defaults from **`draft.stages.generation.model`** when available).
+
+### Why are MMR / ensemble extra knobs only described in copy, not extra fields?
+
+**`RetrievalConfig`** in **`pipeline.ts`** only persists fields that **exports and validators** understand (top-k, threshold, hybrid blend, parent–child sizes, multi-query variants). Catalog text explains **fetch-k**, **λ**, **RRF** for interviews and docs; **Python/YAML generators** already branch on **strategy** with sensible literals.
+
+### How do metadata filters work?
+
+**`filters`** is **`MetadataFilter[]`**: **key**, **operator** (**eq**, **ne**, **gt**, …, **in**, **nin**, **contains**), **value** (string / number / boolean / string[]). **in** / **nin** values are edited as comma-separated lists and parsed in the client.
+
+### How does reranking integrate?
+
+**`RerankingConfig`**: **enabled**, optional **provider** (**cohere** | **huggingface** | **custom**), **model** (catalog id or free text for custom), **topN**. Catalog **`rerankers.json`** is loaded through **`rerankers-catalog.ts`**. **`pythonCodeGenerator`** emits **Cohere** or **CrossEncoder** rerank when **enabled**.
+
+### What is the **`rerank-focus`** variant?
+
+The **`Reranking`** route (**`/designer/reranking`**) renders **`RetrievalConfigurator variant="rerank-focus"`**: compact **current retrieval** summary + **full reranking panel** + link back to **`/designer/retrieval`** for strategy/filters. **`/designer/retrieval`** uses **`variant="full"`** (strategies, parameters, filters, reranking).
+
+### How does this relate to **P2-5 Retrieval Service**?
+
+The Designer stores **configuration only**. Runtime retrieval, hybrid BM25 wiring, and rerank execution live in backend **`RetrievalService`** and workers — the draft is the contract for codegen and APIs.
+
+### What validation applies?
+
+**`RetrievalConfigSchema`**: **topK** 1–100; **hybrid** requires **hybridSearch**; **multiQueryConfig** variants 2–10 and non-empty **llmModel**. **Filters** must satisfy **`MetadataFilterSchema`**. **Reranking** validated by **`RerankingConfigSchema`**.
+
+### What tests cover this task?
+
+**`apps/web/src/lib/__tests__/retrieval-strategies-catalog.test.ts`** exercises strategy **count**, **lookup**, **`isRetrievalStrategyId`**, and **`retrievalDefaultsFromCatalog`**. **`validators.test.ts`** already covers retrieval/reranking shapes.
+
+### What remains placeholder after P5-7?
+
+Stages **generation** through **review** stay dashed until **P5-8+**. **Cloud** through **retrieval/reranking** (configured on Retrieval + Reranking routes) are interactive.
+
+### How do you add a new retrieval strategy to the product?
+
+1. Extend **`RetrievalStrategy`** and **`RetrievalStrategySchema`** if the id is new. 2. Add a strategy block to **`data/retrieval-strategies.json`**. 3. Teach **`retrievalDefaultsFromCatalog`** / UI sections if new persisted fields are required. 4. Update **`pythonCodeGenerator`** / **`yamlGenerator`** / **`mermaidGenerator`** if export behavior should change.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

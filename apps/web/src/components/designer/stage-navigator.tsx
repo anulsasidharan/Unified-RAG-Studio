@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import { getEmbeddingModelMeta } from '@/lib/embeddings-catalog';
 import { getVectorStoreMeta } from '@/lib/vector-stores-catalog';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { ChunkingStrategy, DataIngestionConfig } from '@/types/pipeline';
+import type { ChunkingStrategy, DataIngestionConfig, RetrievalStrategy } from '@/types/pipeline';
 
 function ingestionSourceHint(source?: DataIngestionConfig['sourceType']): string {
   if (!source) return '';
@@ -58,6 +58,20 @@ function vectorStoreHint(providerId?: string, indexName?: string): string {
   if (!indexName) return short;
   const idx = indexName.length > 14 ? `${indexName.slice(0, 12)}…` : indexName;
   return `${short} · ${idx}`;
+}
+
+function retrievalHint(strategy?: RetrievalStrategy, topK?: number): string {
+  if (!strategy) return '';
+  const k = topK != null ? topK : '?';
+  const short = strategy.length > 24 ? `${strategy.slice(0, 22)}…` : strategy;
+  return `${short} · top-${k}`;
+}
+
+function rerankingHint(enabled?: boolean, model?: string): string {
+  if (!enabled) return 'Off';
+  const m = model?.trim();
+  if (!m) return 'On';
+  return m.length > 24 ? `${m.slice(0, 22)}…` : m;
 }
 
 export function StageNavigator() {
@@ -159,6 +173,14 @@ export function StageNavigator() {
                   ) : stage.id === 'vectorstore' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {vectorStoreHint(draft.stages.vectorStore?.provider, draft.stages.vectorStore?.indexName)}
+                    </span>
+                  ) : stage.id === 'retrieval' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {retrievalHint(draft.stages.retrieval?.strategy, draft.stages.retrieval?.topK)}
+                    </span>
+                  ) : stage.id === 'reranking' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {rerankingHint(draft.stages.reranking?.enabled, draft.stages.reranking?.model)}
                     </span>
                   ) : null}
                 </span>

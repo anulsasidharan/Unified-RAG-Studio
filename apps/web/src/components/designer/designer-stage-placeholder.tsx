@@ -7,6 +7,7 @@ import { ChunkingConfigurator } from './chunking-configurator';
 import { CloudProviderSelector } from './cloud-provider-selector';
 import { DataIngestionConfigurator } from './data-ingestion-configurator';
 import { EmbeddingConfigurator } from './embedding-configurator';
+import { RetrievalConfigurator } from './retrieval-configurator';
 import { VectorStoreConfigurator } from './vector-store-configurator';
 
 function phaseNoteFor(stageId: DesignerStageId): string {
@@ -22,9 +23,9 @@ function phaseNoteFor(stageId: DesignerStageId): string {
     case 'vectorstore':
       return 'Pick a vector database from the catalog, name your index/collection, and tune metric, scaling hints, and optional cloud placement — saved on your pipeline draft.';
     case 'retrieval':
-      return 'Retrieval UI — P5-7.';
+      return 'Choose a retrieval strategy from the catalog, tune top-k, optional score threshold, metadata filters, and reranking — saved on your pipeline draft.';
     case 'reranking':
-      return 'Covered alongside retrieval tuning in later P5 steps.';
+      return 'Focused reranking controls (same draft as Retrieval); use the Retrieval stage for full strategy and filters.';
     case 'generation':
       return 'Generation model UI — P5-8.';
     case 'routing':
@@ -72,6 +73,10 @@ export function DesignerStagePlaceholder({
         <EmbeddingConfigurator className="mt-8" />
       ) : stageId === 'vectorstore' ? (
         <VectorStoreConfigurator className="mt-8" />
+      ) : stageId === 'retrieval' ? (
+        <RetrievalConfigurator className="mt-8" variant="full" />
+      ) : stageId === 'reranking' ? (
+        <RetrievalConfigurator className="mt-8" variant="rerank-focus" />
       ) : (
         <div className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground dark:border-neutral-600">
           Configuration UI for “{meta.label}” will appear in the numbered Phase 5 task above.
