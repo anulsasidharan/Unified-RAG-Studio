@@ -529,3 +529,50 @@ flowchart LR
 After P6-2, Autopilot produced **recommendations only**. After P6-3, the same build run **executes real chunkers** on a bounded corpus and selects a **measured** configuration, bridging **heuristic analyst output** to **service-level validation** before embedding work in P6-4.
 
 ---
+
+## Phase 6 — Autopilot LangGraph (after P6-4 · Embedding Tester Agent)
+
+**P6-4** adds **`app/core/agents/embedding_tester.py`**: loads **`data/models/embeddings.json`**, builds a bounded list of **`EmbeddingConfig`** candidates (pipeline `stages.embedding`, optional **`requirements["embedding_candidate_models"]`**, tier-aware defaults from **`optimize_for`**), derives benchmark strings by re-chunking the **same synthetic corpus** as P6-3 with the **winning chunking config** (or **`requirements["embedding_sample_texts"]`**), runs **`EmbeddingBenchmarker.benchmark`**, merges **live throughput/latency** with **catalog MTEB and list-price** signals into a **weighted composite** (`quality` / `latency` / `cost` / `balanced`), and writes **`stage_outputs["embedding"]`**. The compiled bootstrap graph is **linear** through **`embedding_tester`**; terminal **`current_stage`** is **`embedding_complete`**. Tooling adds **`embedding_tester_run`** (chunking + analyze + requirements JSON, optional pipeline JSON).
+
+### P6-4 — Graph topology (bootstrap + analyze + chunking + embedding)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> chunking_optimizer
+  chunking_optimizer --> embedding_tester
+  embedding_tester --> [*]
+```
+
+### P6-4 — Data flow (chunking winner + catalog → benchmarks → stage_outputs)
+
+```mermaid
+flowchart LR
+  subgraph Prior["From P6-2 / P6-3"]
+    A["stage_outputs.analyze"]
+    CH["stage_outputs.chunking"]
+  end
+  subgraph EmbMod["embedding_tester.py"]
+    CAT[data/models/embeddings.json]
+    T[ChunkingService texts]
+    B[EmbeddingBenchmarker]
+  end
+  subgraph Out["AutopilotGraphState"]
+    E["stage_outputs.embedding"]
+    TR[agent_trace]
+  end
+  A --> T
+  CH --> T
+  CAT --> B
+  T --> B
+  B --> E
+  B --> TR
+```
+
+### Evolution note (P6-3 → P6-4)
+
+After P6-3, Autopilot had a **measured chunking triple** but only **static** embedding intent from the Designer draft. After P6-4, the run **exercises real embedders** on representative chunk text (when providers succeed), ranks candidates with **explicit trade-offs** against **`optimize_for`**, and emits a **catalog-aligned** `provider` / `model` / `dimensions` choice for downstream retrieval tuning in **P6-5**.
+
+---

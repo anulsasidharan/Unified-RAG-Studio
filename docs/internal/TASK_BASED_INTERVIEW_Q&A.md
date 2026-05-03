@@ -4746,4 +4746,45 @@ Each candidate is wrapped in **try/except**; failures become **`candidates_tried
 
 ---
 
+## Phase 6 · P6-4 · Embedding Tester Agent
+
+### What problem does the Embedding Tester solve?
+
+Chunking output fixes **text boundaries**, but **retrieval quality, bill, and tail latency** still depend on the **embedding model**. The tester **materialises catalog-backed `EmbeddingConfig` rows**, embeds a **small text sample** aligned to the winning chunker, measures **throughput and per-text latency** via **`EmbeddingBenchmarker`**, and fuses those signals with **catalog MTEB scores and `costPer1MTokens`** so Autopilot picks a **single provider/model** (plus rationale) before retrieval optimisation.
+
+### Where do benchmark texts come from?
+
+By default the service **re-chunks** the same **signal-aware synthetic corpus** used in P6-3 using the **selected** `strategy` / `chunk_size` / `chunk_overlap`. Tests and future workers can inject **`requirements["embedding_sample_texts"]`** (plain string list) to avoid provider calls or stabilise CI.
+
+### How is the winner chosen if live benchmarks only return some providers?
+
+**`EmbeddingBenchmarker`** drops failing configs (missing API keys, unsupported models). The agent builds **`candidates_tried`** including **error rows** for configs that never returned vectors. If **every** config fails, **`stage_outputs["embedding"].status`** is **`failed`** with **`all_embedding_benchmarks_failed`**. Otherwise the **highest composite score** among successful runs wins; weights depend on **`optimize_for`** (`quality`, `latency`, `cost`, `balanced`).
+
+### How does the LangGraph topology change after P6-4?
+
+**Linear extension:** `chunking_optimizer` → **`embedding_tester`** → END. Terminal **`current_stage`** is **`embedding_complete`**.
+
+### What keys does `stage_outputs["embedding"]` expose on success?
+
+| Key | Role |
+|-----|------|
+| `status` | `complete` or `failed` |
+| `selected` | `provider`, `model`, `dimensions`, throughput/latency, `composite_score`, `rationale` |
+| `candidates_tried` | Per-run metrics or `error` markers for skipped providers |
+| `benchmark_text_count` | Number of strings embedded in the timed run |
+
+### Which LangChain tool was added for P6-4?
+
+**`embedding_tester_run(chunking_json, analyze_json, requirements_json, pipeline_config_json?)`** — mirrors the graph inputs so a future **tool-calling LLM** can rerun or explain the stage without invoking the full graph.
+
+### Interview trap: does CI call OpenAI for every pytest graph invoke?
+
+**No.** **`tests/test_core/test_agents_langgraph.py`** patches **`EmbeddingBenchmarker`** inside **`embedding_tester`** with stub **`BenchmarkResult`** rows so the graph and tool smoke tests stay **offline and deterministic**, while production code paths still call real embedders when keys are present.
+
+### What is the next task after P6-4?
+
+**P6-5 · Retrieval Optimizer Agent** — tune retrieval mode, top-k, hybrid weights, and reranking.
+
+---
+
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

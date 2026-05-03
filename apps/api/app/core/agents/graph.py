@@ -1,25 +1,38 @@
-"""LangGraph construction — bootstrap, Document Analyst (P6-2), Chunking Optimizer (P6-3)."""
+"""LangGraph construction — bootstrap through Embedding Tester (P6-4)."""
 
 from __future__ import annotations
 
 from typing import Any
 
-import structlog
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
+import structlog
 
-from app.core.agents.chunking_optimizer import human_readable_optimizer_message, run_chunking_optimizer
-from app.core.agents.document_analyst import human_readable_analyst_message, run_document_analyst
+from app.core.agents.chunking_optimizer import (
+    human_readable_optimizer_message,
+    run_chunking_optimizer,
+)
+from app.core.agents.document_analyst import (
+    human_readable_analyst_message,
+    run_document_analyst,
+)
+from app.core.agents.embedding_tester import (
+    human_readable_embedding_message,
+    run_embedding_tester,
+)
 from app.core.agents.prompts import (
     CHUNKING_OPTIMIZER_PROMPT,
     DOCUMENT_ANALYST_PROMPT,
+    EMBEDDING_TESTER_PROMPT,
     ORCHESTRATOR_SYSTEM_PROMPT,
 )
 from app.core.agents.state import AutopilotGraphState
 
 logger = structlog.get_logger(__name__)
+_CHUNKING_OPT_HINT = CHUNKING_OPTIMIZER_PROMPT[:120]
+_EMBEDDING_TESTER_HINT = EMBEDDING_TESTER_PROMPT[:120]
 
 
 def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
@@ -34,7 +47,8 @@ def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
     text = (
         "Autopilot graph online. "
         f"Documents queued: {trace['document_count']}. "
-        "Running document analyst, then chunking optimizer, then later subgraphs per AUTOPILOT_STAGE_ORDER."
+        "Running document analyst, chunking optimizer, embedding tester, "
+        "then later subgraphs per AUTOPILOT_STAGE_ORDER."
     )
     return {
         "messages": [
@@ -50,7 +64,7 @@ def _bootstrap_prepare(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
-    """Marks bootstrap complete so workers / APIs can detect graph viability without running full Autopilot."""
+    """Mark bootstrap complete for workers that probe graph viability."""
 
     return {
         "current_stage": "bootstrap_complete",
@@ -67,13 +81,101 @@ def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
                 "status": "complete",
                 "next": "document_analyst",
                 "then": "chunking_optimizer",
+                "then_embedding": "embedding_tester",
             },
         },
     }
 
 
+def _embedding_tester_node(state: AutopilotGraphState) -> dict[str, Any]:
+    """P6-4: benchmark embedding candidates; write ``stage_outputs['embedding']``."""
+
+    merged = state.get("stage_outputs") or {}
+    chunking = merged.get("chunking")
+    analyze = merged.get("analyze")
+    if not chunking or chunking.get("status") != "complete":
+        trace = {
+            "event": "embedding_tester",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_chunking",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Embedding tester skipped: chunking stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "embedding",
+                        "embedding_prompt_hint": _EMBEDDING_TESTER_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "embedding_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "embedding": {
+                    "status": "failed",
+                    "reason": "missing_chunking",
+                },
+            },
+        }
+
+    if not analyze or analyze.get("status") != "complete":
+        trace = {
+            "event": "embedding_tester",
+            "build_id": state["build_id"],
+            "error": "missing_or_incomplete_analyze",
+        }
+        return {
+            "messages": [
+                AIMessage(
+                    content="Embedding tester skipped: analyze stage missing or incomplete.",
+                    additional_kwargs={
+                        "stage": "embedding",
+                        "embedding_prompt_hint": _EMBEDDING_TESTER_HINT,
+                    },
+                ),
+            ],
+            "current_stage": "embedding_complete",
+            "agent_trace": [trace],
+            "stage_outputs": {
+                "embedding": {
+                    "status": "failed",
+                    "reason": "missing_analyze",
+                },
+            },
+        }
+
+    payload = run_embedding_tester(
+        chunking_payload=dict(chunking),
+        analyze_payload=dict(analyze),
+        requirements=dict(state.get("requirements") or {}),
+        pipeline_config=state.get("pipeline_config"),
+    )
+    trace = {
+        "event": "embedding_tester",
+        "build_id": state["build_id"],
+        "project_id": state["project_id"],
+        "selected_model": (payload.get("selected") or {}).get("model"),
+    }
+    text = human_readable_embedding_message(payload)
+    return {
+        "messages": [
+            AIMessage(
+                content=text,
+                additional_kwargs={
+                    "stage": "embedding",
+                    "embedding_prompt_hint": _EMBEDDING_TESTER_HINT,
+                },
+            ),
+        ],
+        "current_stage": "embedding_complete",
+        "agent_trace": [trace],
+        "stage_outputs": {"embedding": payload},
+    }
+
+
 def _chunking_optimizer_node(state: AutopilotGraphState) -> dict[str, Any]:
-    """P6-3: benchmark chunking configs around the analyst recommendation; write ``stage_outputs['chunking']``."""
+    """P6-3: benchmark chunking configs; write ``stage_outputs['chunking']``."""
 
     merged = state.get("stage_outputs") or {}
     analyze = merged.get("analyze")
@@ -87,7 +189,10 @@ def _chunking_optimizer_node(state: AutopilotGraphState) -> dict[str, Any]:
             "messages": [
                 AIMessage(
                     content="Chunking optimizer skipped: analyze stage missing or incomplete.",
-                    additional_kwargs={"stage": "chunking", "optimizer_prompt_hint": CHUNKING_OPTIMIZER_PROMPT[:120]},
+                    additional_kwargs={
+                        "stage": "chunking",
+                        "optimizer_prompt_hint": _CHUNKING_OPT_HINT,
+                    },
                 ),
             ],
             "current_stage": "chunking_complete",
@@ -117,7 +222,7 @@ def _chunking_optimizer_node(state: AutopilotGraphState) -> dict[str, Any]:
                 content=text,
                 additional_kwargs={
                     "stage": "chunking",
-                    "optimizer_prompt_hint": CHUNKING_OPTIMIZER_PROMPT[:120],
+                    "optimizer_prompt_hint": _CHUNKING_OPT_HINT,
                 },
             ),
         ],
@@ -158,21 +263,20 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
-    """Compile graph: prepare → finalize → document_analyst → chunking_optimizer → END.
-
-    Pass a ``MemorySaver`` (or other checkpointer) to exercise persistence; omit for stateless smoke tests.
-    """
+    """Compile linear graph through embedding_tester (optional ``MemorySaver``)."""
 
     graph = StateGraph(AutopilotGraphState)
     graph.add_node("bootstrap_prepare", _bootstrap_prepare)
     graph.add_node("bootstrap_finalize", _bootstrap_finalize)
     graph.add_node("document_analyst", _document_analyst_node)
     graph.add_node("chunking_optimizer", _chunking_optimizer_node)
+    graph.add_node("embedding_tester", _embedding_tester_node)
     graph.set_entry_point("bootstrap_prepare")
     graph.add_edge("bootstrap_prepare", "bootstrap_finalize")
     graph.add_edge("bootstrap_finalize", "document_analyst")
     graph.add_edge("document_analyst", "chunking_optimizer")
-    graph.add_edge("chunking_optimizer", END)
+    graph.add_edge("chunking_optimizer", "embedding_tester")
+    graph.add_edge("embedding_tester", END)
     compiled = graph.compile(checkpointer=checkpointer)
     logger.debug("autopilot_bootstrap_graph_compiled", checkpointer=bool(checkpointer))
     return compiled
@@ -184,7 +288,7 @@ def invoke_autopilot_bootstrap(
     thread_id: str = "bootstrap-test",
     checkpointer: MemorySaver | None = None,
 ) -> AutopilotGraphState:
-    """Run bootstrap + document analyst + chunking optimizer graph once; return merged terminal state."""
+    """Run bootstrap + analyst + chunking + embedding tester once; return merged terminal state."""
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
     if checkpointer is not None:
