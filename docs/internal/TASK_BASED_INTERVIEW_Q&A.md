@@ -4091,6 +4091,22 @@ Model grid uses **`role="radiogroup"`** / **`role="radio"`** / **`aria-checked`*
 
 Stages **vector store** through **review** still use dashed placeholders until **P5-6+**. **Cloud**, **ingestion**, **chunking**, and **embedding** are interactive.
 
+### What if filters hide the model that is already selected?
+
+**`EmbeddingConfigurator`** computes **`displayModels`**: if **`getEmbeddingModelMeta(cfg.model)`** is missing from **`filteredModels`**, that catalog row is **prepended** so the radiogroup always lists the active choice. **`pinnedSelectionId`** drives a **“Current · outside filters”** badge and helper copy under the filter summary so users know why an extra card appears and how it relates to **`draft.stages.embedding`**.
+
+### Why not allow arbitrary model strings in the UI?
+
+Free-text **`model`** ids would drift from **`embeddings.json`** and break **`embeddingConfigFromCatalogEntry`** mapping (**provider** / **dimensions** / **maxTokens**). Catalog-backed cards keep the draft aligned with **Phase 2 `EmbeddingService`** expectations and with **vector index dimensionality** (provision indexes with **`cfg.dimensions`**).
+
+### How does the Embedding stage relate to the Python export generator?
+
+**`pythonCodeGenerator`** picks **`langchain_*`** imports from **`draft.stages.embedding.provider`** (see **`EMBEDDING_IMPORTS`** / **`EMBEDDING_CLASS`** in **`apps/web/src/lib/generators/pythonCodeGenerator.ts`**). Selecting a catalog model therefore shapes generated code; **`batchSize`** is the main extra tunable in the UI beyond the catalog row.
+
+### How do you add a new embedding model to the product?
+
+1. Add a row to **`data/models/embeddings.json`** with **id**, **provider** (must be a known **`EmbeddingProvider`**), **dimensions**, **maxTokens**, and metadata used by filters. 2. Rebuild the web app so the JSON import is bundled. 3. Optional: extend **`apps/web/src/lib/__tests__/embeddings-catalog.test.ts`** expected model count. Backend **P2-3** must support the **provider** if you expect live embedding.
+
 ---
 
 *Append new `## Phase … · …` sections at the end for future tasks; keep all prior sections intact.*

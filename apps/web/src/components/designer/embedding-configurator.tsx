@@ -130,6 +130,21 @@ export function EmbeddingConfigurator({
     query,
   ]);
 
+  /** Keep the active catalog row visible when filters would exclude it so the selection never disappears. */
+  const pinnedSelectionId = useMemo(() => {
+    const m = getEmbeddingModelMeta(cfg.model);
+    if (!m) return undefined;
+    if (filteredModels.some((x) => x.id === m.id)) return undefined;
+    return m.id;
+  }, [filteredModels, cfg.model]);
+
+  const displayModels = useMemo(() => {
+    const m = getEmbeddingModelMeta(cfg.model);
+    if (!m) return filteredModels;
+    if (filteredModels.some((x) => x.id === m.id)) return filteredModels;
+    return [m, ...filteredModels];
+  }, [filteredModels, cfg.model]);
+
   const selectedMeta = useMemo(() => getEmbeddingModelMeta(cfg.model), [cfg.model]);
 
   const selectModel = (entry: EmbeddingModel) => {
@@ -293,6 +308,12 @@ export function EmbeddingConfigurator({
         <p className="mt-3 text-xs text-muted-foreground" aria-live="polite">
           Showing {filteredModels.length} of {allModels.length} models
           {filteredModels.length === 0 ? ' — relax filters or clear search.' : '.'}
+          {pinnedSelectionId ? (
+            <>
+              {' '}
+              Your current selection is pinned at the top because it does not match the active filters.
+            </>
+          ) : null}
         </p>
       </section>
 
@@ -301,7 +322,7 @@ export function EmbeddingConfigurator({
         aria-label="Embedding model"
         className="grid gap-4 sm:grid-cols-2"
       >
-        {filteredModels.map((m) => {
+        {displayModels.map((m) => {
           const selected = cfg.model === m.id;
           return (
             <button
@@ -332,6 +353,11 @@ export function EmbeddingConfigurator({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-foreground">{m.name}</span>
+                    {m.id === pinnedSelectionId ? (
+                      <span className="rounded-md border border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-100">
+                        Current · outside filters
+                      </span>
+                    ) : null}
                     {m.deprecated ? (
                       <span className="rounded-md border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100">
                         Deprecated
