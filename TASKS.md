@@ -52,3 +52,4 @@
 | Task | Branch | Status |
 |------|--------|--------|
 | P5-1 · Designer Layout & Stage Navigator | `feature/p5-designer-layout` | ✅ done |
+| P5-2 · Cloud Provider Selector | `feature/p5-cloud-provider-selector` | ✅ done |
