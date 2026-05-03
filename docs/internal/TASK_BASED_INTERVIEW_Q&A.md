@@ -4640,11 +4640,59 @@ LangGraph merges node outputs per key. Without a reducer, the last write would *
 
 ### How do you test a graph without an LLM?
 
-The bootstrap nodes return **`AIMessage`** and dict updates only — **no model call**. Tests invoke **`invoke_autopilot_bootstrap`** with and without **`MemorySaver`** to validate compilation, reducers, and terminal **`current_stage == bootstrap_complete`**.
+The bootstrap and document-analyst nodes return **`AIMessage`** and dict updates only — **no model call**. Tests invoke **`invoke_autopilot_bootstrap`** with and without **`MemorySaver`** to validate compilation, reducers, and terminal **`current_stage == "analyze_complete"`** (P6-2 onward) plus populated **`stage_outputs["analyze"]`**.
 
 ### What is the next task after P6-1?
 
-**P6-2 · Document Analyst Agent** — first specialist node that reads corpus metadata and recommends chunking strategies.
+**P6-2 · Document Analyst Agent** is implemented: the compiled graph runs **bootstrap → document analyst**, and **`stage_outputs["analyze"]`** carries corpus summary plus chunking recommendations. The next milestone is **P6-3 · Chunking Optimizer Agent**.
+
+---
+
+## Phase 6 · P6-2 · Document Analyst Agent
+
+### What problem does the Document Analyst solve?
+
+Autopilot must choose **chunking** before embeddings. The analyst turns **corpus-level signals** (file types, rough size, markdown/code/tabular hints from optional **`corpus_profiles`**) into a **catalog-aligned strategy id** (`fixed-size`, `recursive-character`, `semantic`, `markdown-header`, `code-aware`, `paragraph-based`) plus **suggested chunk size / overlap**, so downstream agents (P6-3) start from an evidence-based default instead of a random preset.
+
+### Where does `corpus_profiles` come from?
+
+**Not invented in the graph.** Ingestion / upload flows (future P7 / worker wiring) should attach a JSON-serializable list under **`requirements["corpus_profiles"]`** after documents are parsed. If it is missing, the analyst **synthesizes** one profile per **`document_id`** with **`file_type: "unknown"`**, which still completes the stage but produces a **conservative** recommendation (`recursive-character`) and a trace note.
+
+### Why keep heuristics in pure Python instead of only an LLM?
+
+- **Deterministic CI** — same inputs yield the same **`primary_strategy`**, so unit tests guard regressions.  
+- **No API key** required for the default Autopilot path.  
+- An LLM can still be added later as a **refinement node** that consumes `stage_outputs["analyze"]`.
+
+### How does `recommend_chunking` choose a strategy?
+
+Priority-ordered rules on **`corpus_summary["signals"]`** and **`optimize_for`**: **code-heavy** → `code-aware`; **markdown structure** → `markdown-header`; **tabular / CSV** → `fixed-size`; **quality** + multiple non-trivial docs → `semantic`; **latency** → `fixed-size`; else **`recursive-character`** as the general default. Alternates are returned for the Chunking Optimizer to search around.
+
+### What does the LangGraph node emit?
+
+**`document_analyst`** returns updates: **`current_stage: "analyze_complete"`**, **`stage_outputs["analyze"]`** (`status`, `corpus_summary`, `chunking_recommendation`, `profile_count`), **`agent_trace`** with `event: "document_analyst"`, and an **`AIMessage`** summarising counts, dominant types, and the primary strategy (Markdown bold on strategy name for UI parsers).
+
+### Which LangChain tools exist for P6-2?
+
+| Tool | Role |
+|------|------|
+| `document_corpus_analyze` | Full analyst JSON from `document_ids_json` + `requirements_json`. |
+| `summarize_corpus_profiles_json` | Returns **`corpus_summary`** only from a profiles array. |
+| `recommend_chunking_from_summary_json` | Returns **`chunking_recommendation`** from a summary + requirements. |
+
+They mirror the same logic as the graph node so a future **tool-calling LLM** can replan without duplicating business rules.
+
+### Interview trap: does the graph still end at `bootstrap_complete`?
+
+**No after P6-2.** The terminal **`current_stage`** is **`analyze_complete`**. Bootstrap remains **`stage_outputs["bootstrap"]`** with `next: "document_analyst"`.
+
+### How do tests cover the analyst without real PDFs?
+
+**`tests/test_core/test_document_analyst.py`** builds synthetic **`corpus_profiles`** and asserts strategy ids. **`test_agents_langgraph.py`** asserts **`stage_outputs["analyze"]["status"] == "complete"`** and extended **`agent_trace`** length after **`invoke_autopilot_bootstrap`**.
+
+### What is the next task after P6-2?
+
+**P6-3 · Chunking Optimizer Agent** — search / evaluate alternative chunking parameters around the analyst’s recommendation.
 
 ---
 

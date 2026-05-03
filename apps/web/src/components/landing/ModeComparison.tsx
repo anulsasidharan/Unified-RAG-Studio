@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowRight, Palette, Zap } from 'lucide-react';
 
 const designerFeatures = [
-  '12-stage guided visual builder',
+  'Multi-stage guided visual builder',
   'Real-time cost estimator',
   'Live Mermaid pipeline diagram',
   'Export to Python / YAML / Terraform',

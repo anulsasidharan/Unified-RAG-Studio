@@ -1,6 +1,8 @@
-"""P6-1 LangGraph agent infrastructure — bootstrap graph + tools."""
+"""P6-1 / P6-2 LangGraph agent infrastructure — bootstrap + document analyst + tools."""
 
 from __future__ import annotations
+
+import json
 
 from langgraph.checkpoint.memory import MemorySaver
 
@@ -12,7 +14,7 @@ from app.core.agents import (
     invoke_autopilot_bootstrap,
 )
 from app.core.agents.prompts import format_stage_delegation
-from app.core.agents.tools import autopilot_health_ping, summarize_requirements_snapshot
+from app.core.agents.tools import autopilot_health_ping, document_corpus_analyze, summarize_requirements_snapshot
 
 
 def test_initial_state_shapes():
@@ -42,11 +44,12 @@ def test_bootstrap_graph_runs_without_checkpointer():
         requirements={},
     )
     out = invoke_autopilot_bootstrap(st, checkpointer=None)
-    assert out["current_stage"] == "bootstrap_complete"
+    assert out["current_stage"] == "analyze_complete"
     assert out["iteration"] == 1
     assert out["stage_outputs"]["bootstrap"]["status"] == "complete"
-    assert len(out["messages"]) >= 1
-    assert len(out["agent_trace"]) >= 2
+    assert out["stage_outputs"]["analyze"]["status"] == "complete"
+    assert len(out["messages"]) >= 2
+    assert len(out["agent_trace"]) >= 3
 
 
 def test_bootstrap_graph_with_memory_checkpointer():
@@ -70,7 +73,7 @@ def test_compile_returns_runnable():
         requirements={},
     )
     final = app.invoke(st)
-    assert final["current_stage"] == "bootstrap_complete"
+    assert final["current_stage"] == "analyze_complete"
 
 
 def test_stub_tools():
@@ -80,7 +83,14 @@ def test_stub_tools():
 
 def test_tool_registry_non_empty():
     tools = get_autopilot_bootstrap_tools()
-    assert len(tools) == 2
+    assert len(tools) == 5
+
+
+def test_document_corpus_analyze_tool_smoke():
+    raw = document_corpus_analyze.invoke(
+        {"document_ids_json": json.dumps(["1"]), "requirements_json": "{}"},
+    )
+    assert "chunking_recommendation" in json.loads(raw)
 
 
 def test_format_stage_delegation_contains_ids():

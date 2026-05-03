@@ -1,13 +1,13 @@
 # Prompt history — Unified RAG Studio
 
-Session log of user prompts (append-only).
+> Session prompts appended newest at bottom. Internal / optional file per `.gitignore` exception.
 
 ---
 
-## 2026-05-03T12:35:01-04:00
+## 2026-05-03T19:35:00Z
 
-Go ahead and complete the P6-1 · LangGraph Agent Infrastructure	
-I am currently in Branch: feature/p6-langgraph-infrastructure
+Go ahead and complete the P6-2 · Document Analyst Agent	
+I am currently in Branch: feature/p6-document-analyst-agent
 
 Once completed do the following tasks:
 

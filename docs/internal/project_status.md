@@ -60,7 +60,7 @@
 | 49 | Phase 5 | P5-14 · Template Gallery Page | `feature/p5-template-gallery` | Build template gallery and template-apply user flow. | ✅ done |
 |  | `Phase 6` | `Build LangGraph-based Autopilot backend agents to autonomously optimize RAG pipelines.` |  |  |  |
 | 50 | Phase 6 | P6-1 · LangGraph Agent Infrastructure | `feature/p6-langgraph-infrastructure` | Set up shared agent state, tools, prompts, and LangGraph foundation. | ✅ done |
-| 51 | Phase 6 | P6-2 · Document Analyst Agent | `feature/p6-document-analyst-agent` | Build agent that analyzes document corpus and recommends chunking. | ⬜ pending |
+| 51 | Phase 6 | P6-2 · Document Analyst Agent | `feature/p6-document-analyst-agent` | Build agent that analyzes document corpus and recommends chunking. | ✅ done |
 | 52 | Phase 6 | P6-3 · Chunking Optimizer Agent | `feature/p6-chunking-optimizer-agent` | Build agent to test chunking options and select best configuration. | ⬜ pending |
 | 53 | Phase 6 | P6-4 · Embedding Tester Agent | `feature/p6-embedding-tester-agent` | Build agent to benchmark embeddings by quality/speed/cost goals. | ⬜ pending |
 | 54 | Phase 6 | P6-5 · Retrieval Optimizer Agent | `feature/p6-retrieval-optimizer-agent` | Build agent to tune retrieval strategy and reranking decisions. | ⬜ pending |
