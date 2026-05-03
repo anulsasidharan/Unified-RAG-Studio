@@ -117,7 +117,7 @@ export function StageNavigator() {
 
   return (
     <nav
-      className="sticky top-0 z-30 flex max-h-none shrink-0 flex-col gap-3 border-b border-neutral-200 bg-card/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:sticky lg:top-0 lg:z-10 lg:h-full lg:max-h-[calc(100vh-3.5rem)] lg:w-[min(280px,calc((100vw-14rem)*0.28))] lg:overflow-y-auto lg:border-b-0 lg:border-r lg:px-2 lg:py-4 xl:w-72 dark:border-neutral-800"
+      className="sticky top-0 z-30 flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-card/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:sticky lg:top-0 lg:z-10 lg:border-b-0 lg:px-2 lg:py-4 dark:border-neutral-800"
       aria-label="Designer pipeline stages"
     >
       <div className="hidden px-2 lg:block">
@@ -125,7 +125,7 @@ export function StageNavigator() {
           Pipeline builder
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
-          Move through stages to configure your pipeline. More stage panels ship in upcoming P5 tasks.
+          Move through stages to configure your pipeline. A live graph and summary update as you edit the draft.
         </p>
       </div>
 

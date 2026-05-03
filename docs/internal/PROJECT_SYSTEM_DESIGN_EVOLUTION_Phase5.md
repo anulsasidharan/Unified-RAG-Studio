@@ -164,4 +164,29 @@ flowchart LR
 
 ---
 
-*Append new “Design level” sections at the end as P5-10+ ship.*
+## Design level 10 — Live pipeline graph & summary (after P5-10)
+
+**Read-only visualization** binds to the same **`useDesignerStore`** draft users edit in configurators. **`pipeline-visualizer.tsx`** chooses **`placement`** (**`sidebar`** vs **`main`**) using **`matchMedia('(min-width: 1024px)')`** so **exactly one** interactive panel mounts per breakpoint (avoiding duplicate **Mermaid** renders). **`generateMermaidDiagram`** outputs **`flowchart LR`** with **Indexing** vs **Query** subgraphs; **`generatePipelineHighlights`** lists human-readable bullets (cloud, ingestion, chunking, embedding, vector store, retrieval, reranking, generation, routing, memory, evaluation). **`DesignerShell`** wraps **`StageNavigator`** + sidebar visualizer in a **scrollable** column (`lg:overflow-y-auto`, `max-h` viewport); **`StageNavigator`** no longer sets fixed sidebar width (the shell column owns **`lg:w-[min(280px,…)]`**).
+
+```mermaid
+flowchart LR
+  subgraph Layout["DesignerShell column lg+"]
+    Nav[StageNavigator]
+    Viz[PipelineVisualizer sidebar]
+  end
+  subgraph Mobile["Main column sm"]
+    Fold[PipelineVisualizer main details]
+    Page[DesignerStagePlaceholder]
+  end
+  subgraph Data["Derived from draft"]
+    MG[mermaidGenerator.ts]
+  end
+  Nav --> MG
+  Viz --> MG
+  Fold --> MG
+  Page --> MG
+```
+
+---
+
+*Append new “Design level” sections at the end as P5-11+ ship.*
