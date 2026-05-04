@@ -74,7 +74,7 @@
 | 61 | Phase 7 | P7-3 · Build Progress Monitor | `feature/p7-build-progress` | Build real-time build progress tracking via SSE/polling fallback. | ✅ done |
 | 62 | Phase 7 | P7-4 · Agent Activity Feed | `feature/p7-agent-activity-feed` | Build agent log stream UI with filter and export support. | ✅ done |
 | 63 | Phase 7 | P7-5 · Metrics Dashboard | `feature/p7-metrics-dashboard` | Build live metrics dashboard with trends, latency, and cost views. | ✅ done |
-| 64 | Phase 7 | P7-6 · Decision Explainer & Results | `feature/p7-results-summary` | Build explainability and final result visualization screens. | ⬜ pending |
+| 64 | Phase 7 | P7-6 · Decision Explainer & Results | `feature/p7-results-summary` | Build explainability and final result visualization screens. | ✅ done |
 | 65 | Phase 7 | P7-7 · Autopilot Entry & History Pages | `feature/p7-autopilot-pages` | Build autopilot entry, layout, project listing, and history pages. | ⬜ pending |
 |  | `Phase 8` | `Integrate bidirectional handoff between Designer and Autopilot so both remain synchronized.` |  |  |  |
 | 66 | Phase 8 | P8-1 · Designer → Autopilot Handoff | `feature/p8-designer-to-autopilot` | Enable handoff from manual Designer config into Autopilot optimization. | ⬜ pending |

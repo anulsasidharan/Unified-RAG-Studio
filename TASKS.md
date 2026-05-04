@@ -89,3 +89,4 @@
 | P7-3 · Build Progress Monitor | `feature/p7-build-progress` | ✅ done |
 | P7-4 · Agent Activity Feed | `feature/p7-agent-activity-feed` | ✅ done |
 | P7-5 · Metrics Dashboard | `feature/p7-metrics-dashboard` | ✅ done |
+| P7-6 · Decision Explainer & Results | `feature/p7-results-summary` | ✅ done |

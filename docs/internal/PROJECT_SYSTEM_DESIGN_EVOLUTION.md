@@ -1050,3 +1050,54 @@ Before P7-5, observability stopped at **text logs** and **numeric progress**. Af
 
 ---
 
+## Phase 7 snapshot — P7-6 · Decision Explainer & Results (`BuildResult` + UI)
+
+**P7-6** closes the loop between **opaque orchestrator JSON** and the **shared pipeline contract**: the Celery worker calls **`compose_build_result_payload`** so **`autopilot_builds.result`** also contains a validated **`BuildResultSchema`** ( **`config`**, **`metrics`**, **`decisions`**, **`deployment`**, **`total_iterations`** ) alongside legacy keys such as **`stage_outputs`**. The **`/autopilot`** page adds **`ResultsSummary`** (metric cards, stub deployment, JSON download) and **`DecisionExplainer`** (per-stage rationale, embedding benchmark table, **Open in Designer**). **`_optional_typed_result`** in FastAPI can now populate **`BuildStatusResponse.result`** for poll/SSE clients.
+
+### P7-6 — Data path (worker → API → explainer)
+
+```mermaid
+flowchart TB
+  subgraph Worker["Celery run_pipeline_build"]
+    G[LangGraph final stage_outputs]
+    C[compose_build_result_payload]
+    R[(autopilot_builds.result)]
+  end
+  subgraph API["GET /api/autopilot/build/{id}"]
+    V[_optional_typed_result]
+    B[BuildStatusResponse.result]
+  end
+  subgraph Web["apps/web"]
+    RS[ResultsSummary]
+    DE[DecisionExplainer]
+    Z[(useAutopilotStore)]
+  end
+  G --> C
+  C --> R
+  R --> V
+  V --> B
+  B -->|SSE / poll| Z
+  Z --> RS
+  Z --> DE
+```
+
+### P7-6 — Designer handoff (Explain in Designer)
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant DE as DecisionExplainer
+  participant ZD as designerStore
+  participant R as Next.js router
+
+  U->>DE: Open in Designer
+  DE->>ZD: loadPipeline(build.result.config)
+  DE->>R: push /designer/review?source=autopilot
+```
+
+### Evolution note (P7-5 → P7-6)
+
+Before P7-6, charts could use **`dashboard_metrics`**, but there was **no first-class typed result** for a “build report” or Designer import. After P7-6, the same status payload can drive **explainability** and a **repeatable pipeline JSON** aligned with **`PipelineConfigurationSchema`**, while older rows without a normalised bundle are handled gracefully in the UI.
+
+---
+
