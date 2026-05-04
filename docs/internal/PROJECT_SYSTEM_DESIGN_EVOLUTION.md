@@ -876,3 +876,40 @@ Before P7-1, **`documentIds`** were opaque strings with **no first-class ingesti
 
 ---
 
+## Phase 7 snapshot — P7-2 · Requirements Form (Zustand + Zod + catalog)
+
+**P7-2** adds **`RequirementsForm`** on **`/autopilot`**: sliders and controls write **`useAutopilotStore.requirements`**, which is already **persisted** (same storage key as P7-1). **Target metrics** (four **0–1** sliders), **`optimizeFor`** (four mutually exclusive cards), optional **budget** / **latency** numeric fields, optional **cloud provider** (**`listCloudProviders()`**), and **`maxIterations` (1–10)** round-trip through **`patchRequirements` / `setRequirements`**. **Validate** runs **`BuildRequirementsSchema.safeParse`** so the client rejects impossible combinations before **P7-3** wires **`POST /api/autopilot/build`**.
+
+### P7-2 — Requirements in the Autopilot wizard
+
+```mermaid
+flowchart TB
+  subgraph Web["Next.js /autopilot"]
+    RF[RequirementsForm]
+    Zod[BuildRequirementsSchema Zod]
+    Z[(useAutopilotStore.requirements)]
+  end
+  RF -->|patchRequirements| Z
+  RF -.->|safeParse| Zod
+```
+
+### P7-2 — End-to-end hand-off (after P7-3+)
+
+```mermaid
+sequenceDiagram
+  participant U as Autopilot UI
+  participant Z as Zustand persist
+  participant API as POST /api/autopilot/build
+
+  U->>Z: targetMetrics optimizeFor budget latency cloud maxIterations
+  Note over U,Z: P7-2 complete — persisted requirements object
+  U->>API: projectId documentIds requirements baseConfig
+  Note over API: P7-3 will trigger this from a Start button
+```
+
+### Evolution note (P7-1 → P7-2)
+
+Before P7-2, **`requirements`** in the store used **defaults only** with no structured editor. After P7-2, operators can **author constraints** that match the **StartBuildRequest.requirements** contract, **validate locally** with **Zod**, and keep **upload metadata + requirements** in one session blob ready for **build progress** and **agent feed** tasks.
+
+---
+

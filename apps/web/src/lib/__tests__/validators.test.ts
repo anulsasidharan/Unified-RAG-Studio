@@ -305,10 +305,10 @@ describe('BuildRequirementsSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('rejects maxIterations above 20', () => {
+  it('rejects maxIterations above 10', () => {
     const result = BuildRequirementsSchema.safeParse({
       targetMetrics: {},
-      maxIterations: 25,
+      maxIterations: 15,
     });
     expect(result.success).toBe(false);
   });
