@@ -9,7 +9,7 @@ import json
 from typing import Annotated, Any, Literal, cast
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -21,6 +21,8 @@ from app.dependencies import DbSession, RequestUserId, get_session_factory
 from app.models.build_history import AutopilotBuild
 from app.models.project import Project
 from app.schemas.autopilot import (
+    AutopilotBuildListItemSchema,
+    AutopilotBuildListResponse,
     AutopilotDashboardMetricsSchema,
     AutopilotUploadResponse,
     BuildArtifactResultResponse,
@@ -208,6 +210,22 @@ async def upload_autopilot_documents(
     return AutopilotUploadResponse(documents=items)
 
 
+def _build_list_item(row: AutopilotBuild, project_name: str) -> AutopilotBuildListItemSchema:
+    return AutopilotBuildListItemSchema(
+        build_id=str(row.id),
+        project_id=str(row.project_id),
+        project_name=project_name,
+        status=_coerce_build_status(str(row.status or "pending")),
+        progress=int(row.progress or 0),
+        current_stage=row.current_stage or "queued",
+        iteration=int(row.iteration or 0),
+        created_at=_dt_iso(row.created_at) or "",
+        updated_at=_dt_iso(row.updated_at) or "",
+        completed_at=_dt_iso(row.completed_at),
+        error=row.error,
+    )
+
+
 def build_status_response(row: AutopilotBuild) -> BuildStatusResponse:
     raw_result = row.result if isinstance(row.result, dict) else None
     return BuildStatusResponse(
@@ -224,6 +242,52 @@ def build_status_response(row: AutopilotBuild) -> BuildStatusResponse:
         created_at=_dt_iso(row.created_at) or "",
         updated_at=_dt_iso(row.updated_at) or "",
         completed_at=_dt_iso(row.completed_at),
+    )
+
+
+@router.get(
+    "/builds",
+    response_model=AutopilotBuildListResponse,
+    summary="List Autopilot builds for the current user (newest first)",
+)
+async def list_autopilot_builds(
+    session: DbSession,
+    user_id: RequestUserId,
+    settings: Annotated[Settings, Depends(get_settings)],
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1),
+    project_id: str | None = Query(None, description="Optional project UUID to filter builds"),
+) -> AutopilotBuildListResponse:
+    cap = settings.max_page_size
+    if page_size > cap:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"page_size must be <= {cap}",
+        )
+
+    pid_filter: uuid.UUID | None = None
+    if project_id is not None and project_id.strip():
+        try:
+            pid_filter = uuid.UUID(project_id.strip())
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="invalid project_id",
+            ) from exc
+        await _require_owned_project(session, pid_filter, user_id)
+
+    total, rows = await _svc(session).list_for_user(
+        user_id,
+        project_id=pid_filter,
+        page=page,
+        page_size=page_size,
+    )
+    items = [_build_list_item(b, name) for b, name in rows]
+    return AutopilotBuildListResponse.from_rows(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
     )
 
 

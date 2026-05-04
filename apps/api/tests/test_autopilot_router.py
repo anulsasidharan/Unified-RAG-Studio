@@ -16,7 +16,7 @@ USER_AUTO = "22222222-2222-4222-8222-222222222222"
 
 def _create_project(client: TestClient) -> str:
     r = client.post(
-        "/api/projects/",
+        "/api/projects",
         json={"name": "Autopilot project", "description": "p"},
         headers={"X-User-ID": USER_AUTO},
     )
@@ -152,6 +152,48 @@ def test_autopilot_result_not_ready(sync_client: TestClient):
     bid = start.json()["buildId"]
     res = sync_client.get(f"/api/autopilot/build/{bid}/result", headers={"X-User-ID": USER_AUTO})
     assert res.status_code == 404
+
+
+@pytest.mark.integration
+def test_autopilot_list_builds(sync_client: TestClient):
+    pid = _create_project(sync_client)
+    mock_async = MagicMock()
+    mock_async.id = "t-list"
+    with patch.object(tasks.run_pipeline_build, "delay", return_value=mock_async):
+        start = sync_client.post(
+            "/api/autopilot/build",
+            json={
+                "projectId": pid,
+                "requirements": {},
+                "documentIds": ["x"],
+            },
+            headers={"X-User-ID": USER_AUTO},
+        )
+    assert start.status_code == 202
+    bid = start.json()["buildId"]
+    r = sync_client.get(
+        f"/api/autopilot/builds?page=1&page_size=10&project_id={pid}",
+        headers={"X-User-ID": USER_AUTO},
+    )
+    assert r.status_code == 200
+    body = r.json()
+    assert body["total"] >= 1
+    assert len(body["items"]) >= 1
+    row = next((x for x in body["items"] if x["buildId"] == bid), None)
+    assert row is not None
+    assert row["projectId"] == pid
+    assert row["projectName"] == "Autopilot project"
+    assert row["status"] in ("pending", "running", "complete", "failed", "cancelled")
+
+
+@pytest.mark.integration
+def test_autopilot_list_builds_filter_unknown_project(sync_client: TestClient):
+    bad = "00000000-0000-4000-8000-000000000099"
+    r = sync_client.get(
+        f"/api/autopilot/builds?project_id={bad}",
+        headers={"X-User-ID": USER_AUTO},
+    )
+    assert r.status_code == 404
 
 
 @pytest.mark.integration

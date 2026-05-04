@@ -55,6 +55,12 @@ export const ROUTES = {
   home: '/',
   designer: '/designer',
   autopilot: '/autopilot',
+  /** Wizard: upload, requirements, progress (P7-7). */
+  autopilotNew: '/autopilot/new',
+  /** Server-backed build list (P7-7). */
+  autopilotHistory: '/autopilot/history',
+  /** Backend projects for corpus uploads (P7-7). */
+  autopilotProjects: '/autopilot/projects',
   templates: '/templates',
   projects: '/projects',
 } as const;

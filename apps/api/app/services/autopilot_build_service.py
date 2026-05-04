@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.agents.state import AUTOPILOT_STAGE_ORDER
@@ -101,3 +101,40 @@ class AutopilotBuildService:
         row.error = None
         await self._session.flush()
         return row
+
+    async def list_for_user(
+        self,
+        user_id: uuid.UUID,
+        *,
+        project_id: uuid.UUID | None,
+        page: int,
+        page_size: int,
+    ) -> tuple[int, list[tuple[AutopilotBuild, str]]]:
+        """Return (total_count, page_rows) of (build, project_name), newest first."""
+
+        filters = [
+            Project.user_id == user_id,
+            Project.deleted_at.is_(None),
+        ]
+        if project_id is not None:
+            filters.append(AutopilotBuild.project_id == project_id)
+
+        count_q = (
+            select(func.count())
+            .select_from(AutopilotBuild)
+            .join(Project, AutopilotBuild.project_id == Project.id)
+            .where(*filters)
+        )
+        total = int((await self._session.execute(count_q)).scalar_one() or 0)
+
+        offset = max(0, (page - 1) * page_size)
+        data_q = (
+            select(AutopilotBuild, Project.name)
+            .join(Project, AutopilotBuild.project_id == Project.id)
+            .where(*filters)
+            .order_by(AutopilotBuild.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
+        )
+        rows = list((await self._session.execute(data_q)).all())
+        return total, rows

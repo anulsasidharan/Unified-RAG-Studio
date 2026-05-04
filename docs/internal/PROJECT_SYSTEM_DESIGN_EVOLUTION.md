@@ -1101,3 +1101,43 @@ Before P7-6, charts could use **`dashboard_metrics`**, but there was **no first-
 
 ---
 
+## Phase 7 snapshot — P7-7 · Autopilot Entry & History Pages (navigation + list API)
+
+**P7-7** completes the **Autopilot IA shell**: a persistent **`AutopilotShell`** layout (sub-nav) wraps **`/autopilot`** (overview), **`/autopilot/new`** (upload + requirements + progress stack moved off the root), **`/autopilot/history`** (server-backed table), and **`/autopilot/projects`** (backend project picker aligned with **`POST /api/autopilot/upload`**). The backend adds **`GET /api/autopilot/builds`** with pagination and optional **`project_id`**, backed by **`AutopilotBuildService.list_for_user`** (join to **`projects`** for names and tenancy). Deep links **`/autopilot/new?build=&project=`** hydrate Zustand via a one-shot **`GET /api/autopilot/build/{id}`** when the build is absent locally.
+
+### P7-7 — Route map (App Router)
+
+```mermaid
+flowchart LR
+  subgraph Shell["AutopilotShell layout"]
+    O["/autopilot — overview"]
+    N["/autopilot/new — wizard"]
+    H["/autopilot/history"]
+    P["/autopilot/projects"]
+  end
+  O --> N
+  O --> H
+  O --> P
+  H -->|"Open ?build=&project="| N
+```
+
+### P7-7 — History read path
+
+```mermaid
+sequenceDiagram
+  participant UI as History page
+  participant API as GET /api/autopilot/builds
+  participant DB as PostgreSQL
+
+  UI->>API: page + optional project_id
+  API->>DB: JOIN builds ↔ projects (user scoped)
+  DB-->>API: rows + total count
+  API-->>UI: AutopilotBuildListResponse
+```
+
+### Evolution note (P7-6 → P7-7)
+
+Before P7-7, **all Autopilot UX lived on one URL** and there was **no first-party API to enumerate builds** across sessions. After P7-7, operators get a **discoverable multi-page flow** and a **paginated history contract** that matches how other products surface “job lists,” while the existing poll/SSE **`GET /api/autopilot/build/{id}`** path remains the source of truth for rich stage data.
+
+---
+
