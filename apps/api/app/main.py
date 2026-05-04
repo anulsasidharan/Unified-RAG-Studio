@@ -8,6 +8,8 @@ from contextlib import asynccontextmanager
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
 from app.metadata import API_SEMVER
@@ -47,7 +49,21 @@ async def lifespan(app: FastAPI):
         "RAG Studio API starting",
         env=settings.app_env,
         log_level=settings.log_level,
+        database_kind="sqlite" if settings.database_url.startswith("sqlite") else "other",
     )
+
+    # Host dev with SQLite: create tables from ORM metadata (Docker Postgres uses Alembic).
+    if settings.database_url.startswith("sqlite"):
+        from app.models import Base
+
+        engine = create_async_engine(
+            settings.database_url,
+            echo=settings.is_development,
+            poolclass=NullPool,
+        )
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        await engine.dispose()
 
     yield  # Application runs here
 

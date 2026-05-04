@@ -6,12 +6,13 @@ import { useRouter } from 'next/navigation';
 import { Filter, LayoutTemplate, Loader2, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { ROUTES } from '@/lib/constants';
+import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
 import { ApiError, apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 import { useProjectStore } from '@/stores/project-store';
 import type { Template, TemplateComplexity } from '@/types/models';
+import type { DesignerProjectSnapshot } from '@/types/project';
 import type { PipelineConfiguration } from '@/types/pipeline';
 
 type TemplatesCatalogResponse = {
@@ -71,6 +72,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
   const updateProject = useProjectStore((s) => s.updateProject);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
   const localProjects = useProjectStore((s) => s.projects);
+  const activeProjectId = useProjectStore((s) => s.activeProjectId);
 
   const [catalog, setCatalog] = useState<TemplatesCatalogResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -119,7 +121,8 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       setProjectsLoading(true);
       setProjectsError(null);
       try {
-        const data = await apiClient.get<PaginatedProjects>('/api/projects?page=1&page_size=50');
+        // Trailing slash required: `/api/projects` 307s to the backend origin and breaks CORS behind Next rewrites.
+        const data = await apiClient.get<PaginatedProjects>('/api/projects/?page=1&page_size=50');
         if (!cancelled) {
           setApiProjects(data.items);
           setSelectedProjectId((prev) => {
@@ -170,19 +173,6 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
     }
   }, []);
 
-  const syncLocalProject = useCallback(
-    (projectId: string, name: string, description: string | undefined, configId: string) => {
-      const existing = localProjects.find((p) => p.id === projectId);
-      if (existing) {
-        updateProject(projectId, { linkedPipelineId: configId });
-      } else {
-        addProject({ id: projectId, name, description, linkedPipelineId: configId });
-      }
-      setActiveProject(projectId);
-    },
-    [addProject, localProjects, setActiveProject, updateProject]
-  );
-
   const handleApply = useCallback(async () => {
     if (!applyTarget) return;
     setApplyError(null);
@@ -208,8 +198,25 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
         { projectId, name: pname }
       );
 
-      loadPipeline(applied.config);
-      syncLocalProject(projectId, projectName, undefined, applied.id);
+      const designerSnapshot: DesignerProjectSnapshot = {
+        draft: applied.config,
+        diagramMaxVisitedStageIndex: DESIGNER_STAGES.length - 1,
+      };
+
+      const existingLocal = localProjects.some((p) => p.id === projectId);
+      if (existingLocal) {
+        updateProject(projectId, { linkedPipelineId: applied.id, designerSnapshot });
+        loadPipeline(applied.config);
+        if (activeProjectId !== projectId) setActiveProject(projectId);
+      } else {
+        addProject({
+          id: projectId,
+          name: projectName,
+          linkedPipelineId: applied.id,
+          designerSnapshot,
+        });
+      }
+
       closeDialog(false);
       router.push(`${ROUTES.designer}/review`);
     } catch (e) {
@@ -224,6 +231,8 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       setApplyLoading(false);
     }
   }, [
+    activeProjectId,
+    addProject,
     applyTarget,
     apiProjects,
     closeDialog,
@@ -233,7 +242,9 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
     projectMode,
     router,
     selectedProjectId,
-    syncLocalProject,
+    setActiveProject,
+    localProjects,
+    updateProject,
   ]);
 
   return (
