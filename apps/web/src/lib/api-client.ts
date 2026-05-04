@@ -78,13 +78,16 @@ async function request<TResponse, TBody = unknown>(
       /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND|socket hang up|ECONNRESET|ETIMEDOUT/i.test(
         head
       );
-    if (
-      proxyUnreachable &&
-      (typeof data !== 'object' || data === null || !('detail' in (data as object)))
-    ) {
+    const noDetail =
+      typeof data !== 'object' || data === null || !('detail' in (data as object));
+    if (proxyUnreachable && noDetail) {
       data = {
         detail:
           'Cannot reach the backend API on port 8000. From the repository root run npm run dev:full (starts Next + FastAPI), or in apps/api run: uv run uvicorn app.main:app --reload --port 8000',
+      };
+    } else if (data === null) {
+      data = {
+        detail: `API returned an empty ${response.status} response. Ensure the backend is running (npm run dev:full from repo root).`,
       };
     }
     throw new ApiError(response.status, response.statusText, data);
@@ -127,10 +130,9 @@ export async function postFormData<TResponse>(
       /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND|socket hang up|ECONNRESET|ETIMEDOUT/i.test(
         head
       );
-    if (
-      proxyUnreachable &&
-      (typeof data !== 'object' || data === null || !('detail' in (data as object)))
-    ) {
+    const noDetailForm =
+      typeof data !== 'object' || data === null || !('detail' in (data as object));
+    if (proxyUnreachable && noDetailForm) {
       data = {
         detail:
           'Cannot reach the backend API on port 8000. From the repository root run npm run dev:full (starts Next + FastAPI), or in apps/api run: uv run uvicorn app.main:app --reload --port 8000',
