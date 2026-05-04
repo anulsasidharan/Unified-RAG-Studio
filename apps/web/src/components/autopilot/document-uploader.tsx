@@ -169,10 +169,14 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
                 Open Templates
               </Link>{' '}
               to create a project, or use the{' '}
-              <Link href={ROUTES.projects} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
-                Projects
+              <Link href={ROUTES.autopilotProjects} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+                Autopilot projects
               </Link>{' '}
-              page.
+              or{' '}
+              <Link href={ROUTES.projects} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+                global Projects
+              </Link>
+              .
             </p>
           ) : null}
         </div>

@@ -7,8 +7,12 @@ These schemas handle the full build lifecycle:
   GET  /api/autopilot/build/{id}/stream — SSE progress events (includes optional ``dashboard_metrics`` — P7-5)
   POST /api/autopilot/build/{id}/cancel
   GET  /api/autopilot/build/{id}/result — orchestrator JSON artifact (opaque until normalised)
+  GET  /api/autopilot/builds — paginated build history for the user (P7-7)
 """
 
+from __future__ import annotations
+
+import math
 from typing import Any, Literal
 
 from pydantic import Field, RootModel
@@ -239,6 +243,55 @@ class CancelBuildResponse(RAGBaseModel):
     build_id: str
     status: Literal["cancelled"] = "cancelled"
     message: str = "Build cancellation requested."
+
+
+class AutopilotBuildListItemSchema(RAGBaseModel):
+    """One row in GET /api/autopilot/builds — server-backed build history (P7-7)."""
+
+    build_id: str
+    project_id: str
+    project_name: str
+    status: BuildStatusLiteral
+    progress: int = Field(ge=0, le=100)
+    current_stage: str
+    iteration: int = Field(ge=0)
+    created_at: str
+    updated_at: str
+    completed_at: str | None = None
+    error: str | None = None
+
+
+class AutopilotBuildListResponse(RAGBaseModel):
+    """Paginated list of Autopilot builds for the authenticated user."""
+
+    items: list[AutopilotBuildListItemSchema]
+    total: int = Field(ge=0)
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1)
+    pages: int = Field(ge=0)
+
+    @classmethod
+    def from_rows(
+        cls,
+        *,
+        items: list[AutopilotBuildListItemSchema],
+        total: int,
+        page: int,
+        page_size: int,
+    ) -> AutopilotBuildListResponse:
+        if total == 0:
+            pages = 0
+        elif page_size <= 0:
+            pages = 1
+        else:
+            pages = max(1, math.ceil(total / page_size))
+        return cls(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            pages=pages,
+        )
 
 
 class BuildStatusResponse(RAGBaseModel):

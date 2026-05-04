@@ -5237,7 +5237,43 @@ It calls **`useDesignerStore.loadPipeline(result.config)`**, patches **`metadata
 
 ### What is the next task after P7-6?
 
-**P7-7 · Autopilot Entry & History Pages** — dedicated entry, layout, project listing, and history pages (beyond the single **`/autopilot`** wizard page).
+**P7-7 · Autopilot Entry & History Pages** (implemented; see Phase 7 · P7-7 section below). After Phase 7, **Phase 8** covers Designer ↔ Autopilot handoff APIs and flows.
+
+---
+
+## Phase 7 · P7-7 · Autopilot Entry & History Pages
+
+### Why split Autopilot across `/autopilot`, `/autopilot/new`, `/autopilot/history`, and `/autopilot/projects`?
+
+A **single long page** mixed marketing entry, the upload wizard, and observability widgets. **P7-7** introduces an **`AutopilotShell`** layout (sub-nav) so users land on an **overview** with clear CTAs, run the **wizard** on **`/autopilot/new`**, inspect **server-backed history** on **`/autopilot/history`**, and manage **backend project selection** on **`/autopilot/projects`** without scrolling past unrelated panels.
+
+### What does `GET /api/autopilot/builds` provide that the Zustand store does not?
+
+The store persists **this browser’s** merged poll/SSE snapshots. **`GET /api/autopilot/builds`** returns **authoritative rows** from **`autopilot_builds`** joined to **`projects`** (name + ownership), with **pagination** and optional **`project_id`** filter. History UI uses it so a fresh session or another device still sees past runs.
+
+### How is user isolation enforced on the list endpoint?
+
+`AutopilotBuildService.list_for_user` joins **`AutopilotBuild` → `Project`** and filters **`Project.user_id == request user`** and **`deleted_at IS NULL`**. Optional **`project_id`** first calls **`_require_owned_project`** so users cannot probe other tenants’ UUIDs.
+
+### What is the deep-link pattern from History back into the wizard?
+
+Each row links to **`/autopilot/new?build={id}&project={projectId}`**. **`AutopilotNewPageBody`** sets **`activeBuildId`** and **`selectedBackendProjectId`**, then **GETs `/api/autopilot/build/{id}`** once if the build is missing locally, **`parseBuildStatusPayload` + `mergeBuildFromServer`**, so **`useAutopilotBuildSubscription`** can attach SSE/poll immediately.
+
+### Why keep `/projects` and add `/autopilot/projects`?
+
+**`/projects`** is the **local-first** project store UI from earlier phases. **`/autopilot/projects`** lists **`GET /api/projects`** rows and toggles **`selectedBackendProjectId`** in **`useAutopilotStore`** — the same id **multipart upload** and **start build** require — so Autopilot operators have a focused path without redesigning the legacy page.
+
+### Interview trap: does `GET /api/autopilot/builds` return full `messages` / `stages`?
+
+**No.** List items are **`AutopilotBuildListItemSchema`** (status, progress, stage label, timestamps, error). Full stage maps and logs remain on **`GET /api/autopilot/build/{id}`** to keep history tables fast.
+
+### What tests cover the new API?
+
+**`tests/test_autopilot_router.py`** adds **`test_autopilot_list_builds`** (filtered by **`project_id`**, asserts the created **`buildId`** row) and **`test_autopilot_list_builds_filter_unknown_project`** (404). **`_create_project`** uses **`POST /api/projects`** without a trailing slash to match FastAPI’s registered path.
+
+### What is the next task after P7-7?
+
+**Phase 8 · P8-1 · Designer → Autopilot Handoff** — wire “Optimize this” style flows so Designer configs seed Autopilot requirements without manual re-entry.
 
 ---
 
