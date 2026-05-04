@@ -398,6 +398,8 @@ flowchart LR
 
 Long-form Phase 5 diagrams: **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase5.md)**.
 
+Long-form Phase 6 (simple → advanced): **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase6.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase6.md)**.
+
 ---
 
 ## Phase 6 — Autopilot LangGraph (after P6-1)
@@ -821,6 +823,8 @@ flowchart LR
 ### Evolution note (P6-8 → P6-9)
 
 Before P6-9, operators could enqueue **`run_pipeline_build`** only via the **generic jobs router** after hand-crafting persistence. After P6-9, **Autopilot is a cohesive HTTP vertical**: one **`POST`** starts a tracked build with **correct `requirements` hydration** for the orchestrator, **cancel** is a product feature (not a Celery admin task), and **SSE** matches the **polling schema** so Phase 7 can swap transports without redesigning payloads.
+
+Long-form Phase 7 (simple → advanced): **[PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase7.md](./PROJECT_SYSTEM_DESIGN_EVOLUTION_Phase7.md)**.
 
 ---
 
