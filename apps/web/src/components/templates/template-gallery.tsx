@@ -7,7 +7,7 @@ import { Filter, LayoutTemplate, Loader2, Sparkles, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
-import { ApiError, apiClient } from '@/lib/api-client';
+import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 import { useProjectStore } from '@/stores/project-store';
@@ -103,7 +103,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
         if (!cancelled) setCatalog(data);
       } catch (e) {
         if (!cancelled) {
-          setLoadError(e instanceof ApiError ? JSON.stringify(e.data) : String(e));
+          setLoadError(e instanceof ApiError ? formatApiErrorForUi(e) : String(e));
         }
       } finally {
         if (!cancelled) setLoading(false);
