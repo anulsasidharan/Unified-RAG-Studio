@@ -284,7 +284,7 @@ export const BuildRequirementsSchema = z.object({
   budgetConstraint: z.number().positive('Budget must be a positive number').optional(),
   latencyRequirement: z.number().positive('Latency must be a positive number in ms').optional(),
   optimizeFor: z.enum(['quality', 'cost', 'latency', 'balanced']).optional(),
-  maxIterations: z.number().int().min(1).max(20).optional(),
+  maxIterations: z.number().int().min(1).max(10).optional(),
 });
 
 // ─── Inferred Types ───────────────────────────────────────────────────────────

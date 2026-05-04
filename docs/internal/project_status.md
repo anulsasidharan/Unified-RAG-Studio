@@ -70,7 +70,7 @@
 | 58 | Phase 6 | P6-9 · Autopilot API Endpoints | `feature/p6-autopilot-api` | Build APIs for starting, monitoring, streaming, canceling, and fetching builds. | ✅ done |
 |  | `Phase 7` | `Create real-time Autopilot frontend for build tracking, metrics, decisions, and results.` |  |  |  |
 | 59 | Phase 7 | P7-1 · Document Uploader | `feature/p7-document-uploader` | Build autopilot document upload UI and upload API path. | ✅ done |
-| 60 | Phase 7 | P7-2 · Requirements Form | `feature/p7-requirements-form` | Build requirements capture UI for targets, constraints, and optimization goals. | ⬜ pending |
+| 60 | Phase 7 | P7-2 · Requirements Form | `feature/p7-requirements-form` | Build requirements capture UI for targets, constraints, and optimization goals. | ✅ done |
 | 61 | Phase 7 | P7-3 · Build Progress Monitor | `feature/p7-build-progress` | Build real-time build progress tracking via SSE/polling fallback. | ⬜ pending |
 | 62 | Phase 7 | P7-4 · Agent Activity Feed | `feature/p7-agent-activity-feed` | Build agent log stream UI with filter and export support. | ⬜ pending |
 | 63 | Phase 7 | P7-5 · Metrics Dashboard | `feature/p7-metrics-dashboard` | Build live metrics dashboard with trends, latency, and cost views. | ⬜ pending |

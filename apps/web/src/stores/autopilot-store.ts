@@ -15,7 +15,7 @@ export type AutopilotUploadedDocMeta = {
   sizeBytes: number;
 };
 
-function createDefaultRequirements(): BuildRequirements {
+export function createDefaultRequirements(): BuildRequirements {
   return {
     targetMetrics: {
       faithfulness: 0.85,

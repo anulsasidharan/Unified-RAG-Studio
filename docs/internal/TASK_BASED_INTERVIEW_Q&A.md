@@ -5049,3 +5049,39 @@ It **`GET /api/projects/?page=1&page_size=50`** (trailing slash avoids **`307`**
 
 ---
 
+## Phase 7 · P7-2 · Requirements Form
+
+### What TypeScript shape represents Autopilot requirements in the browser?
+
+**`BuildRequirements`** in **`apps/web/src/types/autopilot.ts`**: **`targetMetrics`** (optional **faithfulness**, **answerRelevance**, **contextPrecision**, **contextRecall** each **0–1**), optional **`cloudProvider`**, optional **`budgetConstraint`** (USD per **1K** queries), optional **`latencyRequirement`** (ms), **`optimizeFor`** (**quality** | **cost** | **latency** | **balanced**), and **`maxIterations`**. The Zustand store persists **`requirements`** beside uploads so a later **Start build** button can read one coherent payload.
+
+### How does the UI stay aligned with backend validation?
+
+The form uses **`BuildRequirementsSchema`** (**Zod** in **`apps/web/src/lib/validators.ts`**) on **Validate**, mirroring the intent of the FastAPI **`BuildRequirementsSchema`** in **`apps/api/app/schemas/autopilot.py`**. **`maxIterations`** is capped at **10** on both sides (orchestrator graph also clamps iteration caps). Optional numeric fields parse on blur; non-finite input is dropped so the store does not retain **`NaN`**.
+
+### Why camelCase in TS types when Pydantic uses snake_case?
+
+The API layer serialises with **aliases** so JSON over the wire is **camelCase** (**`targetMetrics`**, **`optimizeFor`**, …). The Python schema uses **snake_case** field names as the internal representation. The frontend types match the **wire** JSON contract consumers see in **`fetch`**.
+
+### How does `optimize_for` influence agents?
+
+Chunking and related optimisers read **`requirements["optimize_for"]`** (after normalisation) when scoring candidates—for example preferring cheaper chunking configs when **`cost`** is selected. The requirements form writes **`optimizeFor`** into Zustand so the eventual **`POST /api/autopilot/build`** body matches what **`graph.py`** and optimizer modules already expect in **`state["requirements"]`**.
+
+### Why offer an optional cloud provider on the requirements form?
+
+**`cloudProvider`** hints packaging and defaults for the deployment stage and keeps Autopilot aligned with Designer’s **cloud catalog** (**`data/cloud-providers.json`** via **`listCloudProviders()`**). It is optional: **`No preference`** omits the field so the orchestrator is not over-constrained.
+
+### What interview trap exists around “budget” units?
+
+**`budgetConstraint`** is documented as **maximum cost per 1K queries in USD**—not per token and not monthly cap. Interviewees should state assumptions clearly if product later adds different billing dimensions.
+
+### How do you reset corrupted local state?
+
+**Reset defaults** calls **`createDefaultRequirements()`** (exported from **`autopilot-store.ts`**) and **`setRequirements`**, re-syncing controlled text fields for budget and latency. Users can also clear **localStorage** key **`rag-studio-autopilot-v2-p7`** if a future schema bump requires it.
+
+### What is the next task after P7-2?
+
+**P7-3 · Build Progress Monitor** — subscribe to **`GET /api/autopilot/build/{id}/stream`** (or poll **`GET …/build/{id}`**) and render live progress from **`BuildStatusResponse`**.
+
+---
+
