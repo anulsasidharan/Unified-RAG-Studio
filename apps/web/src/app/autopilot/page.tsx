@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { AgentActivityFeed } from '@/components/autopilot/agent-activity-feed';
 import { BuildProgressMonitor } from '@/components/autopilot/build-progress-monitor';
+import { MetricsDashboard } from '@/components/autopilot/metrics-dashboard';
 import { DocumentUploader } from '@/components/autopilot/document-uploader';
 import { RequirementsForm } from '@/components/autopilot/requirements-form';
 import { ROUTES } from '@/lib/constants';
@@ -17,6 +18,7 @@ export default function AutopilotEntryPage() {
       <DocumentUploader className="mt-10" />
       <RequirementsForm className="mt-8" />
       <BuildProgressMonitor className="mt-8" />
+      <MetricsDashboard className="mt-8" />
       <AgentActivityFeed className="mt-8" />
 
       <Link

@@ -1000,3 +1000,53 @@ Before P7-4, **`messages`** were only implied for future UI (stage list + progre
 
 ---
 
+## Phase 7 snapshot — P7-5 · Metrics Dashboard (typed `dashboardMetrics` + Recharts)
+
+**P7-5** adds **`MetricsDashboard`** on **`/autopilot`** between **`BuildProgressMonitor`** and **`AgentActivityFeed`**. Because **`AutopilotBuild.result`** from the worker is an **opaque orchestrator JSON** (not **`BuildResultSchema`**), the API could not chart “final metrics” from **`result`** alone. The backend now runs **`extract_dashboard_metrics`** over **`result.stage_outputs`** and attaches **`dashboard_metrics`** to every **`BuildStatusResponse`** (poll + SSE). The frontend parses **`dashboardMetrics`** into **`AutopilotBuild`**, renders **Recharts** line (**progress** + **iteration** samples), horizontal bars (**quality vs targets**), embedding **latency** bars (with optional SLO reference), retrieval **performance** bars, and **SLO cards** (budget cap, latency requirement, eval proxy latency).
+
+### P7-5 — Data path (build status → charts)
+
+```mermaid
+flowchart LR
+  subgraph Worker["Celery run_pipeline_build"]
+    G[LangGraph orchestrator]
+    R[(autopilot_builds.result JSON)]
+  end
+  subgraph API["FastAPI build_status_response"]
+    E[extract_dashboard_metrics]
+    B[BuildStatusResponse + dashboard_metrics]
+  end
+  subgraph Web["apps/web /autopilot"]
+    M[MetricsDashboard]
+    RC[Recharts]
+  end
+  G --> R
+  R --> E
+  E --> B
+  B -->|SSE or poll| M
+  M --> RC
+```
+
+### P7-5 — Sequence (metrics on each status tick)
+
+```mermaid
+sequenceDiagram
+  participant W as Celery worker
+  participant DB as PostgreSQL
+  participant API as GET build / SSE
+  participant Z as Zustand
+  participant D as MetricsDashboard
+
+  W->>DB: persist result.stage_outputs
+  API->>DB: read AutopilotBuild row
+  API->>API: extract_dashboard_metrics(result)
+  API-->>Z: BuildStatusResponse + dashboardMetrics
+  Z->>D: render charts + SLO cards
+```
+
+### Evolution note (P7-4 → P7-5)
+
+Before P7-5, observability stopped at **text logs** and **numeric progress**. After P7-5, operators see **structured quality/latency/retrieval** views aligned with Autopilot’s internal stage contracts, without waiting for a future normalised **`BuildResult`** row.
+
+---
+

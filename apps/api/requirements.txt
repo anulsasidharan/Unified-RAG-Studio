@@ -10,8 +10,10 @@ pydantic-settings==2.2.1
 # ─── Database ─────────────────────────────────────────────────
 sqlalchemy[asyncio]==2.0.30
 alembic==1.13.1
-asyncpg==0.29.0                  # Async PostgreSQL driver
-psycopg[binary]==3.1.19          # Sync PostgreSQL for Celery worker DB sessions
+# 0.29.x: no cp313 wheels on Windows; building from source hits removed CPython APIs on 3.13.
+asyncpg==0.31.0                  # Async PostgreSQL driver
+# 3.1.x has no cp313 wheels; 3.3.x adds Python 3.13 (Celery sync DB sessions).
+psycopg[binary]==3.3.3            # Sync PostgreSQL for Celery worker DB sessions
 aiosqlite==0.20.0                # SQLite driver for tests
 
 # ─── Cache / Message broker ───────────────────────────────────

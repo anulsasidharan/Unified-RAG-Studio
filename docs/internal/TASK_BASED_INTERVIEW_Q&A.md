@@ -5157,7 +5157,43 @@ Rows use a **left border** and light background tint by **`BuildMessage.type`** 
 
 ### What is the next task after P7-4?
 
-**P7-5 · Metrics Dashboard** — live metrics, trends, latency, and cost views on top of build results and telemetry.
+**P7-5 · Metrics Dashboard** (implemented): live charts and SLO cards fed by **`dashboardMetrics`** on **`BuildStatusResponse`**, plus client-sampled progress trends. Next: **P7-6 · Decision Explainer & Results**.
+
+---
+
+## Phase 7 · P7-5 · Metrics Dashboard
+
+### Why add `dashboard_metrics` to the build status API instead of only charting in the browser?
+
+The worker persists the LangGraph orchestrator blob on **`AutopilotBuild.result`**, but that JSON is **not** a valid **`BuildResultSchema`** (it wraps **`stage_outputs`**, flags, and metadata), so **`result`** stays **`null`** on **`GET /api/autopilot/build/{id}`**. **`extract_dashboard_metrics`** reads **`result.stage_outputs`** and returns a **small typed projection** (**`AutopilotDashboardMetricsSchema`**) that is safe to chart: evaluation proxies, embedding bench rows, retrieval summary. The UI avoids re-implementing orchestrator parsing rules and stays stable when the opaque artifact evolves.
+
+### How does the metrics dashboard get live updates?
+
+The same **SSE / polling** path as P7-3: **`useAutopilotBuildSubscription`** merges each **`BuildStatusResponse`** into Zustand. **`parseBuildStatusPayload`** maps **`dashboardMetrics`** (camelCase) onto **`AutopilotBuild.dashboardMetrics`**. The **`MetricsDashboard`** component reads **`builds[activeBuildId]`**; no extra HTTP calls.
+
+### What is client-sampled “progress trend”?
+
+Between API ticks the dashboard appends a **local** point when **`progress`**, **`iteration`**, or **`updatedAt`** changes, capped (~240 samples). That yields a **line chart** even before evaluation metrics exist, and mirrors operator perception of motion during long orchestrations.
+
+### How are quality bars interpreted?
+
+**`dashboardMetrics.quality`** carries **faithfulness**, **answer_relevance**, **context_precision**, **context_recall**, optional **avg_latency_ms**, and **meets_targets** from the evaluation agent payload. The UI builds horizontal bars **observed vs target** using **`build.input.requirements.targetMetrics`** (merged earlier from the seed row). Missing targets render as **`null`** bars so Recharts skips the grey “target” segment for that metric.
+
+### How does the latency section relate to requirements?
+
+Embedding candidates expose **`latencyMs`** per tried model. The chart draws an optional **`ReferenceLine`** at **`latencyRequirement`** when the user set an SLO. A separate card compares **eval proxy latency** (**`avg_latency_ms`**) to the same SLO.
+
+### What about “cost” if there is no dollar metric in `dashboard_metrics`?
+
+**`budget_constraint`** from requirements is shown as a **budget cap card** (USD / 1K queries). There is no per-query dollar estimate in the v1 snapshot; interviewees should distinguish **SLO capture** from **full cost analytics** (later phases such as P11-3).
+
+### Interview trap: will `dashboard_metrics` always be non-null after `complete`?
+
+Only when **`stage_outputs`** contains extractable sections. If the orchestrator shape changes and validation fails, **`_optional_dashboard_metrics`** returns **`null`**—the UI must tolerate **empty chart placeholders**.
+
+### What is the next task after P7-5?
+
+**P7-6 · Decision Explainer & Results** — explainability and final result visualization screens.
 
 ---
 

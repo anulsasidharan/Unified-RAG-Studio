@@ -126,6 +126,37 @@ export interface BuildResult {
   totalIterations: number;
 }
 
+// ─── P7-5 · API `dashboardMetrics` (from orchestrator stage_outputs) ─────────
+
+export interface DashboardQualitySnapshot {
+  faithfulness?: number;
+  answerRelevance?: number;
+  contextPrecision?: number;
+  contextRecall?: number;
+  avgLatencyMs?: number;
+  meetsTargets?: boolean;
+}
+
+export interface DashboardEmbeddingBenchRow {
+  label: string;
+  latencyMs?: number;
+  compositeScore?: number;
+  textsPerSecond?: number;
+}
+
+export interface DashboardRetrievalSummary {
+  strategy?: string;
+  topK?: number;
+  performance?: Record<string, number>;
+}
+
+export interface AutopilotDashboardMetrics {
+  quality?: DashboardQualitySnapshot;
+  embeddingBenchmarks: DashboardEmbeddingBenchRow[];
+  selectedEmbeddingLabel?: string;
+  retrieval?: DashboardRetrievalSummary;
+}
+
 // ─── Top-Level Build Object ──────────────────────────────────────────────────
 
 export interface AutopilotBuild {
@@ -144,6 +175,8 @@ export interface AutopilotBuild {
   stages: Record<string, StageStatus>;
   messages: BuildMessage[];
   result?: BuildResult;
+  /** P7-5: typed slice of orchestrator metrics for charts (from ``dashboardMetrics`` on poll/SSE). */
+  dashboardMetrics?: AutopilotDashboardMetrics;
   error?: string;
   createdAt: string;
   updatedAt: string;

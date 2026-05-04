@@ -21,6 +21,7 @@ from app.dependencies import DbSession, RequestUserId, get_session_factory
 from app.models.build_history import AutopilotBuild
 from app.models.project import Project
 from app.schemas.autopilot import (
+    AutopilotDashboardMetricsSchema,
     AutopilotUploadResponse,
     BuildArtifactResultResponse,
     BuildMessageSchema,
@@ -33,6 +34,7 @@ from app.schemas.autopilot import (
     UploadedDocumentItem,
 )
 from app.services.autopilot_build_service import AutopilotBuildService
+from app.services.autopilot_dashboard_metrics import extract_dashboard_metrics
 from app.services.autopilot_object_storage import (
     AutopilotStorageUnavailableError,
     AutopilotUploadError,
@@ -103,6 +105,16 @@ def _optional_typed_result(raw: dict[str, Any] | None) -> BuildResultSchema | No
         return None
     try:
         return BuildResultSchema.model_validate(raw)
+    except ValidationError:
+        return None
+
+
+def _optional_dashboard_metrics(raw: dict[str, Any] | None) -> AutopilotDashboardMetricsSchema | None:
+    extracted = extract_dashboard_metrics(raw)
+    if not extracted:
+        return None
+    try:
+        return AutopilotDashboardMetricsSchema.model_validate(extracted)
     except ValidationError:
         return None
 
@@ -197,6 +209,7 @@ async def upload_autopilot_documents(
 
 
 def build_status_response(row: AutopilotBuild) -> BuildStatusResponse:
+    raw_result = row.result if isinstance(row.result, dict) else None
     return BuildStatusResponse(
         build_id=str(row.id),
         status=_coerce_build_status(str(row.status or "pending")),
@@ -205,7 +218,8 @@ def build_status_response(row: AutopilotBuild) -> BuildStatusResponse:
         iteration=int(row.iteration or 0),
         stages=_normalize_stages(row.stages if isinstance(row.stages, dict) else None),
         messages=_normalize_messages(row.messages if isinstance(row.messages, list) else None),
-        result=_optional_typed_result(row.result if isinstance(row.result, dict) else None),
+        result=_optional_typed_result(raw_result),
+        dashboard_metrics=_optional_dashboard_metrics(raw_result),
         error=row.error,
         created_at=_dt_iso(row.created_at) or "",
         updated_at=_dt_iso(row.updated_at) or "",

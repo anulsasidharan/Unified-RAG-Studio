@@ -47,7 +47,14 @@ class UploadedBlobMeta:
 
 
 def _minio_client(settings: Settings):
-    from minio import Minio
+    try:
+        from minio import Minio
+    except ModuleNotFoundError as exc:
+        raise AutopilotStorageUnavailableError(
+            "The MinIO Python client is not installed in this environment. "
+            "From apps/api run: uv pip install minio==7.2.7 "
+            "(or pip install -r requirements.txt)."
+        ) from exc
 
     raw = (settings.minio_endpoint or "").strip()
     if not raw:
