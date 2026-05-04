@@ -66,7 +66,7 @@
 | 54 | Phase 6 | P6-5 · Retrieval Optimizer Agent | `feature/p6-retrieval-optimizer-agent` | Build agent to tune retrieval strategy and reranking decisions. | ✅ done |
 | 55 | Phase 6 | P6-6 · Evaluation Agent | `feature/p6-evaluation-agent` | Build agent to generate test sets, evaluate pipeline, and diagnose issues. | ✅ done |
 | 56 | Phase 6 | P6-7 · Deployment Agent | `feature/p6-deployment-agent` | Build packaging/deployment generation plus cloud deployer stubs. | ✅ done |
-| 57 | Phase 6 | P6-8 · Autopilot Orchestrator | `feature/p6-autopilot-orchestrator` | Build end-to-end LangGraph orchestration with iteration logic and progress events. | ⬜ pending |
+| 57 | Phase 6 | P6-8 · Autopilot Orchestrator | `feature/p6-autopilot-orchestrator` | Build end-to-end LangGraph orchestration with iteration logic and progress events. | ✅ done |
 | 58 | Phase 6 | P6-9 · Autopilot API Endpoints | `feature/p6-autopilot-api` | Build APIs for starting, monitoring, streaming, canceling, and fetching builds. | ⬜ pending |
 |  | `Phase 7` | `Create real-time Autopilot frontend for build tracking, metrics, decisions, and results.` |  |  |  |
 | 59 | Phase 7 | P7-1 · Document Uploader | `feature/p7-document-uploader` | Build autopilot document upload UI and upload API path. | ⬜ pending |

@@ -35,6 +35,9 @@ class AutopilotGraphState(TypedDict):
     requirements: dict[str, Any]
     pipeline_config: dict[str, Any] | None
     iteration: int
+    """0-based index of optimisation pass after an evaluation-triggered retry (incremented by the gate)."""
+
+    evaluation_pass_index: int
     current_stage: str
     agent_trace: Annotated[list[dict[str, Any]], add]
     stage_outputs: Annotated[dict[str, Any], merge_stage_outputs]
@@ -70,6 +73,7 @@ def initial_autopilot_graph_state(
         requirements=dict(requirements),
         pipeline_config=dict(pipeline_config) if pipeline_config is not None else None,
         iteration=0,
+        evaluation_pass_index=0,
         current_stage="pending",
         agent_trace=[],
         stage_outputs={},

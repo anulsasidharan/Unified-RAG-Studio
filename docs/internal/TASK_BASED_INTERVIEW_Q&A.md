@@ -4886,3 +4886,48 @@ If **`pipeline_config`** in graph state **`model_validate`s** as **`PipelineConf
 **P6-8 · Autopilot Orchestrator** — end-to-end LangGraph orchestration with iteration logic and progress events.
 
 ---
+
+## Phase 6 · P6-8 · Autopilot Orchestrator
+
+### What problem does P6-8 solve that P6-7 left open?
+
+**P6-7** ended in a **strictly linear** LangGraph: **analyze → … → evaluation → deployment** with **no feedback loop** if **`meets_targets`** was false, and **no machine-readable progress** beyond ad-hoc trace dicts. **P6-8** adds an **`orchestration_gate`** after **evaluation**, **optional retries** back to **chunking** (bounded by **`requirements.max_iterations`**), **`evaluation_pass_index`** in state, **`autopilot_progress`** fields on trace rows, and wires **`run_pipeline_build`** to **`invoke_autopilot_orchestrator`** so workers run the **same** graph the API will stream (**P6-9**).
+
+### How does the orchestration gate decide “retry” vs “deploy”?
+
+The gate calls **`_orchestration_decision`**: **deploy** if evaluation **`status` ≠ `complete`**, if **`meets_targets`** is true, or if **`evaluation_pass_index` ≥ `max_iterations` − 1** (so **`max_iterations`** counts full optimisation attempts including the first). Otherwise it chooses **retry**, increments **`evaluation_pass_index`**, and LangGraph routes **`retry_chunking` → `chunking_optimizer`**. **Document analyst** is **not** re-run on retry (the prior **`stage_outputs["analyze"]`** still feeds chunking).
+
+### Why loop back to chunking instead of retrieval or embedding only?
+
+Chunking is the **first tunable knob** that changes downstream **embedding benchmarks**, **retrieval** rankings, and **evaluation** proxies in this codebase; looping there maximises **signal per retry** without multiplying **corpus profile** work. A future subgraph could branch to **embedding-only** retries if product requirements demand it.
+
+### What is `evaluation_pass_index` and how does it differ from `iteration`?
+
+**`evaluation_pass_index`** (P6-8) counts **post-evaluation retry scheduling**—the gate increments it when it chooses **retry**. **`iteration`** is still bumped once in **`bootstrap_finalize`** for backward compatibility with earlier tests and any UI that probed **`iteration == 1`** after a single forward pass.
+
+### What shape do “progress events” take for SSE?
+
+Every major **`agent_trace`** row merges **`progress_trace_fields`** so entries include **`kind: "autopilot_progress"`**, **`progress`** (0–100 using a **stage ladder** plus a **small bump per pass**), **`stage`**, **`detail`**, **`build_id`**, and **`evaluation_pass_index`**. Consumers can filter **`kind == "autopilot_progress"`** or surface **`event == "orchestration_gate"`** for orchestrator-specific lines.
+
+### How does `jobs.run_pipeline_build` read document IDs and base pipeline config?
+
+It copies **`row.requirements`** from the DB: **`document_ids`** must appear as **`requirements["document_ids"]`** (list of strings), and optional **`requirements["base_config"]`** (object) becomes **`pipeline_config`** in **`initial_autopilot_graph_state`**. Until **P6-9** persists these fields on enqueue, builds may run with **empty** `document_ids`—the document analyst still returns **minimal profiles**.
+
+### Why does the worker mark the `generation` stage complete without a generation agent node?
+
+**`AUTOPILOT_STAGE_ORDER`** still lists **`generation`** for **API contract parity** with **`BuildStatusResponse.stages`**. The P6-8 graph does **not** run a separate generation optimiser; the worker injects a **short message** so polling clients do not see a **perpetually pending** stage.
+
+### What public entry points alias the orchestrator?
+
+**`compile_autopilot_orchestrator_graph`** and **`invoke_autopilot_orchestrator`** are thin aliases over the **same** compiled graph as **`compile_autopilot_bootstrap_graph`** / **`invoke_autopilot_bootstrap`** (names kept for **import stability**).
+
+### Interview trap: can retries run forever?
+
+**No.** **`max_iterations`** is clamped to **1…10**; the gate **always** routes to **deployment** once **`evaluation_pass_index` ≥ `max_iterations` − 1** or evaluation is incomplete / targets met.
+
+### What is the next task after P6-8?
+
+**P6-9 · Autopilot API Endpoints** — HTTP APIs to start, poll, **SSE stream**, cancel, and fetch build results against the orchestrator.
+
+---
+

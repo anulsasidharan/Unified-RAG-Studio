@@ -12,7 +12,10 @@ from typing import Any
 
 import structlog
 
-from app.core.agents.state import AUTOPILOT_STAGE_ORDER
+from langchain_core.messages import AIMessage
+
+from app.core.agents.graph import invoke_autopilot_orchestrator
+from app.core.agents.state import AUTOPILOT_STAGE_ORDER, initial_autopilot_graph_state
 from app.core.evaluation.service import EvaluationEngine
 from app.core.evaluation.strategies import EvaluationExample
 from app.models import AutopilotBuild, Deployment, EvaluationRun
@@ -27,18 +30,64 @@ def _iso_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-# Stages iterated for Autopilot build progress until the LangGraph orchestrator replaces this stub (Phase 6).
 _AUTOPILOT_STAGE_KEYS = AUTOPILOT_STAGE_ORDER
+
+
+def _compact_stage_outputs(stage_outputs: dict[str, Any] | None) -> dict[str, Any]:
+    """Strip very large lists before persisting onto ``AutopilotBuild.result``."""
+
+    out: dict[str, Any] = {}
+    for key, val in (stage_outputs or {}).items():
+        if not isinstance(val, dict):
+            out[key] = val
+            continue
+        slim = {k: v for k, v in val.items() if k != "per_row_scores"}
+        out[key] = slim
+    return out
+
+
+def _stages_from_graph(stage_outputs: dict[str, Any] | None) -> dict[str, Any]:
+    """Align ``row.stages`` keys with ``AUTOPILOT_STAGE_ORDER`` for the status API."""
+
+    so = dict(stage_outputs or {})
+    stages: dict[str, Any] = {}
+    for stage in _AUTOPILOT_STAGE_KEYS:
+        if stage == "generation":
+            stages[stage] = {
+                "status": "complete",
+                "started_at": None,
+                "completed_at": _iso_now(),
+                "message": "Generation config remains Designer-led; graph runs analyze→deployment (P6-8).",
+            }
+            continue
+        payload = so.get(stage)
+        if not isinstance(payload, dict):
+            stages[stage] = {
+                "status": "pending",
+                "started_at": None,
+                "completed_at": None,
+                "message": None,
+            }
+            continue
+        ok = payload.get("status") == "complete"
+        stages[stage] = {
+            "status": "complete" if ok else "failed",
+            "started_at": None,
+            "completed_at": _iso_now(),
+            "message": (payload.get("rationale") or payload.get("reason") or stage)[:500],
+        }
+    return stages
 
 
 @celery_app.task(bind=True, name="jobs.run_pipeline_build")
 def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
-    """Advance an Autopilot build row through stubbed stages — real LangGraph replaces this in Phase 6."""
+    """Run the P6-8 LangGraph orchestrator and persist trace, stages, and progress onto the build row."""
     try:
         bid = uuid.UUID(build_id)
     except ValueError:
         return {"build_id": build_id, "status": "failed", "error": "invalid build_id UUID"}
 
+    snapshot: dict[str, Any] = {}
     with sync_session_scope() as session:
         row = session.get(AutopilotBuild, bid)
         if row is None:
@@ -51,49 +100,95 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         row.messages.append(
             {"timestamp": _iso_now(), "text": "Build job started", "type": "info", "agent": "orchestrator"},
         )
+        reqs = dict(row.requirements or {})
+        snapshot = {
+            "requirements": reqs,
+            "project_id": str(row.project_id),
+            "document_ids": [str(x) for x in (reqs.get("document_ids") or [])],
+            "pipeline_config": reqs.get("base_config") if isinstance(reqs.get("base_config"), dict) else None,
+        }
 
-    completed = len(_AUTOPILOT_STAGE_KEYS)
+    graph_state = initial_autopilot_graph_state(
+        build_id=str(bid),
+        project_id=str(snapshot["project_id"]),
+        document_ids=list(snapshot["document_ids"]),
+        requirements=dict(snapshot["requirements"]),
+        pipeline_config=snapshot.get("pipeline_config"),
+    )
 
-    for i, stage in enumerate(_AUTOPILOT_STAGE_KEYS, start=1):
+    try:
+        final = invoke_autopilot_orchestrator(graph_state, checkpointer=None)
+    except Exception as exc:
+        logger.exception("run_pipeline_build_graph_failed", build_id=build_id)
         with sync_session_scope() as session:
             row = session.get(AutopilotBuild, bid)
-            if row is None:
-                return {"build_id": build_id, "status": "failed", "error": "build disappeared mid-job"}
-            row.progress = min(100, int(100 * i / completed))
-            row.current_stage = stage
-            row.iteration = 1
+            if row:
+                row.status = "failed"
+                row.error = str(exc)
+                row.completed_at = datetime.now(timezone.utc)
+        return {"build_id": build_id, "status": "failed", "error": str(exc)}
 
-            stages: dict[str, Any] = dict(row.stages or {})
-            stages[stage] = {
-                "status": "complete",
-                "started_at": None,
-                "completed_at": _iso_now(),
-                "message": f"stub stage [{stage}]",
-            }
-            row.stages = stages
+    traces: list[dict[str, Any]] = list(final.get("agent_trace") or [])
+    stage_outputs = final.get("stage_outputs") if isinstance(final.get("stage_outputs"), dict) else {}
+    progress_vals = [t["progress"] for t in traces if isinstance(t.get("progress"), int)]
+    last_progress = max(progress_vals) if progress_vals else 0
 
-            row.messages.append(
+    new_messages: list[dict[str, Any]] = []
+    for m in final.get("messages") or []:
+        if isinstance(m, AIMessage) and m.content:
+            new_messages.append(
                 {
                     "timestamp": _iso_now(),
-                    "text": f"completed stage={stage}",
-                    "type": "success",
-                    "agent": stage,
+                    "text": str(m.content)[:4000],
+                    "type": "info",
+                    "agent": "orchestrator",
                 },
             )
+    for t in traces:
+        if t.get("event") != "orchestration_gate":
+            continue
+        evt = "orchestration_gate"
+        pct = t.get("progress")
+        detail = str(t.get("detail") or t.get("reason") or t.get("decision") or evt)[:400]
+        suffix = f" — {pct}%" if isinstance(pct, int) else ""
+        new_messages.append(
+            {
+                "timestamp": _iso_now(),
+                "text": f"{evt}{suffix}: {detail}",
+                "type": "info",
+                "agent": "orchestrator",
+            },
+        )
 
     with sync_session_scope() as session:
         row = session.get(AutopilotBuild, bid)
         if row is None:
             return {"build_id": build_id, "status": "failed", "error": "build not found"}
         row.status = "complete"
-        row.progress = 100
-        row.current_stage = "done"
+        dep_ok = (stage_outputs.get("deployment") or {}).get("status") == "complete"
+        row.progress = 100 if final.get("current_stage") == "deployment_complete" or dep_ok else last_progress
+        row.current_stage = str(final.get("current_stage") or "done")
+        row.iteration = int(final.get("evaluation_pass_index") or 0) + 1
+        row.stages = _stages_from_graph(stage_outputs)
+        merged_msgs = list(row.messages or [])
+        merged_msgs.extend(new_messages)
+        row.messages = merged_msgs
+        prev = dict(row.result or {})
+        prev.update(
+            {
+                "autopilot_graph": True,
+                "stub": False,
+                "pipeline_ready": (stage_outputs.get("deployment") or {}).get("status") == "complete",
+                "final_stage": row.current_stage,
+                "stage_outputs": _compact_stage_outputs(stage_outputs),
+            },
+        )
+        row.result = prev
         row.completed_at = datetime.now(timezone.utc)
-        row.result = dict(row.result or {})
-        row.result.setdefault("stub", True)
-        row.result.setdefault("pipeline_ready", False)
-        logger.info("build_complete_stub", build_id=build_id)
-        return {"build_id": build_id, "status": row.status}
+        row.error = None
+
+    logger.info("build_complete_graph", build_id=build_id, trace_events=len(traces))
+    return {"build_id": build_id, "status": "complete"}
 
 
 @celery_app.task(bind=True, name="jobs.run_evaluation")
