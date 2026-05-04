@@ -19,6 +19,7 @@ from app.core.agents.state import AUTOPILOT_STAGE_ORDER, initial_autopilot_graph
 from app.core.evaluation.service import EvaluationEngine
 from app.core.evaluation.strategies import EvaluationExample
 from app.models import AutopilotBuild, Deployment, EvaluationRun
+from app.services.autopilot_build_result import compose_build_result_payload
 
 from app.worker.celery_app import celery_app
 from app.worker.db_sync import sync_session_scope
@@ -177,11 +178,13 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         dep_ok = (stage_outputs.get("deployment") or {}).get("status") == "complete"
         row.progress = 100 if final.get("current_stage") == "deployment_complete" or dep_ok else last_progress
         row.current_stage = str(final.get("current_stage") or "done")
-        row.iteration = int(final.get("evaluation_pass_index") or 0) + 1
+        total_iter = int(final.get("evaluation_pass_index") or 0) + 1
+        row.iteration = total_iter
         row.stages = _stages_from_graph(stage_outputs)
         merged_msgs = list(row.messages or [])
         merged_msgs.extend(new_messages)
         row.messages = merged_msgs
+        compact_outputs = _compact_stage_outputs(stage_outputs)
         prev = dict(row.result or {})
         prev.update(
             {
@@ -189,9 +192,18 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
                 "stub": False,
                 "pipeline_ready": (stage_outputs.get("deployment") or {}).get("status") == "complete",
                 "final_stage": row.current_stage,
-                "stage_outputs": _compact_stage_outputs(stage_outputs),
+                "stage_outputs": compact_outputs,
             },
         )
+        norm = compose_build_result_payload(
+            build_id=str(bid),
+            stage_outputs=compact_outputs,
+            base_pipeline_config=snapshot.get("pipeline_config"),
+            requirements=dict(snapshot.get("requirements") or {}),
+            total_iterations=total_iter,
+        )
+        if norm:
+            prev.update(norm)
         row.result = prev
         row.completed_at = datetime.now(timezone.utc)
         row.error = None

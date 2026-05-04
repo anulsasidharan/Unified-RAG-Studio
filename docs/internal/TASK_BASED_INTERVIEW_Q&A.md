@@ -5193,7 +5193,51 @@ Only when **`stage_outputs`** contains extractable sections. If the orchestrator
 
 ### What is the next task after P7-5?
 
-**P7-6 · Decision Explainer & Results** — explainability and final result visualization screens.
+**P7-6 · Decision Explainer & Results** — explainability and final result visualization screens (implemented: see Phase 7 · P7-6 section below).
+
+---
+
+## Phase 7 · P7-6 · Decision Explainer & Results
+
+### Why was `GET /api/autopilot/build/{id}` returning `result: null` even after a successful build?
+
+The Celery worker persisted an **opaque orchestrator blob** (`autopilot_graph`, `stage_outputs`, …) that was **not** a `BuildResultSchema`. FastAPI’s `_optional_typed_result` only accepts payloads that validate as **`BuildResultSchema`**, so **`result` stayed `null`**. **P7-6** adds **`compose_build_result_payload`** (`app/services/autopilot_build_result.py`), invoked at the end of **`run_pipeline_build`**, which **merges** a typed **`config`**, **`metrics`**, **`decisions`**, optional **`deployment`**, and **`total_iterations`** onto the same JSON row. Existing diagnostic keys remain for debugging.
+
+### How is the synthesised `PipelineConfiguration` built?
+
+The compositor starts from a **minimal default shell** (valid catalog IDs) or from **`requirements.base_config`** when it validates as **`PipelineConfigurationSchema`**. It then **patches** `stages.chunking`, `stages.embedding`, `stages.retrieval`, and optional **`reranking`** from **`stage_outputs`** “selected” payloads, and stamps **`metadata.source = autopilot`** plus **`metadata.build_id`**.
+
+### What appears in `decisions` for the Decision Explainer UI?
+
+**Chunking** — strategy, chunk size, analyst/optimiser **rationale**, and **alternatives_tested**. **Embedding** — winning model id, rationale, and a **benchmark_results** table (score clamped 0–1, latency ms, cost per 1M tokens when present). **Retrieval** — strategy, `top_k`, reranking flag, rationale, and a small **performance** map (e.g. MRR, composite score). **Generation** — carried from the merged pipeline (the LangGraph does not mutate generation in v1).
+
+### Where do final evaluation numbers on the Results Summary come from?
+
+**`metrics`** maps **`stage_outputs.evaluation.metrics`** (faithfulness, answer relevance, context precision/recall, optional avg latency). If evaluation is incomplete, the compositor falls back to **neutral 0.5 proxies** so the schema still validates — operators should treat those as **placeholders**, not measured RAGAS.
+
+### What does the “Open in Designer” button do?
+
+It calls **`useDesignerStore.loadPipeline(result.config)`**, patches **`metadata.source`** / **`buildId`**, and navigates to **`/designer/review?source=autopilot`** so the user can inspect the same pipeline JSON in the Designer review shell.
+
+### Why show an amber banner when status is `complete` but `result` is still missing?
+
+**Older builds** (pre-P7-6 worker) never received a normalised **`BuildResult`**. The **`ResultsSummary`** component explains that and asks the user to **run a new build**; charts from **P7-5** may still work via **`dashboard_metrics`** + **`stage_outputs`**.
+
+### How does JSON download differ from `GET …/build/{id}/result`?
+
+**Download** serialises the **already-fetched** typed **`build.result`** object in the browser (camelCase). **`GET /api/autopilot/build/{id}/result`** returns the **raw persisted orchestrator artifact** (opaque). Interviewees should distinguish **client convenience export** from **server artifact introspection**.
+
+### Interview trap: will `deployment` always reflect a live cloud URL?
+
+**No.** When **`stage_outputs.deployment.status == "complete"`**, the compositor attaches a **stub** **`DeploymentInfoSchema`** (local stub host, `docker_image_tag`, `status: deployed`). Real cloud endpoints belong in later phases (e.g. P12).
+
+### What tests protect the compositor?
+
+**`tests/test_services/test_autopilot_build_result.py`** exercises a **happy-path** `BuildResultSchema` round-trip and a **chunking-failed** scenario (chunking decision omitted, defaults still produce a valid config).
+
+### What is the next task after P7-6?
+
+**P7-7 · Autopilot Entry & History Pages** — dedicated entry, layout, project listing, and history pages (beyond the single **`/autopilot`** wizard page).
 
 ---
 
