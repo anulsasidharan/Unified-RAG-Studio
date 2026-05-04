@@ -127,8 +127,9 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
         Document upload
       </h2>
       <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
-        Files are stored in the MinIO bucket configured for this environment. Use the returned object IDs when you
-        start an Autopilot build (Phase 7 build UI next).
+        Files are stored in the MinIO bucket configured for this environment. Object IDs are sent as{' '}
+        <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">documentIds</code> when you
+        start a build from the progress panel below.
       </p>
 
       <div className="mt-6 space-y-4">

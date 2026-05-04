@@ -913,3 +913,57 @@ Before P7-2, **`requirements`** in the store used **defaults only** with no stru
 
 ---
 
+## Phase 7 snapshot — P7-3 · Build Progress Monitor (SSE + polling fallback)
+
+**P7-3** adds **`BuildProgressMonitor`** on **`/autopilot`** with **Start build** (**`POST /api/autopilot/build`**), **Cancel**, an **active build** selector (history in **`useAutopilotStore.builds`**), a **progress bar**, **per-stage** checklist (**`AUTOPILOT_STAGE_ORDER`**), and a **latest message** teaser ahead of **P7-4**. **`useAutopilotBuildSubscription`** prefers **`EventSource`** on **`/api/autopilot/build/{id}/stream`** and falls back to **polling** **`GET /api/autopilot/build/{id}`** on stream errors. **`autopilot-build-status.ts`** normalises **`BuildStatusResponse`** into the persisted **`AutopilotBuild`** shape while preserving **`input`**.
+
+### P7-3 — Client subscription paths
+
+```mermaid
+flowchart TB
+  subgraph UI["Next.js /autopilot"]
+    BPM[BuildProgressMonitor]
+    H[useAutopilotBuildSubscription]
+    Z[(useAutopilotStore.builds)]
+  end
+  subgraph API["FastAPI P6-9"]
+    S["GET …/stream SSE"]
+    G["GET …/build poll"]
+    B["POST …/build"]
+    C["POST …/cancel"]
+  end
+  BPM -->|Start / Cancel| B
+  BPM -->|Cancel| C
+  BPM --> H
+  H -->|"EventSource"| S
+  H -->|"fallback interval"| G
+  H -->|upsertBuild| Z
+  S -->|JSON snapshots| H
+  G -->|JSON snapshots| H
+```
+
+### P7-3 — Sequence (start → live updates)
+
+```mermaid
+sequenceDiagram
+  participant M as BuildProgressMonitor
+  participant API as FastAPI
+  participant ES as EventSource / poll
+  participant Z as Zustand persist
+
+  M->>API: POST /api/autopilot/build
+  API-->>M: 202 buildId
+  M->>Z: upsertBuild(seed + input)
+  M->>ES: open stream or poll
+  loop Until terminal
+    API-->>ES: BuildStatusResponse
+    ES->>Z: merge progress stages messages
+  end
+```
+
+### Evolution note (P7-2 → P7-3)
+
+Before P7-3, requirements and uploads were **persisted** but nothing called **`POST /api/autopilot/build`** from the product UI. After P7-3, the Autopilot wizard is **closed-loop**: operators enqueue Celery-backed LangGraph runs and observe **real-time row projections** without leaving **`/autopilot`**, with **resilient transport** when SSE is unavailable.
+
+---
+
