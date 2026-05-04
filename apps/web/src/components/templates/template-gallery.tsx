@@ -121,8 +121,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       setProjectsLoading(true);
       setProjectsError(null);
       try {
-        // Trailing slash required: `/api/projects` 307s to the backend origin and breaks CORS behind Next rewrites.
-        const data = await apiClient.get<PaginatedProjects>('/api/projects/?page=1&page_size=50');
+        const data = await apiClient.get<PaginatedProjects>('/api/projects?page=1&page_size=50');
         if (!cancelled) {
           setApiProjects(data.items);
           setSelectedProjectId((prev) => {
@@ -183,7 +182,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
 
       if (projectMode === 'new') {
         const name = newProjectName.trim() || `${applyTarget.name} project`;
-        const created = await apiClient.post<ProjectSummaryRow>('/api/projects/', { name });
+        const created = await apiClient.post<ProjectSummaryRow>('/api/projects', { name });
         projectId = created.id;
         projectName = created.name;
       } else if (!projectId) {

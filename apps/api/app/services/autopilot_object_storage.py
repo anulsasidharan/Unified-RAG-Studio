@@ -9,8 +9,22 @@ from urllib.parse import urlparse
 import uuid
 
 import structlog
+import urllib3
+from urllib3.exceptions import MaxRetryError
+from urllib3.util import Timeout
+from urllib3.util.retry import Retry
 
 from app.config import Settings
+
+# Default urllib3 retries on connection errors (~5 attempts) can exceed Next.js dev-proxy
+# patience and surface as ``ECONNRESET`` / HTTP 500 in the browser while the API eventually
+# returns 503. Fail fast with no automatic retries (MinIO SDK may still retry in some paths).
+_MINIO_HTTP = urllib3.PoolManager(
+    timeout=Timeout(connect=5.0, read=300.0),
+    retries=Retry(total=0),
+    maxsize=10,
+    block=True,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -36,6 +50,16 @@ class AutopilotUploadError(Exception):
 
 class AutopilotStorageUnavailableError(Exception):
     """MinIO / network failures (mapped to HTTP 503)."""
+
+
+def _storage_unreachable_message(settings: Settings, *, context: str) -> str:
+    ep = (settings.minio_endpoint or "").strip() or "http://localhost:9000"
+    return (
+        f"Cannot reach object storage at {ep} ({context}). "
+        "Start MinIO on that host and port, or set MINIO_ENDPOINT (and credentials) to a "
+        "reachable S3-compatible service. If you use Docker, run the stack that exposes MinIO "
+        "(often port 9000)."
+    )
 
 
 @dataclass(frozen=True)
@@ -71,10 +95,11 @@ def _minio_client(settings: Settings):
         access_key=settings.minio_access_key,
         secret_key=settings.minio_secret_key,
         secure=secure,
+        http_client=_MINIO_HTTP,
     )
 
 
-def _ensure_bucket(client, bucket: str) -> None:
+def _ensure_bucket(client, bucket: str, settings: Settings) -> None:
     from minio.error import S3Error
 
     try:
@@ -84,6 +109,11 @@ def _ensure_bucket(client, bucket: str) -> None:
         logger.warning("minio_bucket_ensure_failed", bucket=bucket, code=exc.code)
         raise AutopilotStorageUnavailableError(
             f"Cannot access object storage bucket: {exc}"
+        ) from exc
+    except (MaxRetryError, ConnectionError, TimeoutError) as exc:
+        logger.warning("minio_bucket_transport_failed", bucket=bucket, exc_info=True)
+        raise AutopilotStorageUnavailableError(
+            _storage_unreachable_message(settings, context="bucket check")
         ) from exc
 
 
@@ -132,7 +162,7 @@ def upload_blobs_sync(
 
     bucket = settings.minio_bucket
     client = _minio_client(settings)
-    _ensure_bucket(client, bucket)
+    _ensure_bucket(client, bucket, settings)
 
     out: list[UploadedBlobMeta] = []
     from minio.error import S3Error
@@ -156,6 +186,11 @@ def upload_blobs_sync(
         except S3Error as exc:
             logger.warning("minio_put_failed", key=key, code=exc.code)
             raise AutopilotStorageUnavailableError(f"Upload failed: {exc}") from exc
+        except (MaxRetryError, ConnectionError, TimeoutError) as exc:
+            logger.warning("minio_put_transport_failed", key=key, exc_info=True)
+            raise AutopilotStorageUnavailableError(
+                _storage_unreachable_message(settings, context="upload")
+            ) from exc
         out.append(
             UploadedBlobMeta(
                 object_id=key,

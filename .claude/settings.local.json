@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm config *)"
+      "Bash(npm config *)",
+      "PowerShell(docker network inspect *)",
+      "PowerShell(docker compose *)",
+      "PowerShell(docker exec rag-studio-vector-db-1 *)",
+      "PowerShell(docker exec rag-studio-mlflow-1 *)",
+      "PowerShell(docker exec rag-studio-web-1 *)",
+      "PowerShell(docker exec rag-studio-api-1 *)"
     ]
   }
 }

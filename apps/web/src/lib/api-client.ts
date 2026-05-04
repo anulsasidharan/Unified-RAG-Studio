@@ -26,6 +26,18 @@ class ApiError extends Error {
   }
 }
 
+/** Human-readable message for UI (avoids ``JSON.stringify(null)`` when the body was not JSON). */
+export function formatApiErrorForUi(e: ApiError): string {
+  const d = e.data;
+  if (d != null && typeof d === 'object' && 'detail' in d) {
+    const det = (d as { detail: unknown }).detail;
+    if (typeof det === 'string') return det;
+    return JSON.stringify(det);
+  }
+  if (d != null) return JSON.stringify(d);
+  return e.message;
+}
+
 async function request<TResponse, TBody = unknown>(
   path: string,
   options: RequestOptions<TBody> = {}
@@ -63,7 +75,9 @@ async function request<TResponse, TBody = unknown>(
     }
     const head = trimmed.slice(0, 4000);
     const proxyUnreachable =
-      /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND/i.test(head);
+      /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND|socket hang up|ECONNRESET|ETIMEDOUT/i.test(
+        head
+      );
     if (
       proxyUnreachable &&
       (typeof data !== 'object' || data === null || !('detail' in (data as object)))
@@ -110,7 +124,9 @@ export async function postFormData<TResponse>(
     }
     const head = trimmed.slice(0, 4000);
     const proxyUnreachable =
-      /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND/i.test(head);
+      /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND|socket hang up|ECONNRESET|ETIMEDOUT/i.test(
+        head
+      );
     if (
       proxyUnreachable &&
       (typeof data !== 'object' || data === null || !('detail' in (data as object)))
@@ -119,6 +135,19 @@ export async function postFormData<TResponse>(
         detail:
           'Cannot reach the backend API on port 8000. From the repository root run npm run dev:full (starts Next + FastAPI), or in apps/api run: uv run uvicorn app.main:app --reload --port 8000',
       };
+    }
+    if (
+      (data === null || (typeof data === 'object' && data !== null && !('detail' in data))) &&
+      trimmed &&
+      !trimmed.trimStart().startsWith('<')
+    ) {
+      const line = trimmed
+        .split('\n')
+        .map((l) => l.trim())
+        .find((l) => l.length > 0);
+      if (line) {
+        data = { detail: line.slice(0, 500) };
+      }
     }
     throw new ApiError(response.status, response.statusText, data);
   }

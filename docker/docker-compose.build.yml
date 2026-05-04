@@ -12,8 +12,8 @@ services:
 
   web:
     build:
-      context: ../apps/web
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/web/Dockerfile
 
   api:
     build:
