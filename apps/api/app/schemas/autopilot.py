@@ -4,7 +4,7 @@ These schemas handle the full build lifecycle:
   POST /api/autopilot/upload         — multipart document upload → MinIO object ids
   POST /api/autopilot/build          — start a new build
   GET  /api/autopilot/build/{id}     — poll build status
-  GET  /api/autopilot/build/{id}/stream — SSE progress events
+  GET  /api/autopilot/build/{id}/stream — SSE progress events (includes optional ``dashboard_metrics`` — P7-5)
   POST /api/autopilot/build/{id}/cancel
   GET  /api/autopilot/build/{id}/result — orchestrator JSON artifact (opaque until normalised)
 """
@@ -190,6 +190,42 @@ class BuildResultSchema(RAGBaseModel):
     total_iterations: int = Field(ge=1)
 
 
+# ─── Dashboard metrics (P7-5) ─────────────────────────────────────────────────
+
+
+class DashboardQualitySnapshotSchema(RAGBaseModel):
+    """RAGAS-style proxies from ``stage_outputs['evaluation']``."""
+
+    faithfulness: float | None = None
+    answer_relevance: float | None = None
+    context_precision: float | None = None
+    context_recall: float | None = None
+    avg_latency_ms: float | None = None
+    meets_targets: bool | None = None
+
+
+class DashboardEmbeddingBenchRowSchema(RAGBaseModel):
+    label: str
+    latency_ms: float | None = None
+    composite_score: float | None = None
+    texts_per_second: float | None = None
+
+
+class DashboardRetrievalSummarySchema(RAGBaseModel):
+    strategy: str | None = None
+    top_k: int | None = None
+    performance: dict[str, float] | None = None
+
+
+class AutopilotDashboardMetricsSchema(RAGBaseModel):
+    """Structured slice of orchestrator ``stage_outputs`` for the Autopilot metrics UI."""
+
+    quality: DashboardQualitySnapshotSchema | None = None
+    embedding_benchmarks: list[DashboardEmbeddingBenchRowSchema] = Field(default_factory=list)
+    selected_embedding_label: str | None = None
+    retrieval: DashboardRetrievalSummarySchema | None = None
+
+
 # ─── Build Status ─────────────────────────────────────────────────────────────
 
 
@@ -221,6 +257,7 @@ class BuildStatusResponse(RAGBaseModel):
     stages: dict[str, StageStatusSchema]
     messages: list[BuildMessageSchema]
     result: BuildResultSchema | None = None
+    dashboard_metrics: AutopilotDashboardMetricsSchema | None = None
     error: str | None = None
     created_at: str
     updated_at: str

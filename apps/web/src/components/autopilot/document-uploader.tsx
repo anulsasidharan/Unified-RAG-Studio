@@ -4,7 +4,7 @@ import { FileUp, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 
-import { ApiError, apiClient, postFormData } from '@/lib/api-client';
+import { ApiError, apiClient, formatApiErrorForUi, postFormData } from '@/lib/api-client';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { useAutopilotStore } from '@/stores/autopilot-store';
@@ -49,7 +49,7 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
       setProjectsLoading(true);
       setProjectsError(null);
       try {
-        const data = await apiClient.get<PaginatedProjects>('/api/projects/?page=1&page_size=50');
+        const data = await apiClient.get<PaginatedProjects>('/api/projects?page=1&page_size=50');
         if (cancelled) return;
         setApiProjects(data.items);
         const prev = useAutopilotStore.getState().selectedBackendProjectId;
@@ -58,7 +58,7 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
         }
       } catch (e) {
         if (!cancelled) {
-          setProjectsError(e instanceof ApiError ? JSON.stringify(e.data) : String(e));
+          setProjectsError(e instanceof ApiError ? formatApiErrorForUi(e) : String(e));
           setApiProjects([]);
         }
       } finally {
@@ -95,7 +95,7 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
           }))
         );
       } catch (e) {
-        setUploadError(e instanceof ApiError ? JSON.stringify(e.data) : String(e));
+        setUploadError(e instanceof ApiError ? formatApiErrorForUi(e) : String(e));
       } finally {
         setUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = '';

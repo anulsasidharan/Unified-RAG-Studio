@@ -1,20 +1,40 @@
 # ── Stage 1: Dependencies ─────────────────────────────────────────────────────
+# Build context: repo root (so data/ is accessible alongside apps/web/)
 FROM node:20-alpine AS deps
 
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm ci --frozen-lockfile
+COPY apps/web/package.json ./
+RUN npm install --no-audit
 
-# ── Stage 2: Builder ──────────────────────────────────────────────────────────
+# ── Stage 2: Development — hot-reload via bind-mounted source ─────────────────
+FROM node:20-alpine AS development
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY apps/web/ .
+COPY data/ /data/
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=development
+
+EXPOSE 3000 3001
+
+CMD ["npm", "run", "dev"]
+
+# ── Stage 3: Builder ──────────────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY . .
+COPY apps/web/ .
+COPY data/ /data/
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production

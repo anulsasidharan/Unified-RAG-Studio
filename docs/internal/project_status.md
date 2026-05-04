@@ -73,7 +73,7 @@
 | 60 | Phase 7 | P7-2 · Requirements Form | `feature/p7-requirements-form` | Build requirements capture UI for targets, constraints, and optimization goals. | ✅ done |
 | 61 | Phase 7 | P7-3 · Build Progress Monitor | `feature/p7-build-progress` | Build real-time build progress tracking via SSE/polling fallback. | ✅ done |
 | 62 | Phase 7 | P7-4 · Agent Activity Feed | `feature/p7-agent-activity-feed` | Build agent log stream UI with filter and export support. | ✅ done |
-| 63 | Phase 7 | P7-5 · Metrics Dashboard | `feature/p7-metrics-dashboard` | Build live metrics dashboard with trends, latency, and cost views. | ⬜ pending |
+| 63 | Phase 7 | P7-5 · Metrics Dashboard | `feature/p7-metrics-dashboard` | Build live metrics dashboard with trends, latency, and cost views. | ✅ done |
 | 64 | Phase 7 | P7-6 · Decision Explainer & Results | `feature/p7-results-summary` | Build explainability and final result visualization screens. | ⬜ pending |
 | 65 | Phase 7 | P7-7 · Autopilot Entry & History Pages | `feature/p7-autopilot-pages` | Build autopilot entry, layout, project listing, and history pages. | ⬜ pending |
 |  | `Phase 8` | `Integrate bidirectional handoff between Designer and Autopilot so both remain synchronized.` |  |  |  |

@@ -14,8 +14,8 @@ services:
 
   web:
     build:
-      context: ../apps/web
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: apps/web/Dockerfile
       target: development
     command: npm run dev
     environment:
@@ -25,6 +25,7 @@ services:
       - ../apps/web:/app
       - /app/node_modules       # Anonymous volume so host node_modules don't overwrite container
       - /app/.next              # Preserve Next.js build cache inside container
+      - ../data:/data           # Shared catalog JSON files (imported via ../../../../data/)
     ports:
       - "3000:3000"
       - "3001:3001"             # Next.js HMR websocket (some setups use this)
@@ -44,6 +45,7 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ../apps/api:/app
+      - ../data:/data             # Shared catalog JSON files (templates, pricing, etc.)
     ports:
       - "8000:8000"
       - "5678:5678"             # debugpy remote debugger port
@@ -61,6 +63,7 @@ services:
       - PYTHONUNBUFFERED=1
     volumes:
       - ../apps/api:/app
+      - ../data:/data             # Shared catalog JSON files
 
   db:
     ports:

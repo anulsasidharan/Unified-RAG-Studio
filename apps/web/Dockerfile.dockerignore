@@ -1,0 +1,19 @@
+# Exclude everything except apps/web/ and data/ from the build context.
+# Docker uses this file when dockerfile=apps/web/Dockerfile and context=repo-root.
+
+# Large directories that are never needed for the web build
+apps/api/
+docker/
+.git/
+.github/
+
+# Web-specific build artifacts
+apps/web/node_modules/
+apps/web/.next/
+apps/web/.turbo/
+
+# Dev/test artifacts
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
+**/coverage/

@@ -26,7 +26,7 @@ def _service(session: DbSession) -> ProjectService:
 
 
 @router.post(
-    "/",
+    "",
     response_model=ProjectSummary,
     status_code=status.HTTP_201_CREATED,
     summary="Create a project",
@@ -40,7 +40,7 @@ async def create_project(
 
 
 @router.get(
-    "/",
+    "",
     response_model=PaginatedProjectsResponse,
     summary="List projects (paginated)",
 )
@@ -105,6 +105,7 @@ async def update_project(
 @router.delete(
     "/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
     summary="Soft-delete a project",
 )
 async def delete_project(

@@ -1,8 +1,12 @@
 import type {
   AutopilotBuild,
+  AutopilotDashboardMetrics,
   BuildMessage,
   BuildResult,
   BuildStatus,
+  DashboardEmbeddingBenchRow,
+  DashboardQualitySnapshot,
+  DashboardRetrievalSummary,
   StageStatus,
 } from '@/types/autopilot';
 
@@ -83,6 +87,85 @@ function coerceBuildStatus(raw: string | undefined): BuildStatus {
   return 'failed';
 }
 
+function numOrUndef(v: unknown): number | undefined {
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  return undefined;
+}
+
+function parseDashboardQuality(raw: Record<string, unknown> | undefined): DashboardQualitySnapshot | undefined {
+  if (!raw) return undefined;
+  const out: DashboardQualitySnapshot = {};
+  const f = numOrUndef(raw.faithfulness);
+  const ar = numOrUndef(raw.answerRelevance);
+  const cp = numOrUndef(raw.contextPrecision);
+  const cr = numOrUndef(raw.contextRecall);
+  const lat = numOrUndef(raw.avgLatencyMs);
+  if (f !== undefined) out.faithfulness = f;
+  if (ar !== undefined) out.answerRelevance = ar;
+  if (cp !== undefined) out.contextPrecision = cp;
+  if (cr !== undefined) out.contextRecall = cr;
+  if (lat !== undefined) out.avgLatencyMs = lat;
+  if (typeof raw.meetsTargets === 'boolean') out.meetsTargets = raw.meetsTargets;
+  return Object.keys(out).length ? out : undefined;
+}
+
+function parseDashboardEmbeddingRows(raw: unknown): DashboardEmbeddingBenchRow[] {
+  if (!Array.isArray(raw)) return [];
+  const out: DashboardEmbeddingBenchRow[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const r = item as Record<string, unknown>;
+    const label = typeof r.label === 'string' ? r.label : '';
+    if (!label) continue;
+    out.push({
+      label,
+      latencyMs: numOrUndef(r.latencyMs),
+      compositeScore: numOrUndef(r.compositeScore),
+      textsPerSecond: numOrUndef(r.textsPerSecond),
+    });
+  }
+  return out;
+}
+
+function parseDashboardRetrieval(raw: Record<string, unknown> | undefined): DashboardRetrievalSummary | undefined {
+  if (!raw) return undefined;
+  const out: DashboardRetrievalSummary = {};
+  if (typeof raw.strategy === 'string') out.strategy = raw.strategy;
+  if (typeof raw.topK === 'number' && Number.isFinite(raw.topK)) out.topK = raw.topK;
+  const perf = raw.performance;
+  if (perf && typeof perf === 'object') {
+    const pm: Record<string, number> = {};
+    for (const [k, v] of Object.entries(perf as Record<string, unknown>)) {
+      if (typeof v === 'number' && Number.isFinite(v)) pm[k] = v;
+    }
+    if (Object.keys(pm).length) out.performance = pm;
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function parseDashboardMetricsPayload(raw: unknown): AutopilotDashboardMetrics | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const d = raw as Record<string, unknown>;
+  const quality = parseDashboardQuality(
+    d.quality && typeof d.quality === 'object' ? (d.quality as Record<string, unknown>) : undefined
+  );
+  const embeddingBenchmarks = parseDashboardEmbeddingRows(d.embeddingBenchmarks);
+  const selectedEmbeddingLabel =
+    typeof d.selectedEmbeddingLabel === 'string' ? d.selectedEmbeddingLabel : undefined;
+  const retrieval = parseDashboardRetrieval(
+    d.retrieval && typeof d.retrieval === 'object' ? (d.retrieval as Record<string, unknown>) : undefined
+  );
+  if (!quality && embeddingBenchmarks.length === 0 && !selectedEmbeddingLabel && !retrieval) {
+    return undefined;
+  }
+  return {
+    quality,
+    embeddingBenchmarks,
+    selectedEmbeddingLabel,
+    retrieval,
+  };
+}
+
 function normalizeMessage(m: Record<string, unknown>): BuildMessage | null {
   const ts = m.timestamp;
   const text = m.text;
@@ -130,6 +213,8 @@ export function parseBuildStatusPayload(data: unknown): Omit<AutopilotBuild, 'in
     result = o.result as BuildResult;
   }
 
+  const dashboardMetrics = parseDashboardMetricsPayload(o.dashboardMetrics);
+
   return {
     id: buildId,
     status: coerceBuildStatus(typeof o.status === 'string' ? o.status : undefined),
@@ -139,6 +224,7 @@ export function parseBuildStatusPayload(data: unknown): Omit<AutopilotBuild, 'in
     stages: normalizeStagesFromApi(stagesObj),
     messages,
     result,
+    dashboardMetrics,
     error: typeof o.error === 'string' ? o.error : undefined,
     createdAt: typeof o.createdAt === 'string' ? o.createdAt : new Date().toISOString(),
     updatedAt: typeof o.updatedAt === 'string' ? o.updatedAt : new Date().toISOString(),
