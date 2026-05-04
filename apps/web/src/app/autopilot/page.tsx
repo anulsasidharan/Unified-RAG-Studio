@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { AgentActivityFeed } from '@/components/autopilot/agent-activity-feed';
 import { BuildProgressMonitor } from '@/components/autopilot/build-progress-monitor';
 import { DocumentUploader } from '@/components/autopilot/document-uploader';
 import { RequirementsForm } from '@/components/autopilot/requirements-form';
@@ -16,6 +17,7 @@ export default function AutopilotEntryPage() {
       <DocumentUploader className="mt-10" />
       <RequirementsForm className="mt-8" />
       <BuildProgressMonitor className="mt-8" />
+      <AgentActivityFeed className="mt-8" />
 
       <Link
         href={ROUTES.home}

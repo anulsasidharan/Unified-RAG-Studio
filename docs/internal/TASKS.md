@@ -55,3 +55,4 @@
 | P7-1 · Document Uploader | `feature/p7-document-uploader` | ✅ done |
 | P7-2 · Requirements Form | `feature/p7-requirements-form` | ✅ done |
 | P7-3 · Build Progress Monitor | `feature/p7-build-progress` | ✅ done |
+| P7-4 · Agent Activity Feed | `feature/p7-agent-activity-feed` | ✅ done |
