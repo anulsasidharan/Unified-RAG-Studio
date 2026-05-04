@@ -10,10 +10,13 @@ from langgraph.checkpoint.memory import MemorySaver
 from app.core.agents import (
     AUTOPILOT_STAGE_ORDER,
     compile_autopilot_bootstrap_graph,
+    compile_autopilot_orchestrator_graph,
     get_autopilot_bootstrap_tools,
     initial_autopilot_graph_state,
     invoke_autopilot_bootstrap,
+    invoke_autopilot_orchestrator,
 )
+from app.core.agents.progress import progress_trace_fields
 from app.core.agents.prompts import format_stage_delegation
 from app.core.agents.tools import (
     autopilot_health_ping,
@@ -53,6 +56,20 @@ def _fake_embedding_benchmark_results() -> list[BenchmarkResult]:
     ]
 
 
+def test_progress_trace_fields_shape():
+    row = progress_trace_fields(
+        build_id="b",
+        stage_key="retrieval",
+        detail="unit",
+        evaluation_pass_index=1,
+        max_iterations=5,
+    )
+    assert row["kind"] == "autopilot_progress"
+    assert row["stage"] == "retrieval"
+    assert row["progress"] == 63
+    assert row["build_id"] == "b"
+
+
 def test_initial_state_shapes():
     st = initial_autopilot_graph_state(
         build_id="b1",
@@ -65,6 +82,7 @@ def test_initial_state_shapes():
     assert st["document_ids"] == ["a", "b"]
     assert st["stage_outputs"] == {}
     assert st["iteration"] == 0
+    assert st["evaluation_pass_index"] == 0
 
 
 def test_autopilot_stage_order_matches_worker_stub():
@@ -101,7 +119,11 @@ def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
         "apply_gated"
     )
     assert len(out["messages"]) >= 7
-    assert len(out["agent_trace"]) >= 8
+    assert len(out["agent_trace"]) >= 9
+    gate_events = [t for t in out["agent_trace"] if t.get("event") == "orchestration_gate"]
+    assert len(gate_events) >= 1
+    assert gate_events[-1].get("decision") == "deploy"
+    assert out["evaluation_pass_index"] == 0
 
 
 @patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
@@ -121,7 +143,7 @@ def test_bootstrap_graph_with_memory_checkpointer(mock_bench_cls):
 @patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
 def test_compile_returns_runnable(mock_bench_cls):
     mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
-    app = compile_autopilot_bootstrap_graph()
+    app = compile_autopilot_orchestrator_graph()
     st = initial_autopilot_graph_state(
         build_id="b4",
         project_id="p4",
@@ -320,3 +342,75 @@ def test_deployment_agent_tool_smoke(mock_bench_cls):
 def test_format_stage_delegation_contains_ids():
     s = format_stage_delegation(stage="chunking", build_id="bid", project_id="pid")
     assert "chunking" in s and "bid" in s and "pid" in s
+
+
+@patch("app.core.agents.graph.run_evaluation_agent")
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_orchestrator_retries_when_targets_unmet(mock_bench_cls, mock_run_eval):
+    """Gate retries chunking→…→eval when evaluation reports ``meets_targets`` false."""
+
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
+
+    def _eval_payload(**_kwargs: object) -> dict:
+        _eval_payload.n += 1
+        meets = _eval_payload.n >= 2
+        return {
+            "status": "complete",
+            "metrics": {
+                "faithfulness": 0.99 if meets else 0.2,
+                "answer_relevance": 0.5,
+                "context_precision": 0.5,
+                "context_recall": 0.5,
+                "avg_latency_ms": 100.0,
+            },
+            "meets_targets": meets,
+            "target_gaps": [] if meets else ["faithfulness"],
+            "failure_analysis": {"summary": "stub", "failure_rows": []},
+            "per_row_scores": [],
+            "test_set_size": 1,
+            "eval_mode": "unit_mock",
+            "rationale": "mock",
+        }
+
+    _eval_payload.n = 0
+    mock_run_eval.side_effect = lambda **kw: _eval_payload()
+
+    st = initial_autopilot_graph_state(
+        build_id="b-retry",
+        project_id="p-retry",
+        document_ids=["doc1"],
+        requirements={
+            "max_iterations": 3,
+            "embedding_max_benchmarks": 2,
+            "target_metrics": {"faithfulness": 0.999},
+        },
+    )
+    out = invoke_autopilot_orchestrator(st)
+    eval_ok_traces = [
+        t for t in out["agent_trace"] if t.get("event") == "evaluation_agent" and "error" not in t
+    ]
+    assert len(eval_ok_traces) >= 2
+    assert int(out.get("evaluation_pass_index") or 0) >= 1
+    decisions = [t.get("decision") for t in out["agent_trace"] if t.get("event") == "orchestration_gate"]
+    assert "retry" in decisions
+    assert decisions[-1] == "deploy"
+
+
+@patch("app.core.agents.embedding_tester.EmbeddingBenchmarker")
+def test_invoke_orchestrator_matches_bootstrap(mock_bench_cls):
+    mock_bench_cls.return_value.benchmark.return_value = _fake_embedding_benchmark_results()
+    st = initial_autopilot_graph_state(
+        build_id="b-alias",
+        project_id="p-alias",
+        document_ids=["z"],
+        requirements={"embedding_max_benchmarks": 2},
+    )
+    a = invoke_autopilot_bootstrap(st, checkpointer=None)
+    st2 = initial_autopilot_graph_state(
+        build_id="b-alias",
+        project_id="p-alias",
+        document_ids=["z"],
+        requirements={"embedding_max_benchmarks": 2},
+    )
+    b = invoke_autopilot_orchestrator(st2, checkpointer=None)
+    assert a["current_stage"] == b["current_stage"] == "deployment_complete"

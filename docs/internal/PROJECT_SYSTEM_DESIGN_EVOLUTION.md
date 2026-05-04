@@ -730,3 +730,49 @@ flowchart LR
 After P6-6, Autopilot could **score** the stack but could not yet **package** it for operators. After P6-7, each run carries **reviewable deployment artefacts** and explicit **gated** cloud next-steps, bridging Autopilot output toward **Designer export** parity and future **deployment APIs** without introducing unmanaged side effects in the graph.
 
 ---
+
+## Phase 6 snapshot — P6-8 · Autopilot Orchestrator (evaluation gate + retries + progress)
+
+**P6-8** turns the former **linear** bootstrap graph into a **closed-loop orchestrator**: after **`evaluation_agent`**, an **`orchestration_gate`** node reads **`meets_targets`**, **`requirements.max_iterations`**, and **`evaluation_pass_index`**. If targets are unmet and retries remain, the graph loops back to **`chunking_optimizer`** (re-using the prior **analyze** payload); otherwise it continues to **`deployment_agent`**. Every specialist trace row is merged with **`kind: autopilot_progress`** fields (stage, 0–100 **progress**, detail) from **`app.core.agents.progress`**, suitable for **SSE** consumers in **P6-9**. **`AutopilotGraphState`** gains **`evaluation_pass_index`** (incremented by the gate on retry). **`jobs.run_pipeline_build`** now invokes **`invoke_autopilot_orchestrator`**, persists **stages**, **messages**, **progress**, compact **`result.stage_outputs`**, and marks **`generation`** in **`AUTOPILOT_STAGE_ORDER`** as a **Designer-led** placeholder so API keys stay aligned with the worker stub matrix.
+
+### P6-8 — LangGraph topology (gate + retry loop)
+
+```mermaid
+stateDiagram-v2
+  [*] --> bootstrap_prepare
+  bootstrap_prepare --> bootstrap_finalize
+  bootstrap_finalize --> document_analyst
+  document_analyst --> chunking_optimizer
+  chunking_optimizer --> embedding_tester
+  embedding_tester --> retrieval_optimizer
+  retrieval_optimizer --> evaluation_agent
+  evaluation_agent --> orchestration_gate
+  orchestration_gate --> chunking_optimizer: retry_chunking
+  orchestration_gate --> deployment_agent: deploy
+  deployment_agent --> [*]
+```
+
+### P6-8 — Worker ↔ graph persistence
+
+```mermaid
+flowchart LR
+  subgraph Celery["Celery worker"]
+    T[run_pipeline_build]
+  end
+  subgraph Graph["LangGraph orchestrator"]
+    G[invoke_autopilot_orchestrator]
+  end
+  subgraph DB["PostgreSQL"]
+    B[autopilot_builds row]
+  end
+  T -->|initial_autopilot_graph_state| G
+  G -->|agent_trace + stage_outputs + messages| T
+  T -->|stages, progress, result, messages| B
+```
+
+### Evolution note (P6-7 → P6-8)
+
+Before P6-8, a build always ran **one forward pass** regardless of metric gaps. After P6-8, **target-driven iteration** is explicit in the graph, **progress-shaped trace rows** exist for streaming UIs, and the **Celery build task** executes the **same** LangGraph the API will expose—eliminating the prior **pure stub** stage loop.
+
+---
+
