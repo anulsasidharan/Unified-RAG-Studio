@@ -5085,3 +5085,43 @@ Chunking and related optimisers read **`requirements["optimize_for"]`** (after n
 
 ---
 
+## Phase 7 · P7-3 · Build Progress Monitor
+
+### How does the frontend subscribe to Autopilot build progress?
+
+**`useAutopilotBuildSubscription(activeBuildId)`** opens a browser **`EventSource`** against same-origin **`GET /api/autopilot/build/{id}/stream`**. The FastAPI handler emits **`data: { …BuildStatusResponse… }\n\n`** about once per second until the row reaches a terminal **`status`** (**`complete`**, **`failed`**, **`cancelled`**). The hook parses JSON, merges into **`useAutopilotStore.builds`** via **`upsertBuild`**, and preserves **`input`** (documents, requirements, optional **`baseConfig`**) from the optimistic row created when **`POST /api/autopilot/build`** returns.
+
+### Why add a polling fallback if SSE already exists?
+
+**`EventSource`** has no custom headers (fine here because **`X-User-ID`** defaults server-side), but **corporate proxies**, **HTTP/2 intermediaries**, and **dev tooling** sometimes drop or buffer SSE. On **`onerror`** (or JSON parse failure from a truncated chunk), the hook **closes** the stream and starts **`setInterval`** polling **`GET /api/autopilot/build/{id}`** every **2s** until terminal, so the UI still converges without a manual refresh.
+
+### How do you avoid resetting user-owned fields when each SSE tick arrives?
+
+**`parseBuildStatusPayload`** returns **`Omit<AutopilotBuild,'input'>`**. **`mergeBuildFromServer(prev, server)`** spreads server fields but keeps **`prev.input`** when present. **`BuildProgressMonitor`** seeds **`input`** immediately after **`202 Accepted`** from **`POST /api/autopilot/build`** so the first SSE snapshot cannot wipe document or requirement context.
+
+### What does `BuildStatusResponse` contain for the progress bar and stage list?
+
+**`progress`** (0–100), **`currentStage`** (string, e.g. **`queued`**, **`orchestrate`**, agent keys), **`iteration`**, per-stage **`stages`** map (**`pending` \| `running` \| `complete` \| `failed`** with optional **`message`**), **`messages`** (timestamped agent lines), optional typed **`result`**, optional **`error`**, and timestamps. The UI orders stages using **`AUTOPILOT_STAGE_ORDER`** aligned with **`app.core.agents.state.AUTOPILOT_STAGE_ORDER`**.
+
+### Why can `EventSource` use a relative `/api/...` URL in Next.js?
+
+The browser targets the **Next.js origin**; **`next.config.js`** **`rewrites`** proxy **`/api/*`** to FastAPI, avoiding **CORS** and mismatched hosts (**`127.0.0.1`** vs **`localhost`**). Server components are not involved—the hook is **`'use client'`**.
+
+### How does cancel interact with the worker?
+
+**`POST /api/autopilot/build/{id}/cancel`** revokes the stored **Celery** task id (when present) and marks the DB row **`cancelled`**. The UI re-fetches status once so Zustand reflects the terminal state even if the client had fallen back to polling.
+
+### Interview trap: does every SSE payload include the full `messages` array?
+
+**Yes** in the current API—the handler dumps the whole **`build_status_response(row)`** each tick. The Zustand persist layer already **truncates** long **`messages`** arrays (**`MAX_PERSISTED_MESSAGES`**) on **`upsertBuild`** to keep **localStorage** bounded; **P7-4** will add a richer feed UI.
+
+### How is `Start build` validated before POST?
+
+The monitor requires a **selected project**, at least one **uploaded object id**, and **`BuildRequirementsSchema.safeParse`** (same intent as the Requirements panel’s **Validate**). Payload keys are **camelCase** (**`projectId`**, **`documentIds`**, **`requirements`**, optional **`baseConfig`**) matching **`RAGBaseModel`** aliases.
+
+### What is the next task after P7-3?
+
+**P7-4 · Agent Activity Feed** — full log stream, filters, and export on top of the **`messages`** array.
+
+---
+
