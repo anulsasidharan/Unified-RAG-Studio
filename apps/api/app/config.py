@@ -25,7 +25,10 @@ class Settings(BaseSettings):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     # ── Database ──────────────────────────────────────────────
-    database_url: str = "postgresql+asyncpg://raguser:ragpass@localhost:5432/ragstudio"
+    # Default: SQLite in cwd so `npm run dev:api` works without Docker Postgres.
+    # Docker Compose sets DATABASE_URL to postgresql+asyncpg://raguser:ragpass@db:5432/ragstudio.
+    # For local Postgres instead of SQLite: export DATABASE_URL=postgresql+asyncpg://raguser:ragpass@localhost:5432/ragstudio
+    database_url: str = "sqlite+aiosqlite:///./ragstudio.db"
 
     # ── Redis ─────────────────────────────────────────────────
     redis_url: str = "redis://localhost:6379/0"

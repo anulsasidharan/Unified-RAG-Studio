@@ -13,6 +13,7 @@ import redis.asyncio as aioredis
 from fastapi import Depends, Header, HTTPException
 from qdrant_client import AsyncQdrantClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from app.config import Settings, get_settings
 
@@ -20,10 +21,18 @@ from app.config import Settings, get_settings
 
 def _make_engine(settings: Settings):
     """Create SQLAlchemy async engine from settings."""
+    url = settings.database_url
+    if url.startswith("sqlite"):
+        return create_async_engine(
+            url,
+            echo=settings.is_development,
+            pool_pre_ping=True,
+            poolclass=NullPool,
+        )
     return create_async_engine(
-        settings.database_url,
-        echo=settings.is_development,   # Log SQL only in dev
-        pool_pre_ping=True,             # Detect stale connections before use
+        url,
+        echo=settings.is_development,
+        pool_pre_ping=True,
         pool_size=10,
         max_overflow=20,
     )

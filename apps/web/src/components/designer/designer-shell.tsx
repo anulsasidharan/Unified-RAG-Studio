@@ -6,7 +6,9 @@ import { usePathname } from 'next/navigation';
 import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
+import { takeDesignerSnapshot } from '@/lib/project-designer-bridge';
 import { useDesignerStore } from '@/stores/designer-store';
+import { useProjectStore } from '@/stores/project-store';
 
 import { CodeExporter } from './code-exporter';
 import { CostEstimator } from './cost-estimator';
@@ -21,6 +23,36 @@ export function DesignerShell({
   const pathname = usePathname();
   const setActiveStage = useDesignerStore((s) => s.setActiveStage);
   const expandDiagramReach = useDesignerStore((s) => s.expandDiagramReach);
+
+  /** Debounced autosave of the pipeline draft onto the active project record. */
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let lastDraft = useDesignerStore.getState().draft;
+    let lastDiagramIdx = useDesignerStore.getState().diagramMaxVisitedStageIndex;
+
+    const unsub = useDesignerStore.subscribe((state) => {
+      if (
+        state.draft === lastDraft &&
+        state.diagramMaxVisitedStageIndex === lastDiagramIdx
+      ) {
+        return;
+      }
+      lastDraft = state.draft;
+      lastDiagramIdx = state.diagramMaxVisitedStageIndex;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        const activeId = useProjectStore.getState().activeProjectId;
+        if (!activeId) return;
+        useProjectStore.getState().updateProject(activeId, {
+          designerSnapshot: takeDesignerSnapshot(),
+        });
+      }, 450);
+    });
+    return () => {
+      if (timer) clearTimeout(timer);
+      unsub();
+    };
+  }, []);
 
   useEffect(() => {
     const normalized = normalizeDesignerPathname(pathname ?? '');
