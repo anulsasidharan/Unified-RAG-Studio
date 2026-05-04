@@ -4993,3 +4993,59 @@ Yes — SSE payloads call **`model_dump(mode="json", by_alias=True)`** so keys m
 
 ---
 
+## Phase 7 · P7-1 · Document Uploader
+
+### Which route stores corpus bytes, and what does it return?
+
+**`POST /api/autopilot/upload`** — **multipart/form-data** with **`projectId`** (camelCase form field) and one or more **`files`** parts. On success it returns **`201 Created`** with **`{ "documents": [ … ] }`**. Each element includes **`objectId`** (the MinIO object key), **`originalFilename`**, **`sizeBytes`**, and optional **`contentType`**. The client passes **`objectId`** strings verbatim as **`documentIds`** when calling **`POST /api/autopilot/build`**.
+
+### How is tenant isolation enforced on upload?
+
+The handler parses **`projectId`** as a UUID, loads **`projects`** by primary key, and requires **`project.user_id`** to equal the resolved **`X-User-ID`** (or configured default) and **`deleted_at IS NULL`**. Otherwise it responds **`404 Project not found`** — same “existence hiding” posture as **`AutopilotBuildService.get_owned`**.
+
+### Why multipart instead of JSON with base64 payloads?
+
+**Efficiency and ergonomics**: browsers already expose **`File`** / **`FormData`** with streaming-friendly boundaries; base64 would inflate size (~33%) and force the API to decode large strings inside JSON. Multipart matches nginx **`client_max_body_size`** tuning and standard object-storage tooling.
+
+### Where are objects written in MinIO, and why include `user_id` and `project_id` in the key?
+
+Keys look like **`autopilot/{user_id}/{project_id}/{uuid}_{sanitized_original}`**. The prefix prevents accidental cross-tenant reads when future download or ingestion jobs list by prefix, makes lifecycle policies easier, and keeps human operators able to correlate objects with owning projects without a separate index.
+
+### How are unsafe filenames and unsupported types handled?
+
+The original basename is stripped of directories, reduced to **`[a-zA-Z0-9._-]`**, and truncated. Extensions must belong to an allow-list (**`.pdf`**, **`.txt`**, **`.md`**, **`.markdown`**, **`.csv`**, **`.json`**, **`.html`**, **`.htm`**, **`.docx`**). Violations raise **`400`** with a clear message before any bytes hit object storage.
+
+### What happens if MinIO is down?
+
+The synchronous MinIO client runs inside **`asyncio.to_thread`** so the event loop stays responsive. Connection or **`S3Error`** failures bubble as **`AutopilotStorageUnavailableError`**, mapped to **`503 Service Unavailable`** with a plain-text **`detail`** string for operators.
+
+### Why lazy-import the MinIO client inside helper functions?
+
+Some developer machines (e.g. **CPython 3.13** without wheels for every transitive dependency) still need **`import app.main`** for unit tests. Deferring **`import minio`** until an upload actually executes lets **`pytest`** import the FastAPI app and patch **`upload_blobs_sync`** without requiring a successful **`pip install minio`** in that environment. Production containers still install **`minio`** from **`requirements.txt`**.
+
+### How does the Next.js client reach `/api/autopilot/upload` without CORS pain?
+
+The browser uses **same-origin** `fetch('/api/...')`; **`next.config.js`** rewrites **`/api/*`** to the FastAPI origin, mirroring the existing **`apiClient`** pattern. **`postFormData`** deliberately omits a manual **`Content-Type`** header so the runtime sets **`multipart/form-data; boundary=…`**.
+
+### What state does the Zustand autopilot store persist for uploads?
+
+**`selectedBackendProjectId`**, **`uploadedDocuments`** (each with **`objectId`**, **`originalName`**, **`sizeBytes`**), plus existing wizard fields. The storage key bumped to **`rag-studio-autopilot-v2-p7`** to avoid deserialising obsolete **`documents: string[]`**-only shapes.
+
+### How does the UI obtain selectable `projectId` values?
+
+It **`GET /api/projects/?page=1&page_size=50`** (trailing slash avoids **`307`** redirect issues behind the rewrite proxy, same lesson as the template gallery). If the list is empty, copy links users to **Templates** or **Projects** to create a server-backed row first.
+
+### What automated tests cover upload?
+
+**`tests/test_autopilot_router.py`** patches **`upload_blobs_sync`** to avoid a real MinIO daemon, asserts **`201`** plus JSON shape for happy path, and asserts **`404`** when **`X-User-ID`** does not own the target project.
+
+### Interview trap: are `documentIds` validated to exist in MinIO before enqueue?
+
+**Not in P7-1.** **`StartBuildRequest`** still only checks **non-empty** IDs; verifying object existence (or re-hydrating corpus profiles) is a natural follow-up when ingestion agents read bytes from storage rather than placeholders.
+
+### What is the next task after P7-1?
+
+**P7-2 · Requirements Form** — capture **`BuildRequirementsSchema`** fields in the browser before wiring **`POST /api/autopilot/build`**.
+
+---
+

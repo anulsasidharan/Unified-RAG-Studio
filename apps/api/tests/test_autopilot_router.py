@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.services.autopilot_object_storage import UploadedBlobMeta
 from app.worker import tasks
 
 # Dedicated user so this file does not inflate project counts for ``test_projects`` (same SQLite DB).
@@ -21,6 +22,54 @@ def _create_project(client: TestClient) -> str:
     )
     assert r.status_code == 201
     return r.json()["id"]
+
+
+@pytest.mark.integration
+def test_autopilot_upload_multipart_mock_minio(sync_client: TestClient):
+    pid = _create_project(sync_client)
+
+    def _fake_upload(settings, *, user_id, project_id, payloads):
+        return [
+            UploadedBlobMeta(
+                object_id=f"autopilot/{user_id}/{project_id}/stub-{i}.txt",
+                original_filename=name,
+                size_bytes=len(data),
+                content_type=ct,
+            )
+            for i, (name, data, ct) in enumerate(payloads)
+        ]
+
+    files = [
+        ("files", ("alpha.txt", b"hello", "text/plain")),
+        ("files", ("beta.md", b"# Title", "text/markdown")),
+    ]
+    with patch("app.routers.autopilot.upload_blobs_sync", side_effect=_fake_upload):
+        r = sync_client.post(
+            "/api/autopilot/upload",
+            data={"projectId": pid},
+            files=files,
+            headers={"X-User-ID": USER_AUTO},
+        )
+    assert r.status_code == 201
+    body = r.json()
+    assert len(body["documents"]) == 2
+    assert body["documents"][0]["objectId"].endswith("-0.txt")
+    assert body["documents"][0]["originalFilename"] == "alpha.txt"
+    assert body["documents"][1]["sizeBytes"] == 7
+
+
+@pytest.mark.integration
+def test_autopilot_upload_project_owned_by_other_user(sync_client: TestClient):
+    pid = _create_project(sync_client)
+    other = "33333333-3333-4333-8333-333333333333"
+    with patch("app.routers.autopilot.upload_blobs_sync"):
+        r = sync_client.post(
+            "/api/autopilot/upload",
+            data={"projectId": pid},
+            files=[("files", ("only.txt", b"x", "text/plain"))],
+            headers={"X-User-ID": other},
+        )
+    assert r.status_code == 404
 
 
 @pytest.mark.integration

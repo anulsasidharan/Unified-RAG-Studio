@@ -83,6 +83,49 @@ async function request<TResponse, TBody = unknown>(
   return response.json() as Promise<TResponse>;
 }
 
+/** Multipart upload — do not set ``Content-Type`` (browser sets boundary). */
+export async function postFormData<TResponse>(
+  path: string,
+  form: FormData,
+  signal?: AbortSignal
+): Promise<TResponse> {
+  const url = `${API_BASE}${path}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    body: form,
+    signal,
+    headers: { Accept: 'application/json' },
+  });
+
+  if (!response.ok) {
+    const raw = await response.text();
+    const trimmed = raw.slice(0, 16_000);
+    let data: unknown = null;
+    if (trimmed) {
+      try {
+        data = JSON.parse(trimmed) as unknown;
+      } catch {
+        // ignore
+      }
+    }
+    const head = trimmed.slice(0, 4000);
+    const proxyUnreachable =
+      /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND/i.test(head);
+    if (
+      proxyUnreachable &&
+      (typeof data !== 'object' || data === null || !('detail' in (data as object)))
+    ) {
+      data = {
+        detail:
+          'Cannot reach the backend API on port 8000. From the repository root run npm run dev:full (starts Next + FastAPI), or in apps/api run: uv run uvicorn app.main:app --reload --port 8000',
+      };
+    }
+    throw new ApiError(response.status, response.statusText, data);
+  }
+
+  return response.json() as Promise<TResponse>;
+}
+
 export const apiClient = {
   get: <T>(path: string, signal?: AbortSignal) =>
     request<T>(path, { method: 'GET', signal }),

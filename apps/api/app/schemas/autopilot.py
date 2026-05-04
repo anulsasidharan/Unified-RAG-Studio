@@ -1,6 +1,7 @@
 """Pydantic schemas for Autopilot Mode API endpoints.
 
 These schemas handle the full build lifecycle:
+  POST /api/autopilot/upload         — multipart document upload → MinIO object ids
   POST /api/autopilot/build          — start a new build
   GET  /api/autopilot/build/{id}     — poll build status
   GET  /api/autopilot/build/{id}/stream — SSE progress events
@@ -14,8 +15,25 @@ from pydantic import Field, RootModel
 
 from app.schemas.pipeline import CloudProvider, PipelineConfigurationSchema, RAGBaseModel
 
-
 BuildStatusLiteral = Literal["pending", "running", "complete", "failed", "cancelled"]
+
+
+# ─── Document upload (P7-1) ───────────────────────────────────────────────────
+
+
+class UploadedDocumentItem(RAGBaseModel):
+    """Stored corpus object; ``object_id`` is the MinIO key for ``StartBuildRequest``."""
+
+    object_id: str
+    original_filename: str
+    size_bytes: int = Field(ge=0)
+    content_type: str | None = None
+
+
+class AutopilotUploadResponse(RAGBaseModel):
+    """Response from ``POST /api/autopilot/upload``."""
+
+    documents: list[UploadedDocumentItem]
 
 
 # ─── Build Requirements ───────────────────────────────────────────────────────
@@ -33,9 +51,7 @@ class TargetMetricsSchema(RAGBaseModel):
 class BuildRequirementsSchema(RAGBaseModel):
     """User-supplied constraints that guide the Autopilot optimisation loop."""
 
-    target_metrics: TargetMetricsSchema = Field(
-        default_factory=TargetMetricsSchema
-    )
+    target_metrics: TargetMetricsSchema = Field(default_factory=TargetMetricsSchema)
     cloud_provider: CloudProvider | None = None
     # Maximum acceptable cost per 1K queries in USD
     budget_constraint: float | None = Field(default=None, ge=0.0)
@@ -53,7 +69,7 @@ class StartBuildRequest(RAGBaseModel):
 
     project_id: str
     requirements: BuildRequirementsSchema
-    # MinIO object IDs returned by POST /api/autopilot/upload
+    # Keys from POST /api/autopilot/upload (JSON ``objectId`` on each uploaded row).
     document_ids: list[str] = Field(min_length=1)
     # Optional starting config from the Designer "Optimize This" flow
     base_config: PipelineConfigurationSchema | None = None
@@ -178,7 +194,7 @@ class BuildResultSchema(RAGBaseModel):
 
 
 class BuildArtifactResultResponse(RootModel[dict[str, Any]]):
-    """Opaque JSON from ``AutopilotBuild.result`` (orchestrator output; shape evolves with P6-8+)."""
+    """Opaque JSON from ``AutopilotBuild.result`` (orchestrator output; shape evolves)."""
 
 
 class CancelBuildResponse(RAGBaseModel):

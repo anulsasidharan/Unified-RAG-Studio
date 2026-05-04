@@ -20,6 +20,18 @@ export interface BuildRequirements {
   maxIterations?: number;
 }
 
+/** One row returned from ``POST /api/autopilot/upload`` — ``objectId`` is sent as ``documentIds`` on build start. */
+export interface AutopilotUploadedDocument {
+  objectId: string;
+  originalFilename: string;
+  sizeBytes: number;
+  contentType?: string | null;
+}
+
+export interface AutopilotUploadResponse {
+  documents: AutopilotUploadedDocument[];
+}
+
 // ─── Build Lifecycle ─────────────────────────────────────────────────────────
 
 export type BuildStatus = 'pending' | 'running' | 'complete' | 'failed' | 'cancelled';

@@ -1,24 +1,27 @@
-"""Autopilot Mode HTTP API — start, poll, SSE stream, cancel, fetch build artifacts (P6-9)."""
+"""Autopilot Mode HTTP API — document upload (P7-1), build lifecycle (P6-9), SSE, cancel, artifacts."""
 
 from __future__ import annotations
 
 import asyncio
-import json
-import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
+import json
 from typing import Annotated, Any, Literal, cast
+import uuid
 
-import structlog
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+import structlog
 
+from app.config import Settings, get_settings
 from app.core.agents.state import AUTOPILOT_STAGE_ORDER
 from app.dependencies import DbSession, RequestUserId, get_session_factory
 from app.models.build_history import AutopilotBuild
+from app.models.project import Project
 from app.schemas.autopilot import (
+    AutopilotUploadResponse,
     BuildArtifactResultResponse,
     BuildMessageSchema,
     BuildResultSchema,
@@ -27,8 +30,15 @@ from app.schemas.autopilot import (
     StageStatusSchema,
     StartBuildRequest,
     StartBuildResponse,
+    UploadedDocumentItem,
 )
 from app.services.autopilot_build_service import AutopilotBuildService
+from app.services.autopilot_object_storage import (
+    AutopilotStorageUnavailableError,
+    AutopilotUploadError,
+    upload_blobs_sync,
+    validate_upload_candidate,
+)
 from app.worker import celery_app
 from app.worker.tasks import run_pipeline_build
 
@@ -75,9 +85,7 @@ def _normalize_messages(raw: list[Any] | None) -> list[BuildMessageSchema]:
         except ValidationError:
             raw_t = m.get("type")
             safe_t: Literal["info", "success", "warning", "error"] = (
-                raw_t
-                if raw_t in ("info", "success", "warning", "error")
-                else "info"
+                raw_t if raw_t in ("info", "success", "warning", "error") else "info"
             )
             items.append(
                 BuildMessageSchema(
@@ -99,11 +107,93 @@ def _optional_typed_result(raw: dict[str, Any] | None) -> BuildResultSchema | No
         return None
 
 
-def _coerce_build_status(raw: str) -> Literal["pending", "running", "complete", "failed", "cancelled"]:
+def _coerce_build_status(
+    raw: str,
+) -> Literal["pending", "running", "complete", "failed", "cancelled"]:
     allowed: tuple[str, ...] = ("pending", "running", "complete", "failed", "cancelled")
     if raw in allowed:
         return cast(Literal["pending", "running", "complete", "failed", "cancelled"], raw)
     return "failed"
+
+
+async def _require_owned_project(
+    session: AsyncSession, project_id: uuid.UUID, user_id: uuid.UUID
+) -> None:
+    proj = await session.get(Project, project_id)
+    if proj is None or proj.user_id != user_id or proj.deleted_at is not None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found")
+
+
+@router.post(
+    "/upload",
+    response_model=AutopilotUploadResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload Autopilot corpus files to object storage",
+)
+async def upload_autopilot_documents(
+    project_id: Annotated[str, Form(alias="projectId")],
+    files: Annotated[list[UploadFile], File(description="Corpus files for Autopilot")],
+    session: DbSession,
+    user_id: RequestUserId,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AutopilotUploadResponse:
+    try:
+        pid = uuid.UUID(project_id.strip())
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="invalid projectId"
+        ) from exc
+
+    await _require_owned_project(session, pid, user_id)
+
+    if not files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="At least one file is required"
+        )
+
+    max_files = max(1, int(settings.autopilot_upload_max_files))
+    if len(files) > max_files:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Too many files (max {max_files})",
+        )
+
+    max_bytes = max(1024, int(settings.autopilot_upload_max_bytes_per_file))
+    payloads: list[tuple[str, bytes, str | None]] = []
+    for upload in files:
+        raw_name = (upload.filename or "upload").strip() or "upload"
+        data = await upload.read()
+        try:
+            validate_upload_candidate(raw_name, len(data), max_bytes=max_bytes)
+        except AutopilotUploadError as exc:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+        payloads.append((raw_name, data, upload.content_type))
+
+    try:
+        uploaded = await asyncio.to_thread(
+            upload_blobs_sync,
+            settings,
+            user_id=user_id,
+            project_id=pid,
+            payloads=payloads,
+        )
+    except AutopilotUploadError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except AutopilotStorageUnavailableError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+
+    items = [
+        UploadedDocumentItem(
+            object_id=u.object_id,
+            original_filename=u.original_filename,
+            size_bytes=u.size_bytes,
+            content_type=u.content_type,
+        )
+        for u in uploaded
+    ]
+    return AutopilotUploadResponse(documents=items)
 
 
 def build_status_response(row: AutopilotBuild) -> BuildStatusResponse:
@@ -137,7 +227,9 @@ async def start_build(
     try:
         build = await _svc(session).create_pending_build(user_id, body)
     except LookupError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Project not found") from None
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Project not found"
+        ) from None
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
@@ -252,5 +344,7 @@ async def get_build_result(
     if row.result is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No result persisted yet")
     if not isinstance(row.result, dict):
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid result shape")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Invalid result shape"
+        )
     return BuildArtifactResultResponse.model_validate(row.result)

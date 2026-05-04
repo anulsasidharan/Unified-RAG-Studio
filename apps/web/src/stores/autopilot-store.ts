@@ -6,8 +6,14 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { AutopilotBuild, BuildRequirements } from '@/types/autopilot';
 import type { PipelineConfiguration } from '@/types/pipeline';
 
-const STORAGE_KEY = 'rag-studio-autopilot-v1';
+const STORAGE_KEY = 'rag-studio-autopilot-v2-p7';
 const MAX_PERSISTED_MESSAGES = 120;
+
+export type AutopilotUploadedDocMeta = {
+  objectId: string;
+  originalName: string;
+  sizeBytes: number;
+};
 
 function createDefaultRequirements(): BuildRequirements {
   return {
@@ -34,7 +40,9 @@ function trimBuildForPersistence(build: AutopilotBuild): AutopilotBuild {
 
 type AutopilotState = {
   requirements: BuildRequirements;
-  documents: string[];
+  /** Server project UUID for uploads / future build start */
+  selectedBackendProjectId: string | null;
+  uploadedDocuments: AutopilotUploadedDocMeta[];
   /** Optional Designer handoff baseline */
   baseConfig: PipelineConfiguration | null;
   activeBuildId: string | null;
@@ -42,9 +50,11 @@ type AutopilotState = {
 
   setRequirements: (next: BuildRequirements) => void;
   patchRequirements: (patch: Partial<BuildRequirements>) => void;
-  setDocuments: (docs: string[]) => void;
-  addDocument: (doc: string) => void;
-  removeDocument: (index: number) => void;
+  setSelectedBackendProjectId: (id: string | null) => void;
+  setUploadedDocuments: (docs: AutopilotUploadedDocMeta[]) => void;
+  addUploadedDocuments: (docs: AutopilotUploadedDocMeta[]) => void;
+  removeUploadedDocument: (index: number) => void;
+  clearUploadedDocuments: () => void;
   setBaseConfig: (config: PipelineConfiguration | null) => void;
   startFromDesigner: (config: PipelineConfiguration) => void;
   clearHandoff: () => void;
@@ -60,7 +70,8 @@ export const useAutopilotStore = create<AutopilotState>()(
   persist(
     (set) => ({
       requirements: createDefaultRequirements(),
-      documents: [],
+      selectedBackendProjectId: null,
+      uploadedDocuments: [],
       baseConfig: null,
       activeBuildId: null,
       builds: {},
@@ -79,15 +90,19 @@ export const useAutopilotStore = create<AutopilotState>()(
           },
         })),
 
-      setDocuments: (docs) => set({ documents: [...docs] }),
+      setSelectedBackendProjectId: (id) => set({ selectedBackendProjectId: id }),
 
-      addDocument: (doc) =>
-        set((s) => ({ documents: [...s.documents, doc] })),
+      setUploadedDocuments: (docs) => set({ uploadedDocuments: [...docs] }),
 
-      removeDocument: (index) =>
+      addUploadedDocuments: (docs) =>
+        set((s) => ({ uploadedDocuments: [...s.uploadedDocuments, ...docs] })),
+
+      removeUploadedDocument: (index) =>
         set((s) => ({
-          documents: s.documents.filter((_, i) => i !== index),
+          uploadedDocuments: s.uploadedDocuments.filter((_, i) => i !== index),
         })),
+
+      clearUploadedDocuments: () => set({ uploadedDocuments: [] }),
 
       setBaseConfig: (config) => set({ baseConfig: config }),
 
@@ -95,7 +110,8 @@ export const useAutopilotStore = create<AutopilotState>()(
         set({
           baseConfig: config,
           requirements: createDefaultRequirements(),
-          documents: [],
+          uploadedDocuments: [],
+          selectedBackendProjectId: null,
         }),
 
       clearHandoff: () =>
@@ -127,7 +143,8 @@ export const useAutopilotStore = create<AutopilotState>()(
       resetSession: () =>
         set({
           requirements: createDefaultRequirements(),
-          documents: [],
+          uploadedDocuments: [],
+          selectedBackendProjectId: null,
           baseConfig: null,
           activeBuildId: null,
         }),
@@ -139,7 +156,8 @@ export const useAutopilotStore = create<AutopilotState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (s) => ({
         requirements: s.requirements,
-        documents: s.documents,
+        selectedBackendProjectId: s.selectedBackendProjectId,
+        uploadedDocuments: s.uploadedDocuments,
         baseConfig: s.baseConfig,
         activeBuildId: s.activeBuildId,
         builds: s.builds,

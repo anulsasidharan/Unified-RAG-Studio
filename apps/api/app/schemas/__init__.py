@@ -73,6 +73,7 @@ from app.schemas.designer import (
 # ── Autopilot ─────────────────────────────────────────────────────────────────
 from app.schemas.autopilot import (
     AgentDecisionSchema,
+    AutopilotUploadResponse,
     BuildArtifactResultResponse,
     BuildMessageSchema,
     BuildRequirementsSchema,
@@ -90,6 +91,7 @@ from app.schemas.autopilot import (
     StartBuildRequest,
     StartBuildResponse,
     TargetMetricsSchema,
+    UploadedDocumentItem,
 )
 
 # ── Evaluation ────────────────────────────────────────────────────────────────
@@ -185,6 +187,8 @@ __all__ = [
     # autopilot
     "TargetMetricsSchema",
     "BuildRequirementsSchema",
+    "UploadedDocumentItem",
+    "AutopilotUploadResponse",
     "StartBuildRequest",
     "StartBuildResponse",
     "StageStatusSchema",
