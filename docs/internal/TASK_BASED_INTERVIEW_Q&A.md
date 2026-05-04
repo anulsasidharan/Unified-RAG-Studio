@@ -4931,3 +4931,65 @@ It copies **`row.requirements`** from the DB: **`document_ids`** must appear as 
 
 ---
 
+## Phase 6 · P6-9 · Autopilot API Endpoints
+
+### Which HTTP routes implement the Autopilot build lifecycle?
+
+| Method | Path | Role |
+|--------|------|------|
+| `POST` | `/api/autopilot/build` | Create an `autopilot_builds` row (pending), persist **`requirements`** + **`document_ids`** + optional **`base_config`**, enqueue **`jobs.run_pipeline_build`**, store **`_celery_task_id`** — returns **`202 Accepted`**. |
+| `GET` | `/api/autopilot/build/{id}` | Poll **`BuildStatusResponse`** (stages, messages, progress, optional typed **`result`**). |
+| `GET` | `/api/autopilot/build/{id}/stream` | **Server-Sent Events**: repeated **`data:`** lines with the same JSON shape as the poll endpoint until status is terminal (**`complete`**, **`failed`**, **`cancelled`**). |
+| `POST` | `/api/autopilot/build/{id}/cancel` | **`celery_app.control.revoke`** (best-effort, broker optional in dev), then mark row **`cancelled`**. |
+| `GET` | `/api/autopilot/build/{id}/result` | Returns the **opaque** JSON blob from **`AutopilotBuild.result`** (orchestrator / worker output), **`404`** if nothing persisted yet. |
+
+### How is multi-tenant ownership enforced on every call?
+
+Handlers load the build through **`AutopilotBuildService.get_owned`**: an SQLAlchemy **`select`** joins **`autopilot_builds` → `projects`**, filters **`projects.user_id`** to the resolved **`X-User-ID`** (or configured default) and **`projects.deleted_at IS NULL`**. Missing rows surface as **`404`**, not **`403`**, to avoid leaking build existence across users.
+
+### Where exactly are `document_ids` and `base_config` stored for the worker?
+
+They are merged into the same **`requirements`** JSON column written at **`POST /build`**: **`document_ids`** as a string list and optional **`base_config`** as a dict. **`run_pipeline_build`** already read **`requirements["document_ids"]`** and **`requirements["base_config"]`** for **`initial_autopilot_graph_state`** — P6-9 makes that path live for real enqueue traffic.
+
+### Why stash the Celery AsyncResult id under `_celery_task_id` inside JSON?
+
+Avoids a DB migration while still giving **cancel** a concrete task handle. The worker ignores keys it does not read; the API treats **`_celery_task_id`** as internal metadata.
+
+### Why wrap `celery_app.control.revoke` in a try/except instead of letting it fail?
+
+**Revoke** talks to the **broker** (Redis). In **CI** or **offline dev** the broker may be down; the product decision here is to **still mark the build cancelled in PostgreSQL** and log a warning so operators see intent even if the worker cannot be signalled immediately.
+
+### How does the Celery task cooperate with a cancelled build?
+
+**Before** flipping **`pending → running`**, **`run_pipeline_build`** returns immediately if the row is already **`cancelled`**. **Before** writing the success **`complete`** state, it re-reads the row and aborts if **`cancelled`** (so a late cancel during graph execution is not overwritten by **`complete`**). The exception path also avoids clobbering **`cancelled`** with **`failed`**.
+
+### What is the difference between `GET …/build/{id}` `result` and `GET …/build/{id}/result`?
+
+**`BuildStatusResponse.result`** is **`BuildResultSchema | null`** — only populated when the stored JSON fully validates as the **normalised** “final pipeline + metrics + decisions” contract. Until then it stays **`null`**. The **`/result`** route returns **`BuildArtifactResultResponse`** (arbitrary dict) so Phase 7 UIs and operators can inspect **`stage_outputs`**, flags, and other orchestrator dumps without pretending the shape is final-user-facing.
+
+### Why does the SSE handler open a fresh async session each second instead of reusing `Depends(get_db_session)`?
+
+A stream can run for **minutes**. Holding one request-scoped session across **`asyncio.sleep`** ties up a pool slot and keeps an implicit transaction boundary ambiguous. Short **`async with session_factory()`** blocks per tick are easier to reason about for read-only polling.
+
+### What HTTP code does a successful enqueue return, and why not `200`?
+
+**`202 Accepted`** — the server accepted responsibility to **process later**; the heavy LangGraph work is not done inside the request/response cycle.
+
+### What happens if you cancel the same build twice?
+
+The first **`POST /cancel`** succeeds (**`200`**) with **`status: "cancelled"`**. The second returns **`409 Conflict`** because the build is already in a terminal cancelled state (same for **`complete`**).
+
+### Does the Autopilot API implement document upload (`POST /api/autopilot/upload`)?
+
+**Not in P6-9.** The **`StartBuildRequest`** schema still documents MinIO object IDs for when **P7-1** adds upload; clients may pass **placeholder** IDs until storage is wired.
+
+### Interview trap: will SSE events be camelCase like the REST of the API?
+
+Yes — SSE payloads call **`model_dump(mode="json", by_alias=True)`** so keys match the OpenAPI / frontend **`camelCase`** convention.
+
+### What is the next task after P6-9?
+
+**Phase 7 · P7-1 · Document Uploader** (and subsequent P7 UI) — consume these endpoints from the browser with real uploads, live progress, and dashboards.
+
+---
+

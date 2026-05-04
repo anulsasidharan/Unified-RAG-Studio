@@ -776,3 +776,51 @@ Before P6-8, a build always ran **one forward pass** regardless of metric gaps. 
 
 ---
 
+## Phase 6 snapshot — P6-9 · Autopilot API Endpoints (FastAPI façade over Celery + LangGraph)
+
+**P6-9** exposes **first-class HTTP routes** under **`/api/autopilot`** so clients no longer have to manually create DB rows and call **`/api/jobs/build/{id}`**. **`POST /api/autopilot/build`** validates **`StartBuildRequest`**, checks **project ownership**, inserts **`autopilot_builds`** with **initial per-stage `pending` maps** aligned to **`AUTOPILOT_STAGE_ORDER`**, enqueues **`run_pipeline_build`**, and stores **`_celery_task_id`** beside user **`requirements`**. **`GET`** polling and **`GET …/stream`** surface **`BuildStatusResponse`** (camelCase JSON in SSE). **`POST …/cancel`** marks **`cancelled`** in PostgreSQL and **best-effort** **`revoke`**s the Celery task (tolerates broker outages). **`GET …/result`** returns the **raw** orchestrator JSON artifact. The worker gained **cooperative cancellation** checks so **`cancelled`** is not overwritten by a late **`complete`**.
+
+### P6-9 — Request path (enqueue)
+
+```mermaid
+sequenceDiagram
+  participant C as Client (Designer / P7 UI)
+  participant API as FastAPI /api/autopilot
+  participant PG as PostgreSQL
+  participant R as Redis broker
+  participant W as Celery worker
+
+  C->>API: POST /build (projectId, requirements, documentIds)
+  API->>PG: INSERT autopilot_builds (pending, stages, messages)
+  API->>R: run_pipeline_build.delay(build_id)
+  API->>PG: UPDATE requirements._celery_task_id
+  API-->>C: 202 StartBuildResponse
+  R->>W: deliver task
+  W->>PG: status running → complete / failed / skip if cancelled
+```
+
+### P6-9 — Observe path (poll + SSE)
+
+```mermaid
+flowchart LR
+  subgraph Client
+    P[Poller]
+    S[SSE reader]
+  end
+  subgraph API["FastAPI"]
+    G[GET /build/id]
+    ST[GET /build/id/stream]
+  end
+  PG[(autopilot_builds)]
+  P --> G
+  G --> PG
+  S --> ST
+  ST -->|"new session each tick"| PG
+```
+
+### Evolution note (P6-8 → P6-9)
+
+Before P6-9, operators could enqueue **`run_pipeline_build`** only via the **generic jobs router** after hand-crafting persistence. After P6-9, **Autopilot is a cohesive HTTP vertical**: one **`POST`** starts a tracked build with **correct `requirements` hydration** for the orchestrator, **cancel** is a product feature (not a Celery admin task), and **SSE** matches the **polling schema** so Phase 7 can swap transports without redesigning payloads.
+
+---
+

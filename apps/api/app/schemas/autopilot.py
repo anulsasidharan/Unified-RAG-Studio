@@ -5,14 +5,17 @@ These schemas handle the full build lifecycle:
   GET  /api/autopilot/build/{id}     — poll build status
   GET  /api/autopilot/build/{id}/stream — SSE progress events
   POST /api/autopilot/build/{id}/cancel
-  GET  /api/autopilot/build/{id}/result
+  GET  /api/autopilot/build/{id}/result — orchestrator JSON artifact (opaque until normalised)
 """
 
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, RootModel
 
 from app.schemas.pipeline import CloudProvider, PipelineConfigurationSchema, RAGBaseModel
+
+
+BuildStatusLiteral = Literal["pending", "running", "complete", "failed", "cancelled"]
 
 
 # ─── Build Requirements ───────────────────────────────────────────────────────
@@ -60,7 +63,7 @@ class StartBuildResponse(RAGBaseModel):
     """Response from POST /api/autopilot/build."""
 
     build_id: str
-    status: Literal["pending", "running", "complete", "failed"]
+    status: BuildStatusLiteral
     message: str
 
 
@@ -174,6 +177,18 @@ class BuildResultSchema(RAGBaseModel):
 # ─── Build Status ─────────────────────────────────────────────────────────────
 
 
+class BuildArtifactResultResponse(RootModel[dict[str, Any]]):
+    """Opaque JSON from ``AutopilotBuild.result`` (orchestrator output; shape evolves with P6-8+)."""
+
+
+class CancelBuildResponse(RAGBaseModel):
+    """Response from POST /api/autopilot/build/{id}/cancel."""
+
+    build_id: str
+    status: Literal["cancelled"] = "cancelled"
+    message: str = "Build cancellation requested."
+
+
 class BuildStatusResponse(RAGBaseModel):
     """Response for GET /api/autopilot/build/{id}.
 
@@ -181,7 +196,7 @@ class BuildStatusResponse(RAGBaseModel):
     """
 
     build_id: str
-    status: Literal["pending", "running", "complete", "failed"]
+    status: BuildStatusLiteral
     # Overall progress 0–100 (derived from completed-stage count)
     progress: int = Field(ge=0, le=100)
     current_stage: str

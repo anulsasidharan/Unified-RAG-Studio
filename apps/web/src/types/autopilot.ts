@@ -22,7 +22,7 @@ export interface BuildRequirements {
 
 // ─── Build Lifecycle ─────────────────────────────────────────────────────────
 
-export type BuildStatus = 'pending' | 'running' | 'complete' | 'failed';
+export type BuildStatus = 'pending' | 'running' | 'complete' | 'failed' | 'cancelled';
 
 export type AutopilotStageId =
   | 'analyze'

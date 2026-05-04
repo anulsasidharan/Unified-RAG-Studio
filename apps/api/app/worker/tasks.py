@@ -94,6 +94,10 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
             logger.warning("build_not_found", build_id=build_id)
             return {"build_id": build_id, "status": "failed", "error": "build not found"}
 
+        if row.status == "cancelled":
+            logger.info("build_skipped_already_cancelled", build_id=build_id)
+            return {"build_id": build_id, "status": "cancelled"}
+
         row.status = "running"
         row.current_stage = "orchestrate"
         row.messages = list(row.messages or [])
@@ -122,6 +126,8 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         logger.exception("run_pipeline_build_graph_failed", build_id=build_id)
         with sync_session_scope() as session:
             row = session.get(AutopilotBuild, bid)
+            if row and row.status == "cancelled":
+                return {"build_id": build_id, "status": "cancelled"}
             if row:
                 row.status = "failed"
                 row.error = str(exc)
@@ -164,6 +170,9 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         row = session.get(AutopilotBuild, bid)
         if row is None:
             return {"build_id": build_id, "status": "failed", "error": "build not found"}
+        if row.status == "cancelled":
+            logger.info("build_cancelled_before_persist", build_id=build_id)
+            return {"build_id": build_id, "status": "cancelled"}
         row.status = "complete"
         dep_ok = (stage_outputs.get("deployment") or {}).get("status") == "complete"
         row.progress = 100 if final.get("current_stage") == "deployment_complete" or dep_ok else last_progress
