@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     minio_access_key: str = "minioadmin"
     minio_secret_key: str = "minioadmin"
     minio_bucket: str = "rag-studio-documents"
+    # Autopilot multipart upload limits (P7-1)
+    autopilot_upload_max_files: int = 25
+    autopilot_upload_max_bytes_per_file: int = 52_428_800  # 50 MiB
 
     # ── CORS ──────────────────────────────────────────────────
     cors_origins: list[str] = [

@@ -824,3 +824,55 @@ Before P6-9, operators could enqueue **`run_pipeline_build`** only via the **gen
 
 ---
 
+## Phase 7 snapshot — P7-1 · Document Uploader (browser → API → MinIO → Zustand)
+
+**P7-1** closes the loop between **placeholder `documentIds`** and **real corpus bytes**. The FastAPI router adds **`POST /api/autopilot/upload`**, which validates **project ownership**, enforces **per-file size** / **count** caps from **`Settings`**, optionally type-checks extensions, and streams objects into the configured **MinIO** bucket under **`autopilot/{user}/{project}/…`** keys via **`upload_blobs_sync`** (executed in a **thread** off the asyncio loop). The **Next.js** Autopilot page renders **`DocumentUploader`**: it lists server projects from **`GET /api/projects/`**, posts **`FormData`** through **`postFormData`**, and persists **`UploadedDocumentItem`** metadata in **`useAutopilotStore`** for later **`POST /api/autopilot/build`** wiring.
+
+### P7-1 — Upload + persistence path
+
+```mermaid
+flowchart LR
+  subgraph Web["Next.js (Autopilot page)"]
+    DU[DocumentUploader]
+    Z[(Zustand persist)]
+  end
+  subgraph API["FastAPI /api/autopilot"]
+    UP[POST /upload]
+    OWN[Project ownership check]
+  end
+  subgraph Obj["Object storage"]
+    M[(MinIO / S3 bucket)]
+  end
+  DU -->|GET list| PG[(PostgreSQL projects)]
+  DU -->|multipart projectId + files| UP
+  UP --> OWN
+  OWN --> PG
+  UP -->|put_object| M
+  UP -->|201 documents[]| DU
+  DU --> Z
+```
+
+### P7-1 — Build hand-off (conceptual; wired in later P7 tasks)
+
+```mermaid
+sequenceDiagram
+  participant U as Autopilot UI
+  participant API as FastAPI
+  participant S3 as MinIO
+  participant JOB as Celery worker
+
+  U->>API: POST /upload (multipart)
+  API->>S3: put_object(autopilot/…)
+  API-->>U: objectId list
+  Note over U: P7-2+ capture requirements
+  U->>API: POST /build (documentIds = objectIds)
+  API->>JOB: run_pipeline_build
+  JOB->>JOB: LangGraph reads document_ids from state
+```
+
+### Evolution note (P6-9 → P7-1)
+
+Before P7-1, **`documentIds`** were opaque strings with **no first-class ingestion path** from the product UI. After P7-1, **Autopilot shares the same MinIO substrate** referenced throughout Docker Compose and **`Settings`**, and the **frontend store** can accumulate **display-ready upload metadata** ahead of the **requirements** and **build progress** surfaces.
+
+---
+

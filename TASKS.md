@@ -79,3 +79,9 @@
 | P6-7 · Deployment Agent | `feature/p6-deployment-agent` | ✅ done |
 | P6-8 · Autopilot Orchestrator | `feature/p6-autopilot-orchestrator` | ✅ done |
 | P6-9 · Autopilot API Endpoints | `feature/p6-autopilot-api` | ✅ done |
+
+## Phase 7 — Autopilot frontend
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P7-1 · Document Uploader | `feature/p7-document-uploader` | ✅ done |
