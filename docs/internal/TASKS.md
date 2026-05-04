@@ -46,4 +46,4 @@
 | P6-6 · Evaluation Agent | `feature/p6-evaluation-agent` | ✅ done |
 | P6-7 · Deployment Agent | `feature/p6-deployment-agent` | ✅ done |
 | P6-8 · Autopilot Orchestrator | `feature/p6-autopilot-orchestrator` | ✅ done |
-| P6-9 · Autopilot API Endpoints | `feature/p6-autopilot-api` | ⬜ pending |
+| P6-9 · Autopilot API Endpoints | `feature/p6-autopilot-api` | ✅ done |

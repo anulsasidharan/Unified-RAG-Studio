@@ -73,10 +73,12 @@ from app.schemas.designer import (
 # ── Autopilot ─────────────────────────────────────────────────────────────────
 from app.schemas.autopilot import (
     AgentDecisionSchema,
+    BuildArtifactResultResponse,
     BuildMessageSchema,
     BuildRequirementsSchema,
     BuildResultSchema,
     BuildStatusResponse,
+    CancelBuildResponse,
     ChunkingDecisionSchema,
     DeploymentInfoSchema,
     EmbeddingBenchmarkResultSchema,
@@ -197,6 +199,8 @@ __all__ = [
     "DeploymentInfoSchema",
     "BuildResultSchema",
     "BuildStatusResponse",
+    "BuildArtifactResultResponse",
+    "CancelBuildResponse",
     # evaluation
     "TestSetEntry",
     "EvaluationRunRequest",
