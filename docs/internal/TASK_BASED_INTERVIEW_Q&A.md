@@ -5113,7 +5113,7 @@ The browser targets the **Next.js origin**; **`next.config.js`** **`rewrites`** 
 
 ### Interview trap: does every SSE payload include the full `messages` array?
 
-**Yes** in the current API—the handler dumps the whole **`build_status_response(row)`** each tick. The Zustand persist layer already **truncates** long **`messages`** arrays (**`MAX_PERSISTED_MESSAGES`**) on **`upsertBuild`** to keep **localStorage** bounded; **P7-4** will add a richer feed UI.
+**Yes** in the current API—the handler dumps the whole **`build_status_response(row)`** each tick. The Zustand persist layer already **truncates** long **`messages`** arrays (**`MAX_PERSISTED_MESSAGES`**) on **`upsertBuild`** to keep **localStorage** bounded; **P7-4** surfaces the retained slice in **`AgentActivityFeed`** with filters and export.
 
 ### How is `Start build` validated before POST?
 
@@ -5121,7 +5121,43 @@ The monitor requires a **selected project**, at least one **uploaded object id**
 
 ### What is the next task after P7-3?
 
-**P7-4 · Agent Activity Feed** — full log stream, filters, and export on top of the **`messages`** array.
+**P7-4 · Agent Activity Feed** (implemented): full log stream, filters, and export on top of the **`messages`** array. Then **P7-5 · Metrics Dashboard**.
+
+---
+
+## Phase 7 · P7-4 · Agent Activity Feed
+
+### Where does the agent activity feed get its data?
+
+**`useAutopilotStore`**: the feed reads **`builds[activeBuildId].messages`**, the same **`BuildMessage[]`** merged from **`parseBuildStatusPayload`** during SSE or polling (**`useAutopilotBuildSubscription`** in **`BuildProgressMonitor`**). No second network subscription is required as long as the Autopilot page mounts the progress monitor (or any hook that keeps the store updated).
+
+### Why implement filtering on the client instead of a new API?
+
+**`BuildStatusResponse`** already ships the **`messages`** array on each tick; duplicating query parameters on the server would add latency and contract surface for little gain while message counts remain bounded (**`MAX_PERSISTED_MESSAGES`** in **`autopilot-store.ts`**). Client filters (**text**, **agent**, **type** toggles) operate on the in-memory slice instantly and match export semantics (**filtered** rows only).
+
+### How do JSON and text export differ?
+
+**JSON** export from **`AgentActivityFeed`** writes a structured object: **`buildId`**, **`buildStatus`**, **`exportedAt`**, **`filters`** (active query / agent / included types), **`messageCount`**, and **`messages`** (the visible rows). **Text** export flattens each line to **`[timestamp] Agent · TYPE — text`** with a short header—suitable for pasting into tickets or **`grep`**.
+
+### What happens to filters when the user switches the active build?
+
+An **`useEffect`** keyed on **`activeBuildId`** resets **search**, **agent** (**All agents**), and **all type toggles on**, so a filter from build A does not hide messages on build B.
+
+### Why auto-scroll only when the user is near the bottom?
+
+The feed keeps **`stickBottomRef`** in sync with **`scrollHeight - scrollTop - clientHeight`**. New SSE appends only auto-scroll if the user was already near the end (terminal-style behaviour). If they scrolled up to read history, the viewport does not jump.
+
+### How are message types styled?
+
+Rows use a **left border** and light background tint by **`BuildMessage.type`** (**`info`**, **`success`**, **`warning`**, **`error`**) so operators can scan failures without reading full text.
+
+### Interview trap: does export include messages truncated on the server?
+
+**Exports reflect whatever is in the store** after **`trimBuildForPersistence`**. If the backend ever sends more than the cap, the UI would still only export the truncated tail until persist rules change—interviewees should mention this consistency trade-off.
+
+### What is the next task after P7-4?
+
+**P7-5 · Metrics Dashboard** — live metrics, trends, latency, and cost views on top of build results and telemetry.
 
 ---
 

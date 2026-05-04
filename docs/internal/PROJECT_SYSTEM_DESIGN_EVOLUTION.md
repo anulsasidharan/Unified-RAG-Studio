@@ -915,7 +915,7 @@ Before P7-2, **`requirements`** in the store used **defaults only** with no stru
 
 ## Phase 7 snapshot — P7-3 · Build Progress Monitor (SSE + polling fallback)
 
-**P7-3** adds **`BuildProgressMonitor`** on **`/autopilot`** with **Start build** (**`POST /api/autopilot/build`**), **Cancel**, an **active build** selector (history in **`useAutopilotStore.builds`**), a **progress bar**, **per-stage** checklist (**`AUTOPILOT_STAGE_ORDER`**), and a **latest message** teaser ahead of **P7-4**. **`useAutopilotBuildSubscription`** prefers **`EventSource`** on **`/api/autopilot/build/{id}/stream`** and falls back to **polling** **`GET /api/autopilot/build/{id}`** on stream errors. **`autopilot-build-status.ts`** normalises **`BuildStatusResponse`** into the persisted **`AutopilotBuild`** shape while preserving **`input`**.
+**P7-3** adds **`BuildProgressMonitor`** on **`/autopilot`** with **Start build** (**`POST /api/autopilot/build`**), **Cancel**, an **active build** selector (history in **`useAutopilotStore.builds`**), a **progress bar**, and **per-stage** checklist (**`AUTOPILOT_STAGE_ORDER`**). Agent log lines are surfaced in **P7-4** (**`AgentActivityFeed`**). **`useAutopilotBuildSubscription`** prefers **`EventSource`** on **`/api/autopilot/build/{id}/stream`** and falls back to **polling** **`GET /api/autopilot/build/{id}`** on stream errors. **`autopilot-build-status.ts`** normalises **`BuildStatusResponse`** into the persisted **`AutopilotBuild`** shape while preserving **`input`**.
 
 ### P7-3 — Client subscription paths
 
@@ -964,6 +964,39 @@ sequenceDiagram
 ### Evolution note (P7-2 → P7-3)
 
 Before P7-3, requirements and uploads were **persisted** but nothing called **`POST /api/autopilot/build`** from the product UI. After P7-3, the Autopilot wizard is **closed-loop**: operators enqueue Celery-backed LangGraph runs and observe **real-time row projections** without leaving **`/autopilot`**, with **resilient transport** when SSE is unavailable.
+
+---
+
+## Phase 7 snapshot — P7-4 · Agent Activity Feed (filters + export)
+
+**P7-4** adds **`AgentActivityFeed`** on **`/autopilot`** below **`BuildProgressMonitor`**. It renders the full **`AutopilotBuild.messages`** list for the **active build** (same Zustand row updated by **`useAutopilotBuildSubscription`**). Operators **search** (substring over text, agent, timestamp), restrict by **agent** (**All agents** vs a distinct **`BuildMessage.agent`** value), toggle **message types** (**info** / **success** / **warning** / **error**), and **export** the **filtered** slice as **JSON** (metadata + messages) or **plain text** (one line per event). Filters reset when **`activeBuildId`** changes. The scroll region **sticks to the bottom** on new lines only while the user is already near the end, avoiding disruptive jumps when reading older lines.
+
+### P7-4 — Autopilot page data flow (observability slice)
+
+```mermaid
+flowchart TB
+  subgraph Page["/autopilot"]
+    BPM[BuildProgressMonitor]
+    AAF[AgentActivityFeed]
+  end
+  subgraph Client["Browser"]
+    H[useAutopilotBuildSubscription]
+    Z[(useAutopilotStore.builds activeBuildId)]
+  end
+  subgraph API["FastAPI"]
+    S["GET …/stream SSE"]
+    G["GET …/build poll"]
+  end
+  BPM --> H
+  H --> S
+  H --> G
+  H -->|upsertBuild messages stages| Z
+  AAF -->|read messages filter export| Z
+```
+
+### Evolution note (P7-3 → P7-4)
+
+Before P7-4, **`messages`** were only implied for future UI (stage list + progress dominated the monitor). After P7-4, **agent trace lines** are first-class in the product: operators can **slice**, **review**, and **archive** orchestrator output without opening browser devtools or raw API payloads.
 
 ---
 

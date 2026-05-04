@@ -359,29 +359,6 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
             </p>
           ) : null}
 
-          {displayBuild.messages?.length ? (
-            <div>
-              <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Latest activity</h3>
-              <p className="mt-2 rounded-md border border-neutral-200 bg-neutral-50/80 px-3 py-2 text-xs text-neutral-800 dark:border-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-200">
-                {(() => {
-                  const last = displayBuild.messages[displayBuild.messages.length - 1];
-                  return (
-                    <>
-                      <span className="text-muted-foreground">{last.timestamp}</span>
-                      {last.agent ? (
-                        <span className="text-muted-foreground"> · {last.agent}</span>
-                      ) : null}
-                      <br />
-                      <span className="mt-1 inline-block text-sm">{last.text}</span>
-                    </>
-                  );
-                })()}
-              </p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Full agent feed and filters ship in <strong>P7-4</strong>.
-              </p>
-            </div>
-          ) : null}
         </div>
       ) : activeBuildId ? (
         <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
