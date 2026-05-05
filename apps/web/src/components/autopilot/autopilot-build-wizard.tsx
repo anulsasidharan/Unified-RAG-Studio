@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { AutopilotDesignerBaselineBanner } from '@/components/autopilot/autopilot-designer-baseline-banner';
 import { AgentActivityFeed } from '@/components/autopilot/agent-activity-feed';
 import { BuildProgressMonitor } from '@/components/autopilot/build-progress-monitor';
 import { DecisionExplainer } from '@/components/autopilot/decision-explainer';
@@ -26,6 +27,8 @@ export function AutopilotBuildWizard() {
         Upload corpus files, set requirements, then start a build. Progress streams over SSE with polling
         fallback.
       </p>
+
+      <AutopilotDesignerBaselineBanner className="mt-6" />
 
       <DocumentUploader className="mt-8" />
       <RequirementsForm className="mt-8" />
