@@ -87,6 +87,7 @@ jobs:
     env:
       DATABASE_URL: "postgresql+asyncpg://raguser:ragpass@localhost:5432/ragstudio_test"
       REDIS_URL: "redis://localhost:6379/0"
+      CELERY_TASK_ALWAYS_EAGER: "true"
       QDRANT_URL: "http://localhost:6333"
       OPENAI_API_KEY: "sk-test-placeholder"
       ANTHROPIC_API_KEY: "sk-ant-test-placeholder"
@@ -208,7 +209,7 @@ jobs:
         working-directory: apps/web
         env:
           PLAYWRIGHT_BASE_URL: "http://localhost:3000"
-        run: npx playwright test --reporter=html
+        run: npm run test:e2e -- --reporter=html
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

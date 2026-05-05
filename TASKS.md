@@ -112,3 +112,6 @@
 | Task | Branch | Status |
 |------|--------|--------|
 | P10-1 · Backend Unit Tests | `feature/p10-backend-unit-tests` | ✅ done |
+| P10-2 · Backend Integration Tests | `feature/p10-backend-integration-tests` | ✅ done |
+| P10-3 · Frontend Unit Tests | `feature/p10-frontend-unit-tests` | ✅ done |
+| P10-4 · End-to-End Tests | `feature/p10-e2e-tests` | ✅ done |
