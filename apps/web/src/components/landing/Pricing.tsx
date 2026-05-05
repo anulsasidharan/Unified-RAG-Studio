@@ -21,7 +21,7 @@ const tiers: Tier[] = [
     period: 'forever',
     description: 'Perfect for learning RAG and building personal projects.',
     cta: 'Get Started Free',
-    ctaHref: '/designer',
+    ctaHref: '/register',
     popular: false,
     features: [
       { label: 'Designer Mode (full access)', included: true },
@@ -40,7 +40,7 @@ const tiers: Tier[] = [
     period: '/ month',
     description: 'For teams that need unlimited builds and all export formats.',
     cta: 'Start Free Trial',
-    ctaHref: '/designer',
+    ctaHref: '/register',
     popular: true,
     features: [
       { label: 'Designer Mode (full access)', included: true },

@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { applyDesignerSnapshot } from '@/lib/project-designer-bridge';
 import { useAutopilotStore } from '@/stores/autopilot-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { useProjectStore } from '@/stores/project-store';
 import type { PipelineConfiguration } from '@/types/pipeline';
 
@@ -62,12 +63,20 @@ function migrateLegacyDesignerDraftOnce(): void {
  */
 export function StoreHydration() {
   useEffect(() => {
-    void Promise.resolve(useProjectStore.persist.rehydrate()).then(() => {
+    void (async () => {
+      await Promise.resolve(useProjectStore.persist.rehydrate());
       migrateLegacyDesignerDraftOnce();
-      const activeId = useProjectStore.getState().activeProjectId;
-      const project = useProjectStore.getState().projects.find((p) => p.id === activeId);
-      applyDesignerSnapshot(project?.designerSnapshot);
-    });
+
+      await useAuthStore.getState().initFromToken();
+
+      // If unauthenticated, keep the legacy persisted designer snapshot behavior.
+      if (!useAuthStore.getState().isAuthenticated) {
+        const activeId = useProjectStore.getState().activeProjectId;
+        const project = useProjectStore.getState().projects.find((p) => p.id === activeId);
+        applyDesignerSnapshot(project?.designerSnapshot);
+      }
+    })();
+
     void useAutopilotStore.persist.rehydrate();
   }, []);
 

@@ -36,7 +36,12 @@ async def create_project(
     session: DbSession,
     user_id: RequestUserId,
 ) -> ProjectSummary:
-    return await _service(session).create(user_id, body)
+    try:
+        return await _service(session).create(user_id, body)
+    except LookupError:
+        raise HTTPException(status_code=404, detail="User not found") from None
+    except ValueError as exc:
+        raise HTTPException(status_code=403, detail=str(exc)) from exc
 
 
 @router.get(

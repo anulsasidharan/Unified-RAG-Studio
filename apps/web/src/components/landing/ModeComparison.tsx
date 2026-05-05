@@ -61,7 +61,7 @@ export function ModeComparison() {
           </ul>
 
           <Link
-            href="/designer"
+            href="/register"
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
           >
             Open Designer
@@ -100,7 +100,7 @@ export function ModeComparison() {
           </ul>
 
           <Link
-            href="/autopilot"
+            href="/register"
             className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-neutral-200 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 transition-colors hover:border-purple-300 hover:bg-purple-50"
           >
             Launch Autopilot

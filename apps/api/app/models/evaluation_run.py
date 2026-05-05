@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Integer, JSON, String, Text, Uuid
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, JSON, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -23,6 +23,12 @@ class EvaluationRun(Base, TimestampMixin):
         Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     config_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True),
@@ -55,3 +61,7 @@ class EvaluationRun(Base, TimestampMixin):
 
     config: Mapped[PipelineConfig] = relationship("PipelineConfig", back_populates="evaluations")
     build: Mapped[AutopilotBuild | None] = relationship("AutopilotBuild", back_populates="evaluations")
+
+    __table_args__ = (
+        Index("ix_evaluation_runs_user_id_id", "user_id", "id"),
+    )

@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.project import Project
+from app.models.user import User
 from app.schemas.project import (
     AutopilotBuildSummary,
     PaginatedProjectsResponse,
@@ -30,6 +31,22 @@ class ProjectService:
         user_id: uuid.UUID,
         body: ProjectCreateRequest,
     ) -> ProjectSummary:
+        user = await self._session.get(User, user_id)
+        if user is None:
+            raise LookupError("user not found")
+
+        if user.subscription_tier.lower() == "free":
+            # Free tier: max 3 projects (active = not soft-deleted).
+            count_q = (
+                select(func.count())
+                .select_from(Project)
+                .where(Project.user_id == user_id)
+                .where(Project.deleted_at.is_(None))
+            )
+            n = int((await self._session.execute(count_q)).scalar_one() or 0)
+            if n >= 3:
+                raise ValueError("Free tier limit reached (max 3 projects). Upgrade to create more.")
+
         proj = Project(
             user_id=user_id,
             name=body.name,

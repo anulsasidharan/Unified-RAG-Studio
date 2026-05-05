@@ -66,6 +66,7 @@ class DesignerService:
             select(PipelineConfig)
             .join(Project, PipelineConfig.project_id == Project.id)
             .where(PipelineConfig.id == config_id)
+            .where(PipelineConfig.user_id == user_id)
             .where(Project.user_id == user_id)
             .where(Project.deleted_at.is_(None))
         )
@@ -97,6 +98,7 @@ class DesignerService:
         cfg_dict = schema.model_dump(mode="json")
         row = PipelineConfig(
             id=row_id,
+            user_id=user_id,
             project_id=body.project_id,
             name=body.name,
             version=schema.metadata.version,
@@ -177,12 +179,14 @@ class DesignerService:
         base = (
             select(PipelineConfig)
             .where(PipelineConfig.project_id == project_id)
+            .where(PipelineConfig.user_id == user_id)
             .order_by(PipelineConfig.updated_at.desc())
         )
         count_q = (
             select(func.count())
             .select_from(PipelineConfig)
             .where(PipelineConfig.project_id == project_id)
+            .where(PipelineConfig.user_id == user_id)
         )
         total = int((await self._session.execute(count_q)).scalar_one())
         offset = (page - 1) * page_size

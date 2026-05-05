@@ -39,6 +39,7 @@ class AutopilotBuildService:
             select(AutopilotBuild)
             .join(Project, AutopilotBuild.project_id == Project.id)
             .where(AutopilotBuild.id == build_id)
+            .where(AutopilotBuild.user_id == user_id)
             .where(Project.user_id == user_id)
             .where(Project.deleted_at.is_(None))
         )
@@ -60,6 +61,7 @@ class AutopilotBuildService:
             requirements["base_config"] = body.base_config.model_dump(mode="json")
 
         build = AutopilotBuild(
+            user_id=user_id,
             project_id=pid,
             status="pending",
             progress=0,
@@ -113,8 +115,9 @@ class AutopilotBuildService:
         """Return (total_count, page_rows) of (build, project_name), newest first."""
 
         filters = [
+            AutopilotBuild.user_id == user_id,
             Project.user_id == user_id,
-            Project.deleted_at.is_(None),
+            Project.deleted_at.is_(None),  # also prevents builds for soft-deleted projects
         ]
         if project_id is not None:
             filters.append(AutopilotBuild.project_id == project_id)

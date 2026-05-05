@@ -32,26 +32,27 @@ export function Sidebar({
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
-  const addProject = useProjectStore((s) => s.addProject);
-  const removeProject = useProjectStore((s) => s.removeProject);
+  const createProjectOnServer = useProjectStore((s) => s.createProjectOnServer);
+  const deleteProjectOnServer = useProjectStore((s) => s.deleteProjectOnServer);
+  const renameProjectOnServer = useProjectStore((s) => s.renameProjectOnServer);
   const updateProject = useProjectStore((s) => s.updateProject);
 
-  const handleNewProject = () => {
+  const handleNewProject = async () => {
     const n = projects.filter((p) => p.name.startsWith('Untitled project')).length;
     const name =
       n === 0 ? 'Untitled project' : `Untitled project (${n + 1})`;
-    addProject({ name });
+    await createProjectOnServer({ name });
     onMobileClose();
   };
 
-  const handleDeleteProject = (id: string, name: string) => {
+  const handleDeleteProject = async (id: string, name: string) => {
     if (
       typeof window !== 'undefined' &&
       !window.confirm(`Delete "${name}"? This cannot be undone.`)
     ) {
       return;
     }
-    removeProject(id);
+    await deleteProjectOnServer(id);
     onMobileClose();
   };
 
@@ -136,7 +137,10 @@ export function Sidebar({
               <EditableProjectName
                 variant="sidebar"
                 name={p.name}
-                onSave={(next) => updateProject(p.id, { name: next })}
+                onSave={(next) => {
+                  updateProject(p.id, { name: next });
+                  void renameProjectOnServer(p.id, { name: next });
+                }}
                 onSelect={() => {
                   setActiveProject(p.id);
                   onMobileClose();
