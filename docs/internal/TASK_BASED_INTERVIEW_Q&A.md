@@ -5309,7 +5309,7 @@ On **`/designer/review`**, the **`DesignerToAutopilotHandoff`** card explains th
 
 ### What is the next task after P8-1?
 
-**P8-2 · Autopilot → Designer Visualization** — (done; see Phase 8 · P8-2 below). **P8-3** is also complete (see Phase 8 · P8-3). Next in the roadmap: **P8-4 · Deployment API Endpoints**.
+**P8-2 · Autopilot → Designer Visualization** — (done; see Phase 8 · P8-2 below). **P8-3** and **P8-4** are complete (see Phase 8 · P8-3 and P8-4). Next in the roadmap: **P9-1 · MLflow Integration**.
 
 ---
 
@@ -5349,7 +5349,7 @@ If **`metadata`** already marks **`source: autopilot`** but the metric snapshot 
 
 ### What is the next task after P8-2?
 
-**P8-3 · Evaluation API Endpoints** is implemented (see Phase 8 · P8-3). Next: **P8-4 · Deployment API Endpoints**.
+**P8-3 · Evaluation API Endpoints** is implemented (see Phase 8 · P8-3). **P8-4 · Deployment API Endpoints** is also complete (see Phase 8 · P8-4). Next: **P9-1 · MLflow Integration**.
 
 ---
 
@@ -5405,7 +5405,52 @@ The **`EvaluationEngine`** resolves metric names via **`resolve_ragas_metric_nam
 
 ### What is the next task after P8-3?
 
-**P8-4 · Deployment API Endpoints** — trigger/list/status/teardown for deployments.
+**P8-4 · Deployment API Endpoints** is implemented (see Phase 8 · P8-4). Next in the roadmap: **P9-1 · MLflow Integration**.
+
+---
+
+## Phase 8 · P8-4 · Deployment API Endpoints
+
+### What user problem does P8-4 solve?
+
+Saved **pipeline configurations** need a **first-class HTTP API** to **start** a deployment (Docker / K8s / cloud targets), **poll status**, **list** deployment history under a **project**, and **tear down** a deployment record — without bypassing the DB or calling Celery manually from scripts.
+
+### What HTTP surface does the API expose?
+
+| Method | Path | Role |
+|--------|------|------|
+| `POST` | `/api/deployment/deploy` | Create a `deployments` row (`status=deploying`), commit, enqueue Celery `run_deployment`, return `DeployResponse` (`201`). |
+| `GET` | `/api/deployment/{deployment_id}/status` | Return endpoint, health URL, image tag, timestamps, `error` from `deployment_info` when `failed`. |
+| `GET` | `/api/deployment/deployments?project_id=<uuid>` | Paginated list (`page`, `page_size` ≤ 100) for all configs in that **owned** project. |
+| `DELETE` | `/api/deployment/{deployment_id}` | Logical teardown: `status=teardown`, clear `endpoint` / `health_check_url`, set `deployment_info.teardown_at`. |
+
+### How is the acting user scoped?
+
+Same as evaluation/projects: **`X-User-ID`** (or **`default_user_id`**). Every query joins **`deployments` → `pipeline_configs` → `projects`** and requires **`projects.user_id`** to match and **`deleted_at` IS NULL**.
+
+### Why commit before enqueueing Celery?
+
+The **`run_deployment`** worker opens a **new synchronous session** and loads the row by ID. If the FastAPI request transaction had not yet committed, the worker could **race** and return “deployment not found”. **`DeploymentService.trigger_deploy`** **`commit()`**s immediately after flush, then calls **`tasks.run_deployment.delay`**.
+
+### What does the existing Celery task do?
+
+**`jobs.run_deployment`** (see **`app/worker/tasks.py`**) is a **stub**: it sets **`deployed`**, a **stub HTTPS endpoint** under **`stub.rag-studio.local`**, **`health_check_url`**, **`docker_image_tag`**, **`deployed_at`**, and merges **`deployment_info.stub: true`**. Real Terraform / `kubectl` / cloud apply remains **operator-gated** (see deployment agent and Phase 12).
+
+### How do optional deploy body fields persist?
+
+**`region`** and **`image_tag`** map to **`deployment_info.region`** (JSON) and **`docker_image_tag`** on the row, respectively.
+
+### What is idempotent about teardown?
+
+Calling **`DELETE`** on an already **teardown** deployment still requires **ownership**; the handler updates the row again (safe) and returns **`DeploymentStatusResponse`** with **`status: teardown`**.
+
+### Interview trap: does list filter by configuration?
+
+**No** — it filters by **`project_id`** only, so you see **all deployments** for every **saved config** in that project (newest first). Use **`config_id`** from each **`DeploymentListItem`** to correlate.
+
+### What is the next task after P8-4?
+
+**P9-1 · MLflow Integration** — experiment tracking for Autopilot runs (see `docs/internal/project_status.md`).
 
 ---
 

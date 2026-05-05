@@ -118,6 +118,7 @@ def create_app() -> FastAPI:
 
     # ── Routes ───────────────────────────────────────────────
     from app.routers.autopilot import router as autopilot_router
+    from app.routers.deployment import router as deployment_router
     from app.routers.designer import router as designer_router
     from app.routers.evaluation import router as evaluation_router
     from app.routers.health import router as health_router
@@ -136,6 +137,7 @@ def create_app() -> FastAPI:
     app.include_router(templates_router)
     app.include_router(designer_router)
     app.include_router(evaluation_router)
+    app.include_router(deployment_router)
 
     return app
 
