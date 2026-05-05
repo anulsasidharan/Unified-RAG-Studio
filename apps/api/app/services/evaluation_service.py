@@ -138,6 +138,7 @@ class EvaluationService:
             select(PipelineConfig)
             .join(Project, PipelineConfig.project_id == Project.id)
             .where(PipelineConfig.id == config_id)
+            .where(PipelineConfig.user_id == user_id)
             .where(Project.user_id == user_id)
             .where(Project.deleted_at.is_(None))
         )
@@ -170,6 +171,7 @@ class EvaluationService:
         test_set_size = len(entries)
 
         row = EvaluationRun(
+            user_id=user_id,
             config_id=p_row.id,
             build_id=None,
             status="running",
@@ -211,11 +213,8 @@ class EvaluationService:
     async def get_run(self, user_id: uuid.UUID, run_id: uuid.UUID) -> EvaluationRunResponse | None:
         q = (
             select(EvaluationRun)
-            .join(PipelineConfig, EvaluationRun.config_id == PipelineConfig.id)
-            .join(Project, PipelineConfig.project_id == Project.id)
             .where(EvaluationRun.id == run_id)
-            .where(Project.user_id == user_id)
-            .where(Project.deleted_at.is_(None))
+            .where(EvaluationRun.user_id == user_id)
         )
         er = (await self._session.execute(q)).scalar_one_or_none()
         if er is None:
@@ -236,12 +235,18 @@ class EvaluationService:
         q = (
             select(EvaluationRun)
             .where(EvaluationRun.config_id == config_id)
+            .where(EvaluationRun.user_id == user_id)
             .order_by(EvaluationRun.created_at.desc())
             .limit(min(max(limit, 1), 200))
         )
         rows = list((await self._session.execute(q)).scalars().all())
         items = [_row_to_response(r) for r in rows]
-        cq = select(func.count()).select_from(EvaluationRun).where(EvaluationRun.config_id == config_id)
+        cq = (
+            select(func.count())
+            .select_from(EvaluationRun)
+            .where(EvaluationRun.config_id == config_id)
+            .where(EvaluationRun.user_id == user_id)
+        )
         total = int((await self._session.execute(cq)).scalar_one())
         return EvaluationRunListResponse(items=items, total=total)
 

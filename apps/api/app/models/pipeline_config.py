@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, JSON, String, Text, Uuid
+from sqlalchemy import ForeignKey, Index, JSON, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -23,6 +23,12 @@ class PipelineConfig(Base, TimestampMixin):
         Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     project_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True),
@@ -48,4 +54,8 @@ class PipelineConfig(Base, TimestampMixin):
         "Deployment",
         back_populates="config",
         cascade="all, delete-orphan",
+    )
+
+    __table_args__ = (
+        Index("ix_pipeline_configs_user_id_id", "user_id", "id"),
     )

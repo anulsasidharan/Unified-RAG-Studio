@@ -37,6 +37,7 @@ class DeploymentService:
             select(PipelineConfig)
             .join(Project, PipelineConfig.project_id == Project.id)
             .where(PipelineConfig.id == config_id)
+            .where(PipelineConfig.user_id == user_id)
             .where(Project.user_id == user_id)
             .where(Project.deleted_at.is_(None))
         )
@@ -59,6 +60,8 @@ class DeploymentService:
             .join(PipelineConfig, Deployment.config_id == PipelineConfig.id)
             .join(Project, PipelineConfig.project_id == Project.id)
             .where(Deployment.id == deployment_id)
+            .where(Deployment.user_id == user_id)
+            .where(PipelineConfig.user_id == user_id)
             .where(Project.user_id == user_id)
             .where(Project.deleted_at.is_(None))
         )
@@ -99,6 +102,7 @@ class DeploymentService:
             dep_info["region"] = body.region
 
         row = Deployment(
+            user_id=user_id,
             config_id=p_row.id,
             provider=body.provider,
             environment=body.environment,
@@ -153,20 +157,39 @@ class DeploymentService:
         page_size = min(max(1, page_size), 100)
         offset = (page - 1) * page_size
 
-        base = (
+        q = (
             select(Deployment)
-            .join(PipelineConfig, Deployment.config_id == PipelineConfig.id)
-            .where(PipelineConfig.project_id == project_id)
+            .where(Deployment.user_id == user_id)
+            .where(
+                Deployment.config_id.in_(
+                    select(PipelineConfig.id)
+                    .join(Project, PipelineConfig.project_id == Project.id)
+                    .where(PipelineConfig.project_id == project_id)
+                    .where(PipelineConfig.user_id == user_id)
+                    .where(Project.user_id == user_id)
+                    .where(Project.deleted_at.is_(None))
+                )
+            )
+            .order_by(Deployment.created_at.desc())
+            .offset(offset)
+            .limit(page_size)
         )
-
-        q = base.order_by(Deployment.created_at.desc()).offset(offset).limit(page_size)
         rows = list((await self._session.execute(q)).scalars().all())
 
         cq = (
             select(func.count())
             .select_from(Deployment)
-            .join(PipelineConfig, Deployment.config_id == PipelineConfig.id)
-            .where(PipelineConfig.project_id == project_id)
+            .where(Deployment.user_id == user_id)
+            .where(
+                Deployment.config_id.in_(
+                    select(PipelineConfig.id)
+                    .join(Project, PipelineConfig.project_id == Project.id)
+                    .where(PipelineConfig.project_id == project_id)
+                    .where(PipelineConfig.user_id == user_id)
+                    .where(Project.user_id == user_id)
+                    .where(Project.deleted_at.is_(None))
+                )
+            )
         )
         total = int((await self._session.execute(cq)).scalar_one())
 

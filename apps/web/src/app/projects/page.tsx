@@ -11,12 +11,20 @@ export default function ProjectsPage() {
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
-  const removeProject = useProjectStore((s) => s.removeProject);
+  const deleteProjectOnServer = useProjectStore((s) => s.deleteProjectOnServer);
   const updateProject = useProjectStore((s) => s.updateProject);
+  const createProjectOnServer = useProjectStore((s) => s.createProjectOnServer);
+  const renameProjectOnServer = useProjectStore((s) => s.renameProjectOnServer);
 
   const handleDelete = (id: string, name: string) => {
     if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    removeProject(id);
+    void deleteProjectOnServer(id);
+  };
+
+  const handleCreateFirstProject = () => {
+    const n = projects.filter((p) => p.name.startsWith('Untitled project')).length;
+    const name = n === 0 ? 'Untitled project' : `Untitled project (${n + 1})`;
+    void createProjectOnServer({ name });
   };
 
   return (
@@ -25,12 +33,23 @@ export default function ProjectsPage() {
         Projects
       </h1>
       <p className="mt-3 text-neutral-600 dark:text-neutral-400">
-        Local project list until the Projects API (Phase 4) syncs with the server. Create projects from the
-        sidebar.
+        Your projects are scoped to your account. Create a project to unlock Designer and Autopilot.
       </p>
       <ul className="mt-8 divide-y rounded-lg border border-neutral-200 dark:border-neutral-800">
         {projects.length === 0 ? (
-          <li className="px-4 py-8 text-center text-sm text-muted-foreground">No projects yet.</li>
+          <li className="px-4 py-10 text-center text-sm text-muted-foreground">
+            <p className="font-medium text-neutral-900 dark:text-neutral-100">No projects yet.</p>
+            <p className="mt-2">
+              Get started by creating your first project, then open Designer to build your RAG pipeline.
+            </p>
+            <button
+              type="button"
+              onClick={handleCreateFirstProject}
+              className="mt-5 inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700"
+            >
+              Create New Project
+            </button>
+          </li>
         ) : (
           projects.map((p) => (
             <li key={p.id} className="flex items-start justify-between gap-3 px-4 py-3">
@@ -38,7 +57,10 @@ export default function ProjectsPage() {
                 <EditableProjectName
                   variant="list"
                   name={p.name}
-                  onSave={(next) => updateProject(p.id, { name: next })}
+                  onSave={(next) => {
+                    updateProject(p.id, { name: next });
+                    void renameProjectOnServer(p.id, { name: next });
+                  }}
                 />
                 {p.description ? (
                   <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>

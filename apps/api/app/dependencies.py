@@ -121,51 +121,51 @@ AppSettings = Annotated[Settings, Depends(get_settings)]
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_request_user_id(
+async def get_request_user_id(
     settings: AppSettings,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
-    x_user_id: Annotated[
-        str | None,
-        Header(alias="X-User-ID", convert_underscores=False),
-    ] = None,
+    redis: RedisClient,
 ) -> uuid.UUID:
-    """Resolves acting user from JWT when enabled, else falls back to header/default."""
-    if credentials and credentials.credentials:
-        try:
-            principal = decode_access_token(settings, credentials.credentials)
-            return principal.user_id
-        except ValueError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid bearer token",
-            ) from exc
+    """Resolves acting user from JWT and enforces token revocation."""
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
 
-    if settings.auth_required:
+    try:
+        principal = decode_access_token(settings, credentials.credentials)
+    except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Missing bearer token",
-        )
+            detail="Invalid bearer token",
+        ) from exc
 
-    raw = (x_user_id or str(settings.default_user_id)).strip()
-    try:
-        return uuid.UUID(raw)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail="Invalid X-User-ID header") from exc
+    if principal.jti:
+        key = f"revoked_jti:{principal.jti}"
+        if await redis.exists(key):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
+
+    return principal.user_id
 
 
 RequestUserId = Annotated[uuid.UUID, Depends(get_request_user_id)]
 
 
-def get_current_principal(
+async def get_current_principal(
     settings: AppSettings,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    redis: RedisClient,
 ) -> AuthPrincipal:
     if credentials is None or not credentials.credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
     try:
-        return decode_access_token(settings, credentials.credentials)
+        principal = decode_access_token(settings, credentials.credentials)
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token") from exc
+
+    if principal.jti:
+        key = f"revoked_jti:{principal.jti}"
+        if await redis.exists(key):
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token revoked")
+    return principal
 
 
 CurrentPrincipal = Annotated[AuthPrincipal, Depends(get_current_principal)]

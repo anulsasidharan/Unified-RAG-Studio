@@ -2,17 +2,45 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
 
 import { Navbar } from './navbar';
 import { Sidebar } from './sidebar';
+import { useAuthStore } from '@/stores/auth-store';
 
 const SIDEBAR_COLLAPSED_KEY = 'rag-studio-sidebar-collapsed';
 
 export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
+  const router = useRouter();
   const isHome = pathname === '/';
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const isLoadingProfile = useAuthStore((s) => s.isLoadingProfile);
+  const hasInitialized = useAuthStore((s) => s.hasInitialized);
+
+  const isPublicRoute =
+    isHome ||
+    pathname === '/login' ||
+    pathname === '/register' ||
+    pathname.startsWith('/verify-email') ||
+    pathname === '/password-reset' ||
+    pathname.startsWith('/password-reset/confirm');
+
+  useEffect(() => {
+    if (isPublicRoute) return;
+    // Avoid redirecting while we still have a token and the profile is loading.
+    if (!isAuthenticated && !accessToken && hasInitialized && !isLoadingProfile) {
+      router.replace('/login');
+    }
+  }, [isPublicRoute, isAuthenticated, accessToken, isLoadingProfile, hasInitialized, router]);
+
+  if (!isPublicRoute && !hasInitialized) {
+    return null;
+  }
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -44,11 +72,11 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <Navbar
-        showSidebarTrigger={!isHome}
+        showSidebarTrigger={!isPublicRoute}
         onOpenSidebar={() => setMobileSidebarOpen(true)}
       />
       <div className="flex min-h-0 flex-1">
-        {!isHome ? (
+        {!isPublicRoute ? (
           <Sidebar
             collapsed={collapsed}
             onToggleCollapsed={toggleCollapsed}

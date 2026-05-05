@@ -88,8 +88,15 @@ class Settings(BaseSettings):
 
     # ── User scope (P4-1; replaced by JWT in P12) ─────────────
     default_user_id: uuid.UUID = uuid.UUID("00000000-0000-4000-8000-000000000001")
-    auth_required: bool = False
+    # For multi-tenant SaaS, requests must be authenticated.
+    auth_required: bool = True
     auth_access_token_ttl_minutes: int = 60
+
+    # ── Email verification / password reset (P0-Auth) ─────────
+    auth_email_verification_ttl_minutes: int = 60 * 24  # 24 hours
+    auth_password_reset_ttl_minutes: int = 60  # 1 hour
+    # Development convenience: return verification/reset tokens in API responses.
+    auth_dev_return_tokens: bool = True
     # CSV list: email:password:role:user_uuid
     auth_bootstrap_users: str = (
         "admin@ragstudio.local:admin123:admin:00000000-0000-4000-8000-000000000001,"

@@ -40,17 +40,17 @@ export function Hero() {
         {/* CTA buttons */}
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/designer"
+            href="/register"
             className="group inline-flex items-center gap-2 rounded-xl bg-primary-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-primary-200/60 transition-all hover:bg-primary-700 hover:shadow-xl hover:shadow-primary-300/50 active:scale-[0.98]"
           >
-            Start Designing
+            Sign up
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
           <Link
-            href="/autopilot"
+            href="/login"
             className="group inline-flex items-center gap-2 rounded-xl border-2 border-neutral-200 bg-white/80 px-8 py-4 text-base font-semibold text-neutral-900 shadow-md backdrop-blur-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:shadow-lg active:scale-[0.98]"
           >
-            Launch Autopilot
+            Log in
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </div>

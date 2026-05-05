@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
+from app.core.security.auth import decode_access_token
 from app.metadata import API_SEMVER
 from app.observability.context import bind_request_observability, clear_observability_context
 from app.observability.logging_setup import configure_logging
@@ -54,8 +55,9 @@ async def lifespan(app: FastAPI):
         database_kind="sqlite" if settings.database_url.startswith("sqlite") else "other",
     )
 
-    # Host dev with SQLite: create tables from ORM metadata (Docker Postgres uses Alembic).
-    if settings.database_url.startswith("sqlite"):
+    # In dev/test we auto-create the schema from ORM metadata.
+    # (This repo does not currently ship Alembic migration scripts.)
+    if settings.app_env in {"development", "test"}:
         from app.models import Base
 
         engine = create_async_engine(
@@ -104,7 +106,18 @@ def create_app() -> FastAPI:
         now = time.time()
         period_start = now - 60
         client_host = getattr(request.client, "host", "unknown") or "unknown"
-        key = f"{client_host}:{request.method}:{request.url.path}"
+
+        user_id: str | None = None
+        auth_header = request.headers.get("Authorization") or ""
+        if auth_header.startswith("Bearer "):
+            token = auth_header.removeprefix("Bearer ").strip()
+            try:
+                principal = decode_access_token(settings, token)
+                user_id = str(principal.user_id)
+            except Exception:
+                user_id = None
+
+        key = f"{user_id or client_host}:{request.method}:{request.url.path}"
         bucket = _rate_limit_buckets.setdefault(key, [])
         alive = [t for t in bucket if t >= period_start]
         if len(alive) >= limit:
@@ -118,6 +131,26 @@ def create_app() -> FastAPI:
     @app.middleware("http")
     async def observability_http_middleware(request: Request, call_next):
         start = time.perf_counter()
+
+        # Enforce JWT for all API endpoints (except /api/auth/* itself; those
+        # endpoints validate via dependencies).
+        if request.method != "OPTIONS" and request.url.path.startswith("/api/"):
+            if not request.url.path.startswith("/api/auth/"):
+                auth_header = request.headers.get("Authorization") or ""
+                if not auth_header.startswith("Bearer "):
+                    return JSONResponse(
+                        status_code=401,
+                        content={"detail": "Missing bearer token"},
+                    )
+                token = auth_header.removeprefix("Bearer ").strip()
+                try:
+                    decode_access_token(settings, token)
+                except Exception:
+                    return JSONResponse(
+                        status_code=401,
+                        content={"detail": "Invalid or expired token"},
+                    )
+
         if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
             rate_limit = _check_rate_limit(request)
             if not rate_limit.allowed:

@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, JSON, String, Text, Uuid
+from sqlalchemy import DateTime, ForeignKey, Index, JSON, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -22,6 +22,12 @@ class Deployment(Base, TimestampMixin):
         Uuid(as_uuid=True),
         primary_key=True,
         default=uuid.uuid4,
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     config_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True),
@@ -51,3 +57,7 @@ class Deployment(Base, TimestampMixin):
     )
 
     config: Mapped[PipelineConfig] = relationship("PipelineConfig", back_populates="deployments")
+
+    __table_args__ = (
+        Index("ix_deployments_user_id_id", "user_id", "id"),
+    )
