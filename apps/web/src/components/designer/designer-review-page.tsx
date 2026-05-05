@@ -10,8 +10,9 @@ import {
   ListChecks,
   Package,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { AutopilotDesignerImportBanner } from '@/components/designer/autopilot-designer-import-banner';
 import { DesignerToAutopilotHandoff } from '@/components/designer/designer-to-autopilot-handoff';
 import { guardrailPolicyMermaidSubtitle, resolveGuardrailsConfig } from '@/lib/guardrails-summary';
 import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
@@ -55,12 +56,30 @@ export function DesignerReviewPage({
 }: Readonly<{
   className?: string;
 }>) {
+  const scrolledToPipelineRef = useRef(false);
   const draft = useDesignerStore((s) => s.draft);
   const resetDraft = useDesignerStore((s) => s.resetDraft);
+  const autopilotImportSnapshot = useDesignerStore((s) => s.autopilotImportSnapshot);
+  const syncAutopilotSnapshotFromStores = useDesignerStore((s) => s.syncAutopilotSnapshotFromStores);
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
   /** Avoid hydration mismatch: server vs client differ on `new Date().toLocaleString()` and default draft timestamps. */
   const [lastUpdatedLabel, setLastUpdatedLabel] = useState('—');
+
+  useEffect(() => {
+    syncAutopilotSnapshotFromStores();
+  }, [syncAutopilotSnapshotFromStores, draft.metadata.buildId, draft.metadata.source]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || scrolledToPipelineRef.current) return;
+    const source = new URLSearchParams(window.location.search).get('source');
+    if (source !== 'autopilot') return;
+    scrolledToPipelineRef.current = true;
+    const t = window.requestAnimationFrame(() => {
+      scrollToSection(DESIGNER_DOM_SECTION_IDS.pipeline);
+    });
+    return () => window.cancelAnimationFrame(t);
+  }, []);
 
   useEffect(() => {
     const iso = draft.metadata.updatedAt ?? draft.metadata.createdAt;
@@ -119,6 +138,11 @@ export function DesignerReviewPage({
   const di = stages.dataIngestion;
   const gr = resolveGuardrailsConfig(draft.guardrails);
 
+  const showAutopilotBanner =
+    autopilotImportSnapshot &&
+    draft.metadata.source === 'autopilot' &&
+    draft.metadata.buildId === autopilotImportSnapshot.buildId;
+
   return (
     <div className={cn('mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:py-10', className)}>
       <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -131,6 +155,8 @@ export function DesignerReviewPage({
         Confirm your RAG pipeline draft before export or handoff. Use the links below to jump to the live diagram, cost
         model, and generated artefacts — each strip stays in sync with your Zustand draft (local storage).
       </p>
+
+      {showAutopilotBanner ? <AutopilotDesignerImportBanner className="mt-8" snapshot={autopilotImportSnapshot} /> : null}
 
       <DesignerToAutopilotHandoff className="mt-8" />
 

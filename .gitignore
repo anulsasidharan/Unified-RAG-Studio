@@ -165,3 +165,8 @@ celerybeat-schedule
 # Guardrails — operator-specific JSON policies (P4.5-7)
 # ------------------------------------------------------------
 apps/api/config/guardrails/local/
+
+# ------------------------------------------------------------
+# Next.js — local trace files (profiling / debugging)
+# ------------------------------------------------------------
+**/.next/trace
