@@ -88,6 +88,14 @@ class Settings(BaseSettings):
 
     # ── User scope (P4-1; replaced by JWT in P12) ─────────────
     default_user_id: uuid.UUID = uuid.UUID("00000000-0000-4000-8000-000000000001")
+    auth_required: bool = False
+    auth_access_token_ttl_minutes: int = 60
+    # CSV list: email:password:role:user_uuid
+    auth_bootstrap_users: str = (
+        "admin@ragstudio.local:admin123:admin:00000000-0000-4000-8000-000000000001,"
+        "user@ragstudio.local:user123:user:00000000-0000-4000-8000-000000000002"
+    )
+    auth_rate_limit_per_minute: int = 120
 
     # ── Pricing catalog (P2-9 cost estimator) ────────────────
     pricing_catalog_path: str = ""

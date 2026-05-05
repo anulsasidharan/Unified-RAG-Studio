@@ -3,10 +3,13 @@
 import time
 import uuid
 from contextlib import asynccontextmanager
+from dataclasses import dataclass
 
 import structlog
 from fastapi import FastAPI, Request
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.responses import JSONResponse
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -18,6 +21,13 @@ from app.observability.rag_metrics import observe_http_request
 
 
 logger = structlog.get_logger(__name__)
+_rate_limit_buckets: dict[str, list[float]] = {}
+
+
+@dataclass(frozen=True)
+class _RateLimitResult:
+    allowed: bool
+    remaining: int
 
 
 def _route_template(request: Request) -> str:
@@ -87,11 +97,35 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.add_middleware(GZipMiddleware, minimum_size=512)
+
+    def _check_rate_limit(request: Request) -> _RateLimitResult:
+        limit = max(1, int(settings.auth_rate_limit_per_minute))
+        now = time.time()
+        period_start = now - 60
+        client_host = getattr(request.client, "host", "unknown") or "unknown"
+        key = f"{client_host}:{request.method}:{request.url.path}"
+        bucket = _rate_limit_buckets.setdefault(key, [])
+        alive = [t for t in bucket if t >= period_start]
+        if len(alive) >= limit:
+            _rate_limit_buckets[key] = alive
+            return _RateLimitResult(allowed=False, remaining=0)
+        alive.append(now)
+        _rate_limit_buckets[key] = alive
+        return _RateLimitResult(allowed=True, remaining=max(0, limit - len(alive)))
 
     # ── Request ID, correlation ID, Prometheus HTTP metrics, latency JSON logs ───
     @app.middleware("http")
     async def observability_http_middleware(request: Request, call_next):
         start = time.perf_counter()
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            rate_limit = _check_rate_limit(request)
+            if not rate_limit.allowed:
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded"},
+                    headers={"Retry-After": "60", "X-RateLimit-Remaining": "0"},
+                )
 
         inbound_rid = (
             request.headers.get("X-Request-ID") or request.headers.get("x-request-id") or ""
@@ -117,6 +151,18 @@ def create_app() -> FastAPI:
 
             response.headers["X-Request-ID"] = request_id
             response.headers.setdefault("X-Correlation-ID", correlation_id)
+            response.headers.setdefault("X-Content-Type-Options", "nosniff")
+            response.headers.setdefault("X-Frame-Options", "DENY")
+            response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+            response.headers.setdefault(
+                "Permissions-Policy",
+                "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+            )
+            response.headers.setdefault(
+                "Content-Security-Policy",
+                "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; "
+                "script-src 'self' 'unsafe-inline'; connect-src 'self' http: https: ws: wss:",
+            )
 
             logger.info(
                 "request",
@@ -164,6 +210,7 @@ def create_app() -> FastAPI:
 
     # ── Routes ───────────────────────────────────────────────
     from app.routers.analytics import router as analytics_router
+    from app.routers.auth import router as auth_router
     from app.routers.autopilot import router as autopilot_router
     from app.routers.deployment import router as deployment_router
     from app.routers.designer import router as designer_router
@@ -177,6 +224,7 @@ def create_app() -> FastAPI:
 
     app.include_router(monitoring_router)
     app.include_router(health_router)
+    app.include_router(auth_router)
     app.include_router(utilities_router)
     app.include_router(jobs_router)
     app.include_router(analytics_router)

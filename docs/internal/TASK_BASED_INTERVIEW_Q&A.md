@@ -4,6 +4,102 @@
 
 ---
 
+## Phase 12 · P12-1 — Authentication & Authorization
+
+### What changed from `X-User-ID` scoping to production auth?
+
+Phase 12 keeps backward-compatible user scoping for local development, but in production mode (`AUTH_REQUIRED=true`) requests must include a bearer JWT. The API now resolves identity from token claims (`sub`, `email`, `role`) before any fallback logic.
+
+### Why add `/api/auth/login` and `/api/auth/me`?
+
+`/api/auth/login` is the bootstrap token-issuing endpoint for secured environments, and `/api/auth/me` is a fast sanity endpoint to validate token wiring and role propagation through dependencies.
+
+### How is role-based authorization enforced?
+
+Admin-only operations use a dedicated `AdminPrincipal` dependency. Deployment mutation actions (`deploy`, `teardown`) now require `role=admin`, returning `403` for non-admin callers.
+
+### Interview trap: Is JWT validation enough if signature checks pass?
+
+No. You still must validate claim shape and types (`sub` UUID, role/email presence), enforce expiration, and tie downstream authorization to explicit role checks.
+
+---
+
+## Phase 12 · P12-2 — Security Hardening
+
+### Which HTTP hardening controls were added?
+
+The API now emits key security headers: CSP, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and a restrictive `Permissions-Policy` baseline.
+
+### How is rate limiting implemented?
+
+Write methods (`POST`, `PUT`, `PATCH`, `DELETE`) are rate-limited using an in-memory per-minute bucket keyed by `client_host + method + path`, returning `429` with `Retry-After` on excess traffic.
+
+### Why also update `.gitignore` in this phase?
+
+To prevent accidental secret commits from production overlays, local secret files (`k8s/production/secret.yaml` and `*.local.yaml`) are explicitly ignored.
+
+---
+
+## Phase 12 · P12-3 — Performance Optimisation
+
+### What is the low-risk API optimization added first?
+
+GZip compression for response bodies above a threshold (`minimum_size=512`) gives immediate bandwidth and latency gains for JSON-heavy endpoints without business-logic changes.
+
+### Why was HPA included in performance optimization?
+
+Performance is not only per-request latency; it is also sustained throughput under load. Horizontal Pod Autoscaler on API CPU utilization provides elastic scaling under bursts.
+
+### Interview trap: Is frontend perf solved just by Next.js standalone mode?
+
+No. Standalone output helps deployment footprint, but production performance still depends on cache behavior, API latency, compression, autoscaling, and ingress/network tuning.
+
+---
+
+## Phase 12 · P12-4 — Kubernetes Production Manifests
+
+### What production manifest components are mandatory?
+
+At minimum: namespace isolation, config/secret separation, API and web deployments + services, ingress with TLS, autoscaling policy, and a network policy baseline.
+
+### Why keep `secret.example.yaml` instead of committing real secret manifests?
+
+It documents required keys and expected shape while avoiding credential leakage. Operators generate real `secret.yaml` from secure vault/CI pipelines.
+
+### Interview trap: Is this full zero-trust network policy?
+
+No. The provided network policy is a conservative baseline for deny-default directionality and should be tightened per dependency graph in hardened clusters.
+
+---
+
+## Phase 12 · P12-5 — Final Documentation Pass
+
+### What documents should be finalized before launch?
+
+A deploy runbook, security/auth operating notes, rollout and rollback steps, and status tracking updates that align engineering artifacts with execution reality.
+
+### Why maintain internal completion notes?
+
+They create traceability across code, manifests, and release actions, which helps handoffs, audits, incident response, and interview-style architectural review.
+
+---
+
+## Phase 12 · P12-6 — Production Deployment & Launch
+
+### What is the expected production launch sequence?
+
+Prepare secrets and images, apply manifests (`kubectl apply -k`), wait for rollouts, validate health and auth endpoints, run smoke tests, then announce release with rollback references.
+
+### What makes a launch “production ready” versus “deployment succeeded”?
+
+Production readiness includes post-deploy validation, monitoring health, auth/authorization checks, and documented rollback, not just successful Kubernetes apply output.
+
+### Interview trap: Did this phase execute a live external cluster rollout automatically?
+
+No. The phase codifies production deployment artifacts and repeatable runbook steps. Actual cluster rollout requires environment access and operator approval in the target infrastructure.
+
+---
+
 ## P0-1 · Monorepo Skeleton
 
 ### Monorepo & Workspace Concepts
