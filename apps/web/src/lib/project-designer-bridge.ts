@@ -1,6 +1,7 @@
 'use client';
 
 import { useDesignerStore } from '@/stores/designer-store';
+import { deepStripNulls } from '@/lib/utils';
 import type { DesignerProjectSnapshot } from '@/types/project';
 
 export function takeDesignerSnapshot(): DesignerProjectSnapshot {
@@ -14,7 +15,7 @@ export function applyDesignerSnapshot(snapshot: DesignerProjectSnapshot | undefi
     return;
   }
   useDesignerStore.setState({
-    draft: snapshot.draft,
+    draft: deepStripNulls(snapshot.draft),
     diagramMaxVisitedStageIndex: snapshot.diagramMaxVisitedStageIndex,
   });
 }

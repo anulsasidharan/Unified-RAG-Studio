@@ -96,12 +96,24 @@ export interface AgentDecisions {
 
 // ─── Deployment ──────────────────────────────────────────────────────────────
 
-export type DeploymentStatus = 'deploying' | 'deployed' | 'failed';
+export type DeploymentStatus = 'deploying' | 'deployed' | 'failed' | 'preview';
+
+export interface DeploymentArtefacts {
+  docker_compose?: string;
+  kubernetes_manifest?: string;
+  terraform_stub?: string;
+}
 
 export interface DeploymentInfo {
   provider: string;
-  endpoint: string;
   status: DeploymentStatus;
+  /** Generated IaC files — review and apply manually; no cloud resources were provisioned. */
+  artefacts?: DeploymentArtefacts;
+  synthesizedFrom?: string;
+  operatorNotes?: string;
+  warnings?: string[];
+  /** Present only on real deployments (not stub/preview). */
+  endpoint?: string;
   deployedAt?: string;
   healthCheckUrl?: string;
   dockerImageTag?: string;

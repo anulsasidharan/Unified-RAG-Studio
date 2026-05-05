@@ -173,12 +173,28 @@ class FinalMetricsSchema(RAGBaseModel):
     cost_per_query: float | None = Field(default=None, ge=0.0)
 
 
+class DeploymentArtefactsSchema(RAGBaseModel):
+    """Generated IaC files from the deployment agent (stub/preview only)."""
+
+    docker_compose: str | None = None
+    kubernetes_manifest: str | None = None
+    terraform_stub: str | None = None
+
+
 class DeploymentInfoSchema(RAGBaseModel):
-    """Information about the deployed RAG endpoint."""
+    """Deployment result from the Autopilot build.
+
+    status='preview' means IaC config was generated but no cloud resources
+    were provisioned. status='deployed' is reserved for future real deployments.
+    """
 
     provider: str
-    endpoint: str
-    status: Literal["deploying", "deployed", "failed"]
+    status: Literal["deploying", "deployed", "failed", "preview"]
+    artefacts: DeploymentArtefactsSchema | None = None
+    synthesized_from: str | None = None
+    operator_notes: str | None = None
+    warnings: list[str] = Field(default_factory=list)
+    endpoint: str | None = None
     deployed_at: str | None = None
     health_check_url: str | None = None
     docker_image_tag: str | None = None

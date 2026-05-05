@@ -332,13 +332,19 @@ def compose_build_result_payload(
     dep = stage_outputs.get("deployment")
     deployment: dict[str, Any] | None = None
     if isinstance(dep, dict) and dep.get("status") == "complete":
+        artefacts: dict[str, str] = {}
+        raw_art = dep.get("artefacts")
+        if isinstance(raw_art, dict):
+            for k in ("docker_compose", "kubernetes_manifest", "terraform_stub"):
+                if isinstance(raw_art.get(k), str):
+                    artefacts[k] = raw_art[k]
         deployment = {
             "provider": cloud,
-            "endpoint": f"https://stub.rag-studio.local/autopilot/builds/{build_id}",
-            "status": "deployed",
-            "deployed_at": _iso_now(),
-            "health_check_url": f"https://stub.rag-studio.local/autopilot/builds/{build_id}/healthz",
-            "docker_image_tag": "rag-studio-api:stub",
+            "status": "preview",
+            "artefacts": artefacts,
+            "synthesized_from": dep.get("synthesized_from", "stage_outputs_fallback"),
+            "operator_notes": dep.get("operator_notes", ""),
+            "warnings": dep.get("warnings") or [],
         }
 
     raw_result: dict[str, Any] = {

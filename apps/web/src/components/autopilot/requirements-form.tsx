@@ -50,6 +50,7 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
     requirements.latencyRequirement != null ? String(requirements.latencyRequirement) : ''
   );
   const [zodError, setZodError] = useState<string | null>(null);
+  const [validated, setValidated] = useState(false);
 
   const providers = useMemo(() => listCloudProviders(), []);
 
@@ -80,9 +81,11 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
           .map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
           .join(' · ') || parsed.error.message;
       setZodError(msg);
+      setValidated(false);
       return false;
     }
     setZodError(null);
+    setValidated(true);
     return true;
   }, [applyBudgetLatency]);
 
@@ -91,11 +94,13 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
     setRequirements(d);
     syncOptionalFields(d);
     setZodError(null);
+    setValidated(false);
   }, [setRequirements, syncOptionalFields]);
 
   const patchMetric = (key: keyof TargetMetrics, pct: number) => {
     const v = Math.min(1, Math.max(0, pct / 100));
     patchRequirements({ targetMetrics: { [key]: v } });
+    setValidated(false);
   };
 
   return (
@@ -139,6 +144,10 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
       {zodError ? (
         <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
           {zodError}
+        </p>
+      ) : validated ? (
+        <p className="mt-4 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-200">
+          Requirements valid — ready to start a build.
         </p>
       ) : (
         <p className="mt-4 text-xs text-muted-foreground">
