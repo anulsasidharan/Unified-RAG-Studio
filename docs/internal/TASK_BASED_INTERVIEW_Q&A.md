@@ -5562,3 +5562,79 @@ From **`apps/api`**: install **`requirements.txt`** + **`requirements-dev.txt`**
 
 ---
 
+## Phase 11 · P11-1 — Structured Logging
+
+### What does “structured logging” mean here?
+
+Each log line is rendered as **JSON** at **`INFO`** and above ( **`DEBUG`** switches to **structlog’s console renderer** ), with stable keys such as **`level`**, **`timestamp`**, **`event`**, **`request_id`**, **`correlation_id`**, **`duration_ms`**, and **`service_version`**. That makes logs **machine-parseable** in ELK/Loki/CloudWatch instead of ad-hoc prose.
+
+### Where is structlog configured?
+
+**`app.observability.logging_setup.configure_logging`** is invoked from the FastAPI **lifespan** in **`app.main`**. It merges **context vars** per request, attaches **exception/traceback** fields for failures, and aligns **uvicorn** log levels with **`LOG_LEVEL`**.
+
+### How are `request_id` and `correlation_id` propagated?
+
+The HTTP middleware binds **`X-Request-ID`** (generated if missing), accepts an optional **`X-Correlation-ID`**, echoes both on the response, and includes them in structlog’s context so every handler log line for that request shares the same identifiers.
+
+### Why bind `autopilot_build_id` only on some routes?
+
+**`POST /api/autopilot/build`** calls **`bind_build_context(build.id)`** so enqueue logs are **correlated to a build** without forcing every endpoint to know about Autopilot IDs. Other routes still get **request-level** IDs.
+
+### Interview trap: Does structured logging replace Prometheus?
+
+**No** — logs answer **“what happened for this request?”**; metrics answer **“how often and how fast in aggregate?”**. **P11-2** complements **P11-1**.
+
+---
+
+## Phase 11 · P11-2 — Prometheus Metrics
+
+### Which new series does the API expose beyond P4.5-6 guardrail metrics?
+
+Counters and histograms prefixed with **`rag_http_`** capture **request volume** and **latency** by **normalized route template** (from Starlette’s **`route.path`**) and **HTTP method**, plus **`rag_autopilot_*`** and **`rag_evaluation_runs_*`** for **Celery terminals**. Guardrail metrics remain **`rag_guardrail_*`**.
+
+### Why use route templates as label values?
+
+Using **literal paths** (e.g. UUIDs in URLs) creates **Exploding cardinality** and can **crash Prometheus**. **Templates** collapse `/api/autopilot/build/…` variants into **`/api/autopilot/build/{build_id}`**-style keys after label sanitisation.
+
+### Where is `/metrics` defined?
+
+FastAPI **`app.routers.monitoring`** registers **`GET /metrics`** (**OpenMetrics**) when **`PROMETHEUS_METRICS_ENABLED`** is **`true`** ( **`app.config.Settings`** ); otherwise the endpoint returns **404**.
+
+### What is `/monitoring/rag`?
+
+A **JSON listing** of all samples whose Prometheus **collector metric name** starts with **`rag_`** — combining **guardrail**, **HTTP**, and **business** exporters for quick dashboards **without PromQL**.
+
+### How do Grafana and Prometheus join the Compose stack?
+
+**`docker/docker-compose.observability.yml`** adds **`prometheus`** (scrapes **`http://api:8000/metrics`**) and **`grafana`** (pre-provisioned **Prometheus** datasource under **`docker/grafana/provisioning/`**). Merge it **after** the base Compose files sharing **`name: rag-studio`** so both attach to **`rag-network`**.
+
+### Interview trap: Do Celery workers expose `/metrics`?
+
+**No** — this phase records **evaluation**/**Autopilot terminals** inside **worker processes** into the **shared in-process registry** only when **`record_*`** helpers run **in that process**. Separate **worker scrape targets** would need **`prometheus_multiproc`**, a sidecar exporter, or a **pushgateway** pattern (future hardening).
+
+---
+
+## Phase 11 · P11-3 — Cost & Usage Analytics
+
+### What does `GET /api/analytics/summary` return?
+
+Scoped to the acting user (**`X-User-ID`** or **`DEFAULT_USER_ID`**), it aggregates **counts** from **`projects`**, **`pipeline_configs`**, **`autopilot_builds`** (by **status**), **`evaluation_runs`**, **`deployments`**, a **documents hint** (sum of **`document_ids`** lengths in requirements JSON), plus **`cost_signals`** (mean **`cost_per_query`** from **`result.metrics`** when present, mean **`budget_constraint`** from **`requirements`** when present).
+
+### Is this billing-accurate cost data?
+
+**No** — persisted **Estimator**/`BuildResult`-like fields are **planning proxies**. True spend needs **vendor invoices**, **token meters**, **vector storage GB**, etc.
+
+### Why is the frontend page at `/analytics`?
+
+**`apps/web/src/app/analytics/page.tsx`** fetches **`/api/analytics/summary`** via the Next.js **`/api/*` rewrite**, keeping **same-origin calls** consistent with **`apiClient`**. **Navbar** links expose it alongside **Templates**.
+
+### What are the aggregation SQL patterns?
+
+Prefer **`JOIN Project`** (and **`JOIN PipelineConfig`** for evaluation/deployments) with **`deleted_at IS NULL`** and **`user_id = :acting_user`** to mirror **ownership rules** elsewhere in **`ProjectService`** / routers.
+
+### Interview trap: Should analytics reuse the existing cost calculation service?
+
+Only when you need **live catalog math** against a Designer payload. **`P11-3`** optimises for **portfolio rollups already stored on rows** (`AutopilotBuild`) so dashboards stay cheap and deterministic.
+
+---
+

@@ -63,4 +63,6 @@ export const ROUTES = {
   autopilotProjects: '/autopilot/projects',
   templates: '/templates',
   projects: '/projects',
+  /** Usage & cost snapshot (Phase 11). */
+  analytics: '/analytics',
 } as const;

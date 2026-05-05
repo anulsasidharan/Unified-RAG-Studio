@@ -20,6 +20,10 @@ from app.core.evaluation.service import EvaluationEngine
 from app.core.evaluation.strategies import EvaluationExample
 from app.models import AutopilotBuild, Deployment, EvaluationRun
 from app.config import get_settings
+from app.observability.rag_metrics import (
+    record_autopilot_terminal,
+    record_evaluation_terminal,
+)
 from app.services.autopilot_build_result import compose_build_result_payload
 from app.services.mlflow_tracking import log_autopilot_build_to_mlflow
 
@@ -135,6 +139,7 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
                 row.status = "failed"
                 row.error = str(exc)
                 row.completed_at = datetime.now(timezone.utc)
+        record_autopilot_terminal("failed")
         log_autopilot_build_to_mlflow(
             build_id=str(bid),
             project_id=str(snapshot.get("project_id") or ""),
@@ -235,6 +240,7 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         row.completed_at = datetime.now(timezone.utc)
         row.error = None
 
+    record_autopilot_terminal("complete")
     logger.info("build_complete_graph", build_id=build_id, trace_events=len(traces))
     return {"build_id": build_id, "status": "complete"}
 
@@ -260,6 +266,7 @@ def run_evaluation(
             if row:
                 row.status = "failed"
                 row.error = "No evaluation examples supplied to worker task."
+        record_evaluation_terminal("failed")
         return {"evaluation_run_id": evaluation_run_id, "status": "failed", "error": "empty examples"}
 
     ex_models: list[EvaluationExample] = []
@@ -296,6 +303,7 @@ def run_evaluation(
             if row:
                 row.status = "failed"
                 row.error = str(exc)
+        record_evaluation_terminal("failed")
         raise
 
     metrics_dump = outcome.metrics.model_dump(mode="json")
@@ -313,6 +321,7 @@ def run_evaluation(
         row.completed_at = datetime.now(timezone.utc)
         row.error = None
 
+    record_evaluation_terminal("complete")
     return {
         "evaluation_run_id": evaluation_run_id,
         "status": "complete",
