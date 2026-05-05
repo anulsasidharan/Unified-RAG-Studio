@@ -5309,7 +5309,47 @@ On **`/designer/review`**, the **`DesignerToAutopilotHandoff`** card explains th
 
 ### What is the next task after P8-1?
 
-**P8-2 · Autopilot → Designer Visualization** — formalise importing optimised results back into Designer (partially anticipated by **`DecisionExplainer`** / **`loadPipeline`**).
+**P8-2 · Autopilot → Designer Visualization** — (done; see Phase 8 · P8-2 below). Next: **P8-3 · Evaluation API Endpoints**.
+
+---
+
+## Phase 8 · P8-2 · Autopilot → Designer Visualization
+
+### What user problem does P8-2 solve?
+
+After an Autopilot build completes, users need to **see the optimised pipeline in the same Designer visualisation** (Mermaid graph, cost strip, export) they would get from a manual design — without re-entering stage fields. P8-2 turns **`BuildResult.config`** into the Designer **`draft`**, keeps **evaluation metrics** visible on review, and links back to the Autopilot run.
+
+### How does the user open Autopilot output in Designer?
+
+On the completed build screen, **`DecisionExplainer`** exposes **Open in Designer**. That calls **`applyAutopilotBuildResult(buildId, result)`** on **`useDesignerStore`**, then navigates to **`/designer/review?source=autopilot&build=<id>`**.
+
+### What does `applyAutopilotBuildResult` do?
+
+It **loads** **`result.config`** into **`draft`** (via **`deepStripNulls`**), sets **`metadata.source: 'autopilot'`** and **`metadata.buildId`**, unlocks the full stage diagram (**`diagramMaxVisitedStageIndex`**), and stores **`autopilotImportSnapshot`** with **`metrics`** and **`totalIterations`** for the review banner.
+
+### What appears on `/designer/review` after import?
+
+**`AutopilotDesignerImportBanner`** renders when the snapshot’s **`buildId`** matches **`draft.metadata.buildId`**: RAGAS-style metric tiles (faithfulness, relevance, precision, recall), latency and iteration count, plus **Open Autopilot build** → **`/autopilot/new?build=…`**. The existing **DesignerShell** footer still renders **PipelineVisualizer**, **CostEstimator**, and **CodeExporter** bound to the same **`draft`**.
+
+### Why is `syncAutopilotSnapshotFromStores` needed?
+
+If **`metadata`** already marks **`source: autopilot`** but the metric snapshot was cleared (e.g. **`loadPipeline`** from a template wipes **`autopilotImportSnapshot`**), the sync tries **`useAutopilotStore.builds[buildId].result`** to **rehydrate** metrics without another navigation.
+
+### What clears the Autopilot import snapshot?
+
+**`loadPipeline`**, **`resetDraft`**, and any path that sets **`autopilotImportSnapshot: null`** — template apply and full reset should not keep stale Autopilot metrics.
+
+### Does P8-2 add a new backend endpoint?
+
+**No.** It is a **frontend integration** on top of **`BuildResult`** already returned by **`GET /api/autopilot/build/{id}`** and the orchestrator’s composed result.
+
+### Interview trap: does “Open in Designer” mutate Autopilot state?
+
+**No.** It only reads **`build.result`** and updates **`useDesignerStore`**; existing **`useAutopilotStore`** build records are not modified by this action.
+
+### What is the next task after P8-2?
+
+**P8-3 · Evaluation API Endpoints** — execution/history/compare APIs for evaluation runs.
 
 ---
 

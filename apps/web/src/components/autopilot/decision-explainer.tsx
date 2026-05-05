@@ -18,7 +18,6 @@ import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 import { useAutopilotStore } from '@/stores/autopilot-store';
 import type { AgentDecisions, AutopilotBuild, BuildResult, EmbeddingBenchmarkResult } from '@/types/autopilot';
-import type { PipelineConfiguration } from '@/types/pipeline';
 
 function fmtPct(n: number | undefined): string {
   if (n === undefined || !Number.isFinite(n)) return '—';
@@ -81,19 +80,6 @@ function BenchmarkTable({ rows }: Readonly<{ rows: EmbeddingBenchmarkResult[] }>
   );
 }
 
-function explainInDesigner(buildId: string, config: PipelineConfiguration): void {
-  const next: PipelineConfiguration = {
-    ...config,
-    metadata: {
-      ...config.metadata,
-      source: 'autopilot',
-      buildId,
-      updatedAt: new Date().toISOString(),
-    },
-  };
-  useDesignerStore.getState().loadPipeline(next);
-}
-
 export function DecisionExplainer({
   className,
   build,
@@ -109,8 +95,10 @@ export function DecisionExplainer({
   const onOpenDesigner = useCallback(() => {
     const r = build.result as BuildResult | undefined;
     if (!r?.config) return;
-    explainInDesigner(build.id, r.config);
-    router.push(`${ROUTES.designer}/review?source=autopilot`);
+    useDesignerStore.getState().applyAutopilotBuildResult(build.id, r);
+    router.push(
+      `${ROUTES.designer}/review?source=autopilot&build=${encodeURIComponent(build.id)}`
+    );
   }, [build.id, build.result, router]);
 
   const sections = useMemo(() => {
