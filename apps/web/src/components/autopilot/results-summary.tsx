@@ -1,14 +1,103 @@
 'use client';
 
-import { CheckCircle2, ClipboardList, Download, Loader2 } from 'lucide-react';
-import { useCallback, useId, useMemo, useState } from 'react';
+import { CheckCircle2, ClipboardList, Copy, Download, Loader2 } from 'lucide-react';
+import { useCallback, useId, useMemo, useRef, useState } from 'react';
 
 import { cn } from '@/lib/utils';
-import type { AutopilotBuild, BuildResult, FinalMetrics } from '@/types/autopilot';
+import type { AutopilotBuild, BuildResult, DeploymentArtefacts, FinalMetrics } from '@/types/autopilot';
 
 function fmtPct(n: number | undefined): string {
   if (n === undefined || !Number.isFinite(n)) return '—';
   return `${(n * 100).toFixed(1)}%`;
+}
+
+const ARTEFACT_LABELS: Record<keyof DeploymentArtefacts, string> = {
+  docker_compose: 'Docker Compose',
+  kubernetes_manifest: 'Kubernetes',
+  terraform_stub: 'Terraform',
+};
+
+function ArtefactBlock({
+  label,
+  content,
+}: Readonly<{ label: string; content: string }>) {
+  const [copied, setCopied] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const copy = useCallback(() => {
+    void navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setCopied(false), 2000);
+    });
+  }, [content]);
+
+  return (
+    <div className="rounded-lg border border-neutral-200 dark:border-neutral-700">
+      <div className="flex items-center justify-between border-b border-neutral-200 bg-neutral-50 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-800/60">
+        <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">{label}</span>
+        <button
+          type="button"
+          onClick={copy}
+          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-neutral-200 dark:hover:bg-neutral-700"
+        >
+          <Copy className="h-3 w-3" aria-hidden />
+          {copied ? 'Copied!' : 'Copy'}
+        </button>
+      </div>
+      <pre className="max-h-40 overflow-auto p-3 text-[11px] leading-relaxed text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap break-all">
+        {content}
+      </pre>
+    </div>
+  );
+}
+
+function DeploymentPreview({
+  deployment,
+}: Readonly<{ deployment: NonNullable<BuildResult['deployment']> }>) {
+  const artefacts = deployment.artefacts ?? {};
+  const keys = (Object.keys(ARTEFACT_LABELS) as Array<keyof DeploymentArtefacts>).filter(
+    (k) => typeof artefacts[k] === 'string' && artefacts[k]!.length > 0
+  );
+
+  return (
+    <div className="mt-6 rounded-lg border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-800/50 dark:bg-amber-950/20">
+      <h3 className="flex items-center gap-2 text-sm font-semibold text-amber-900 dark:text-amber-200">
+        <ClipboardList className="h-4 w-4" aria-hidden />
+        Deployment preview
+        <span className="ml-1 rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-900 dark:bg-amber-900/60 dark:text-amber-200">
+          Stub — not deployed
+        </span>
+      </h3>
+      <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+        No cloud resources were provisioned. The agents generated these configuration files based on the
+        optimal settings found. Review them, inject your secrets, then run{' '}
+        <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/50">terraform plan</code> /{' '}
+        <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/50">kubectl diff</code> /{' '}
+        <code className="rounded bg-amber-100 px-1 dark:bg-amber-900/50">docker compose up</code> to
+        actually deploy.
+      </p>
+      {deployment.operatorNotes ? (
+        <p className="mt-2 text-xs italic text-amber-700 dark:text-amber-400">{deployment.operatorNotes}</p>
+      ) : null}
+      {deployment.warnings && deployment.warnings.length > 0 ? (
+        <ul className="mt-2 list-disc pl-4 text-xs text-amber-700 dark:text-amber-400">
+          {deployment.warnings.map((w, i) => <li key={i}>{w}</li>)}
+        </ul>
+      ) : null}
+      {keys.length > 0 ? (
+        <div className="mt-4 space-y-3">
+          {keys.map((k) => (
+            <ArtefactBlock key={k} label={ARTEFACT_LABELS[k]} content={artefacts[k]!} />
+          ))}
+        </div>
+      ) : (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Artefacts not included — download the full JSON to access them.
+        </p>
+      )}
+    </div>
+  );
 }
 
 function MetricCard({
@@ -136,26 +225,7 @@ export function ResultsSummary({
       </div>
 
       {result.deployment ? (
-        <div className="mt-6 rounded-lg border border-neutral-200 bg-neutral-50/50 p-4 dark:border-neutral-800 dark:bg-neutral-900/40">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
-            <ClipboardList className="h-4 w-4" aria-hidden />
-            Deployment (stub)
-          </h3>
-          <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground">Provider</dt>
-              <dd className="font-medium text-neutral-900 dark:text-neutral-100">{result.deployment.provider}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Status</dt>
-              <dd className="font-medium capitalize text-neutral-900 dark:text-neutral-100">{result.deployment.status}</dd>
-            </div>
-            <div className="sm:col-span-2">
-              <dt className="text-muted-foreground">Endpoint</dt>
-              <dd className="break-all font-mono text-[11px] text-neutral-800 dark:text-neutral-200">{result.deployment.endpoint}</dd>
-            </div>
-          </dl>
-        </div>
+        <DeploymentPreview deployment={result.deployment} />
       ) : null}
 
       {result.config?.name ? (

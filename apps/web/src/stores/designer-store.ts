@@ -4,6 +4,7 @@ import { create } from 'zustand';
 
 import { DESIGNER_STAGES, designerStageIndex, type DesignerStageId } from '@/lib/constants';
 import { createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
+import { deepStripNulls } from '@/lib/utils';
 import type { PipelineConfiguration, PipelineStages } from '@/types/pipeline';
 
 type DesignerState = {
@@ -25,7 +26,7 @@ export const useDesignerStore = create<DesignerState>()((set) => ({
   activeStageId: DESIGNER_STAGES[0].id,
   diagramMaxVisitedStageIndex: -1,
 
-  setDraft: (next) => set({ draft: next }),
+  setDraft: (next) => set({ draft: deepStripNulls(next) }),
 
   patchDraft: (patch) =>
     set((s) => ({
@@ -72,7 +73,7 @@ export const useDesignerStore = create<DesignerState>()((set) => ({
 
   loadPipeline: (config) =>
     set({
-      draft: config,
+      draft: deepStripNulls(config),
       activeStageId: DESIGNER_STAGES[0].id,
       diagramMaxVisitedStageIndex: DESIGNER_STAGES.length - 1,
     }),

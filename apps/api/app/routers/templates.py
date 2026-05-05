@@ -62,6 +62,7 @@ async def get_template(
 @router.post(
     "/{template_id}/apply",
     response_model=ApplyTemplateResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
     summary="Apply template — create pipeline config for a project",
 )

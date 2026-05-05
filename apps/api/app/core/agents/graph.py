@@ -777,6 +777,20 @@ def compile_autopilot_orchestrator_graph(*, checkpointer: MemorySaver | None = N
     return compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
 
 
+def _safe_recursion_limit(state: AutopilotGraphState) -> int:
+    """Compute a recursion limit that accommodates the configured max_iterations.
+
+    Graph node counts per full run:
+      8 fixed  (prepare + finalize + analyst + chunking + embedding + retrieval + evaluation + gate)
+      5 × (max_iter - 1)  retry loops  (chunking → embedding → retrieval → evaluation → gate)
+      6  final deployment pass          (same 5 + deployment node)
+    Total = 8 + 5*(max_iter-1) + 6 = 9 + 5*max_iter
+    We add a 10-node safety buffer so LangGraph never raises GraphRecursionError.
+    """
+    max_iter = _max_iterations_cap(state.get("requirements"))
+    return 19 + 5 * max_iter
+
+
 def invoke_autopilot_bootstrap(
     state: AutopilotGraphState,
     *,
@@ -786,11 +800,15 @@ def invoke_autopilot_bootstrap(
     """Run orchestrator graph (including evaluation gate and retries); return merged terminal state."""
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
+    recursion_limit = _safe_recursion_limit(state)
     if checkpointer is not None:
-        cfg: RunnableConfig = {"configurable": {"thread_id": thread_id}}
+        cfg: RunnableConfig = {
+            "configurable": {"thread_id": thread_id},
+            "recursion_limit": recursion_limit,
+        }
         result = app.invoke(state, config=cfg)
     else:
-        result = app.invoke(state)
+        result = app.invoke(state, config={"recursion_limit": recursion_limit})
     return result  # type: ignore[return-value]
 
 

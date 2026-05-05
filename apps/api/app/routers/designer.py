@@ -37,6 +37,7 @@ def _svc(session: DbSession) -> DesignerService:
 @router.post(
     "/config",
     response_model=SaveConfigResponse,
+    response_model_exclude_none=True,
     status_code=status.HTTP_201_CREATED,
     summary="Create pipeline configuration",
 )
@@ -54,6 +55,7 @@ async def create_config(
 @router.get(
     "/config/{config_id}",
     response_model=SaveConfigResponse,
+    response_model_exclude_none=True,
     summary="Load pipeline configuration by id",
 )
 async def get_config(
@@ -70,6 +72,7 @@ async def get_config(
 @router.put(
     "/config/{config_id}",
     response_model=SaveConfigResponse,
+    response_model_exclude_none=True,
     summary="Update pipeline configuration",
 )
 async def put_config(
