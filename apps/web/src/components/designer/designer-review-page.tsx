@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { DesignerToAutopilotHandoff } from '@/components/designer/designer-to-autopilot-handoff';
 import { guardrailPolicyMermaidSubtitle, resolveGuardrailsConfig } from '@/lib/guardrails-summary';
 import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
@@ -130,6 +131,8 @@ export function DesignerReviewPage({
         Confirm your RAG pipeline draft before export or handoff. Use the links below to jump to the live diagram, cost
         model, and generated artefacts — each strip stays in sync with your Zustand draft (local storage).
       </p>
+
+      <DesignerToAutopilotHandoff className="mt-8" />
 
       <div className="mt-6 flex flex-wrap gap-2">
         <button

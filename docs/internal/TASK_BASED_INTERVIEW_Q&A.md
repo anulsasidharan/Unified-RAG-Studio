@@ -5273,7 +5273,43 @@ Each row links to **`/autopilot/new?build={id}&project={projectId}`**. **`Autopi
 
 ### What is the next task after P7-7?
 
-**Phase 8 · P8-1 · Designer → Autopilot Handoff** — wire “Optimize this” style flows so Designer configs seed Autopilot requirements without manual re-entry.
+**Phase 8 · P8-1 · Designer → Autopilot Handoff** — wire “Optimize this” style flows so Designer configs seed Autopilot requirements without manual re-entry. **(Done — see Phase 8 · P8-1 section below.)**
+
+---
+
+## Phase 8 · P8-1 · Designer → Autopilot Handoff
+
+### What user problem does P8-1 solve?
+
+Users who finish a **Designer** draft should not **re-type** chunk sizes, embedding IDs, retrieval strategy, and cloud preference when switching to **Autopilot**. P8-1 carries the draft into Autopilot as an optional **`baseConfig`** on **`POST /api/autopilot/build`** and surfaces that intent in the UI.
+
+### Where does the user start the handoff?
+
+On **`/designer/review`**, the **`DesignerToAutopilotHandoff`** card explains the flow and navigates to **`/autopilot/new?from=designer`** after confirmation.
+
+### What happens in client state when the user confirms?
+
+**`useAutopilotStore.startFromDesigner(draft)`** stores **`baseConfig: PipelineConfiguration`**, resets **`uploadedDocuments`** and **`selectedBackendProjectId`**, reapplies default **`requirements`**, and sets **`requirements.cloudProvider`** from **`draft.cloudProvider`** so the requirements form matches the Designer cloud choice.
+
+### How does the build request include the Designer baseline?
+
+**`BuildProgressMonitor`** already merges **`baseConfig`** into the JSON body as **`baseConfig`** (camelCase). FastAPI’s **`RAGBaseModel`** aliases **`base_config`** ↔ **`baseConfig`**. **`StartBuildRequest.base_config`** validates as **`PipelineConfigurationSchema`** and is persisted under **`requirements["base_config"]`** on the build row for workers.
+
+### Does Autopilot run without new uploads?
+
+**No.** **`document_ids`** remains **`min_length=1`**; the user must **upload corpus files** and pick a **backend project** before **Start build**. The Designer draft describes pipeline hyperparameters, not document binaries.
+
+### What does the banner on `/autopilot/new` communicate?
+
+**`AutopilotDesignerBaselineBanner`** appears when **`baseConfig`** is set: pipeline name, reminder that **`baseConfig`** is attached on start, optional **Clear baseline** calling **`clearHandoff()`** (drops **`baseConfig`** only).
+
+### Interview trap: does handoff replace Autopilot optimization?
+
+**No.** **`base_config`** is a **starting point** for the orchestrator and result compositor (see **`autopilot_build_result`**); agents may still change chunking, embeddings, and retrieval based on corpus analysis and targets.
+
+### What is the next task after P8-1?
+
+**P8-2 · Autopilot → Designer Visualization** — formalise importing optimised results back into Designer (partially anticipated by **`DecisionExplainer`** / **`loadPipeline`**).
 
 ---
 

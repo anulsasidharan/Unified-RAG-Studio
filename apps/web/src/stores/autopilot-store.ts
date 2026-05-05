@@ -109,7 +109,10 @@ export const useAutopilotStore = create<AutopilotState>()(
       startFromDesigner: (config) =>
         set({
           baseConfig: config,
-          requirements: createDefaultRequirements(),
+          requirements: {
+            ...createDefaultRequirements(),
+            cloudProvider: config.cloudProvider,
+          },
           uploadedDocuments: [],
           selectedBackendProjectId: null,
         }),
