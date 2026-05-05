@@ -5309,7 +5309,7 @@ On **`/designer/review`**, the **`DesignerToAutopilotHandoff`** card explains th
 
 ### What is the next task after P8-1?
 
-**P8-2 · Autopilot → Designer Visualization** — (done; see Phase 8 · P8-2 below). Next: **P8-3 · Evaluation API Endpoints**.
+**P8-2 · Autopilot → Designer Visualization** — (done; see Phase 8 · P8-2 below). **P8-3** is also complete (see Phase 8 · P8-3). Next in the roadmap: **P8-4 · Deployment API Endpoints**.
 
 ---
 
@@ -5349,7 +5349,63 @@ If **`metadata`** already marks **`source: autopilot`** but the metric snapshot 
 
 ### What is the next task after P8-2?
 
-**P8-3 · Evaluation API Endpoints** — execution/history/compare APIs for evaluation runs.
+**P8-3 · Evaluation API Endpoints** is implemented (see Phase 8 · P8-3). Next: **P8-4 · Deployment API Endpoints**.
+
+---
+
+## Phase 8 · P8-3 · Evaluation API Endpoints
+
+### What user problem does P8-3 solve?
+
+Designer and Autopilot need a **shared backend** to **run RAGAS-style evaluations** on a saved **pipeline configuration**, **review past runs**, and **compare two configs** (A/B) without re-implementing RAGAS in the client or ad-hoc scripts.
+
+### What HTTP surface does the API expose?
+
+| Method | Path | Role |
+|--------|------|------|
+| `POST` | `/api/evaluation/run` | Create an `evaluation_runs` row, execute evaluation, return `EvaluationRunResponse` (status `complete` or `failed`). |
+| `GET` | `/api/evaluation/run/{run_id}` | Return one run (metrics, failure analysis, error) for an **owned** config. |
+| `GET` | `/api/evaluation/runs?config_id=<uuid>` | List runs for a config, **newest first** (with `total` count). |
+| `POST` | `/api/evaluation/compare` | Compare two configs by **reusing two completed run IDs** or by **running both** on a **shared synthetic** test set of `test_set_size`. |
+
+### How is the acting user determined?
+
+Same pre-auth pattern as other APIs: **`X-User-ID`** (or `default_user_id` from settings). `EvaluationService` joins `evaluation_runs` → `pipeline_configs` → `projects` and requires `projects.user_id` to match.
+
+### How does a run build the test set?
+
+- If the client sends **`test_set`**: each row is a **`TestSetEntry`** (`question`, `ground_truth`, optional `context` list). Empty **`test_set`** is rejected (`400`).
+- If **`test_set` is omitted**: the service generates **`test_set_size`** rows (**10–500**) from an internal synthetic corpus (deterministic segments), matching the schema comment that absent rows imply generated data.
+
+### How are model answers and contexts produced?
+
+For each row, the service calls **`run_guarded_rag_query`**: context documents are **`entry.context`** if provided, otherwise **`ground_truth`** as a single **`Document`** (simulates grounded retrieval). The **generation** answer feeds RAGAS alongside **`contexts`** derived from **`documents_used`** (fallback to **`ground_truth`**).
+
+### Which metrics run in RAGAS?
+
+The **`EvaluationEngine`** resolves metric names via **`resolve_ragas_metric_names`**. Request **`metrics`** overrides pipeline defaults; otherwise **`metric_names_from_pipeline`** reads **`stages.evaluation`** when evaluation is enabled; **`latency`** in the pipeline list is excluded from RAGAS (wall-clock is tracked separately as **`avg_latency_ms`** on the result).
+
+### What gets persisted on `evaluation_runs`?
+
+**`status`**, serialised **`EvaluationMetrics`**, optional **`FailureAnalysisResult`**, **`test_set_size`**, **`error`**, **`completed_at`**. **`build_id`** remains `NULL` for API-triggered runs (Autopilot can link later).
+
+### How does `POST /api/evaluation/compare` work?
+
+- If **both** `run_id_a` and `run_id_b` are set: load **complete** runs, verify each **run’s `config_id`** matches the given config id, reuse stored metrics.
+- If **neither** is set: build **one** shared synthetic test set, run **`run_evaluation` twice** (config A and B), then **`compare_metrics`** (per-metric winner + overall tally).
+- If only one run id is set: **`400`** — must supply both or neither.
+
+### What does the compare response include?
+
+**`CompareConfigsResponse`**: **`metrics_a` / `metrics_b`**, per-metric **`deltas`** (with **`winner`** `a` / `b` / `tie`, including **`avg_latency_ms`** when present), **`overall_winner`**, and a short human **`summary`**.
+
+### Interview trap: does evaluation require a deployed vector index?
+
+**Not for this API path.** Context is either user-supplied, or **ground-truth text** used as the chunk passed into the guarded RAG path — so the endpoint is **self-contained** for integration and lab use. A future enhancement can wire **real retrieval** from Qdrant when indexed corpora exist.
+
+### What is the next task after P8-3?
+
+**P8-4 · Deployment API Endpoints** — trigger/list/status/teardown for deployments.
 
 ---
 
