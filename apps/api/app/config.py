@@ -60,8 +60,10 @@ class Settings(BaseSettings):
     evaluation_llm_model: str = "gpt-4o-mini"
     evaluation_embedding_model: str = "text-embedding-3-small"
 
-    # ── Experiment tracking ───────────────────────────────────
+    # ── Experiment tracking (P9-1) ────────────────────────────
     mlflow_tracking_uri: str = "http://localhost:5000"
+    mlflow_enabled: bool = True
+    mlflow_experiment_name: str = "rag-studio-autopilot"
 
     # ── Object storage ────────────────────────────────────────
     minio_endpoint: str = "http://localhost:9000"

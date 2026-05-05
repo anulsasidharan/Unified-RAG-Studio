@@ -50,6 +50,8 @@ services:
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - QDRANT_URL=${QDRANT_URL:-http://vector-db:6333}
       - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+      - MLFLOW_ENABLED=${MLFLOW_ENABLED:-true}
+      - MLFLOW_EXPERIMENT_NAME=${MLFLOW_EXPERIMENT_NAME:-rag-studio-autopilot}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}
@@ -90,6 +92,8 @@ services:
       - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - QDRANT_URL=${QDRANT_URL:-http://vector-db:6333}
       - MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI:-http://mlflow:5000}
+      - MLFLOW_ENABLED=${MLFLOW_ENABLED:-true}
+      - MLFLOW_EXPERIMENT_NAME=${MLFLOW_EXPERIMENT_NAME:-rag-studio-autopilot}
       - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://minio:9000}
       - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY:-minioadmin}
       - MINIO_SECRET_KEY=${MINIO_SECRET_KEY:-minioadmin}

@@ -82,7 +82,7 @@
 | 68 | Phase 8 | P8-3 · Evaluation API Endpoints | `feature/p8-evaluation-api` | Add evaluation execution/history/compare backend endpoints. | ✅ done |
 | 69 | Phase 8 | P8-4 · Deployment API Endpoints | `feature/p8-deployment-api` | Add deployment trigger/status/list/teardown backend endpoints. | ✅ done |
 |  | `Phase 9` | `Add MLflow experiment tracking for reproducibility across Autopilot runs.` |  |  |  |
-| 70 | Phase 9 | P9-1 · MLflow Integration | `feature/p9-mlflow-integration` | Add experiment tracking for autopilot runs, metrics, params, and artifacts. | ⬜ pending |
+| 70 | Phase 9 | P9-1 · MLflow Integration | `feature/p9-mlflow-integration` | Add experiment tracking for autopilot runs, metrics, params, and artifacts. | ✅ done |
 |  | `Phase 10` | `Achieve comprehensive quality gates through unit, integration, and end-to-end testing.` |  |  |  |
 | 71 | Phase 10 | P10-1 · Backend Unit Tests | `feature/p10-backend-unit-tests` | Build backend unit test suites and target high coverage. | ⬜ pending |
 | 72 | Phase 10 | P10-2 · Backend Integration Tests | `feature/p10-backend-integration-tests` | Build backend integration tests for designer/autopilot/evaluation flows. | ⬜ pending |

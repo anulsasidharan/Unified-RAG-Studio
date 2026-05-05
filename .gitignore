@@ -170,3 +170,8 @@ apps/api/config/guardrails/local/
 # Next.js — local trace files (profiling / debugging)
 # ------------------------------------------------------------
 **/.next/trace
+
+# ------------------------------------------------------------
+# MLflow — default local file store when not using Docker volume (P9-1)
+# ------------------------------------------------------------
+mlruns/
