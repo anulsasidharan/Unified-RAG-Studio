@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.dependencies import DbSession, RequestUserId
+from app.dependencies import AdminPrincipal, DbSession, RequestUserId
 from app.schemas.deployment import DeployRequest, DeployResponse, DeploymentListResponse, DeploymentStatusResponse
 from app.services.deployment_service import DeploymentService
 
@@ -28,6 +28,7 @@ def _svc(session: DbSession) -> DeploymentService:
 async def deploy_pipeline(
     body: DeployRequest,
     session: DbSession,
+    _: AdminPrincipal,
     user_id: RequestUserId,
 ) -> DeployResponse:
     out = await _svc(session).trigger_deploy(user_id, body)
@@ -80,6 +81,7 @@ async def get_deployment_status(
 async def teardown_deployment(
     deployment_id: uuid.UUID,
     session: DbSession,
+    _: AdminPrincipal,
     user_id: RequestUserId,
 ) -> DeploymentStatusResponse:
     out = await _svc(session).teardown(user_id, deployment_id)

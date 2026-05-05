@@ -93,9 +93,9 @@
 | 76 | Phase 11 | P11-2 · Prometheus Metrics | `feature/p11-prometheus-metrics` | Add metrics endpoint, custom metrics, and Prometheus/Grafana integration. | ✅ done |
 | 77 | Phase 11 | P11-3 · Cost & Usage Analytics | `feature/p11-usage-analytics` | Add usage/cost analytics APIs and frontend analytics page. | ✅ done |
 |  | `Phase 12` | `Harden security and performance, then execute production deployment and launch.` |  |  |  |
-| 78 | Phase 12 | P12-1 · Authentication & Authorization | `feature/p12-auth` | Implement auth flows, endpoint protection, and user-level access control. | ⬜ pending |
-| 79 | Phase 12 | P12-2 · Security Hardening | `feature/p12-security-hardening` | Implement security controls, validation, rate limits, and scanning. | ⬜ pending |
-| 80 | Phase 12 | P12-3 · Performance Optimisation | `feature/p12-performance` | Tune performance across cache, DB, API, frontend, and load handling. | ⬜ pending |
-| 81 | Phase 12 | P12-4 · Kubernetes Production Manifests | `feature/p12-kubernetes-manifests` | Create production-ready Kubernetes manifests and verify deployment. | ⬜ pending |
-| 82 | Phase 12 | P12-5 · Final Documentation Pass | `feature/p12-documentation` | Complete product docs, guides, API references, and README polish. | ⬜ pending |
-| 83 | Phase 12 | P12-6 · Production Deployment & Launch | `feature/p12-production-launch` | Execute release, staging validation, production rollout, and release notes. | ⬜ pending |
+| 78 | Phase 12 | P12-1 · Authentication & Authorization | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | Implement auth flows, endpoint protection, and user-level access control. | ✅ done |
+| 79 | Phase 12 | P12-2 · Security Hardening | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | Implement security controls, validation, rate limits, and scanning. | ✅ done |
+| 80 | Phase 12 | P12-3 · Performance Optimisation | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | Tune performance across cache, DB, API, frontend, and load handling. | ✅ done |
+| 81 | Phase 12 | P12-4 · Kubernetes Production Manifests | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | Create production-ready Kubernetes manifests and verify deployment. | ✅ done |
+| 82 | Phase 12 | P12-5 · Final Documentation Pass | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | Complete product docs, guides, API references, and README polish. | ✅ done |
+| 83 | Phase 12 | P12-6 · Production Deployment & Launch | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | Execute release, staging validation, production rollout, and release notes. | ✅ done |

@@ -10,11 +10,13 @@ from collections.abc import AsyncGenerator
 from typing import Annotated
 
 import redis.asyncio as aioredis
-from fastapi import Depends, Header, HTTPException
+from fastapi import Depends, Header, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from qdrant_client import AsyncQdrantClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
+from app.core.security.auth import AuthPrincipal, decode_access_token
 from app.config import Settings, get_settings
 
 # ─── Database ────────────────────────────────────────────────────────────────
@@ -116,16 +118,34 @@ DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 RedisClient = Annotated[aioredis.Redis, Depends(get_redis)]
 QdrantDB = Annotated[AsyncQdrantClient, Depends(get_qdrant)]
 AppSettings = Annotated[Settings, Depends(get_settings)]
+bearer_scheme = HTTPBearer(auto_error=False)
 
 
 def get_request_user_id(
     settings: AppSettings,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
     x_user_id: Annotated[
         str | None,
         Header(alias="X-User-ID", convert_underscores=False),
     ] = None,
 ) -> uuid.UUID:
-    """Resolves the acting user for row-level scoping (pre-auth: ``X-User-ID`` or default)."""
+    """Resolves acting user from JWT when enabled, else falls back to header/default."""
+    if credentials and credentials.credentials:
+        try:
+            principal = decode_access_token(settings, credentials.credentials)
+            return principal.user_id
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid bearer token",
+            ) from exc
+
+    if settings.auth_required:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing bearer token",
+        )
+
     raw = (x_user_id or str(settings.default_user_id)).strip()
     try:
         return uuid.UUID(raw)
@@ -134,3 +154,27 @@ def get_request_user_id(
 
 
 RequestUserId = Annotated[uuid.UUID, Depends(get_request_user_id)]
+
+
+def get_current_principal(
+    settings: AppSettings,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+) -> AuthPrincipal:
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+    try:
+        return decode_access_token(settings, credentials.credentials)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token") from exc
+
+
+CurrentPrincipal = Annotated[AuthPrincipal, Depends(get_current_principal)]
+
+
+def require_admin(principal: CurrentPrincipal) -> AuthPrincipal:
+    if principal.role.lower() != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin role required")
+    return principal
+
+
+AdminPrincipal = Annotated[AuthPrincipal, Depends(require_admin)]

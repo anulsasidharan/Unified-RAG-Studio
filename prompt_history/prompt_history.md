@@ -152,6 +152,23 @@ Once completed do the following tasks:
 
 ---
 
+## 2026-05-05T06:36:00Z
+
+**User prompt:**
+
+Go ahead and complete the Phase 12	Harden security and performance, then execute production deployment and launch(P12-1 · Authentication & Authorization, P12-2 · Security Hardening,P12-3 · Performance Optimisation,P12-4 · Kubernetes Production Manifests,P12-5 · Final Documentation Pass,P12-6 · Production Deployment & Launch).
+I am currently in Branch: feature/p12-Harden-security-auth-k8s-prod-deplloy
+
+Once completed do the following tasks:
+
+1. Make sure to update the @docs/internal/TASK_BASED_INTERVIEW_Q&A.md file with all possible interview questions and answers after completing each tasks. Only append at the end of existing document, Dont erase the existing content.  
+2. Make sure to update the .gitignore file at the end of each Task if required. 
+3. Make sure to save all the prompt which I am giving, in the prompt_history/prompt_history.md file with time stamp. Only append at the end of existing document, Dont erase the existing content. 
+4. Update the corresponding tasks in @docs/internal/TASKS.md file and @docs/internal/project_status.md as completed ✅ with this tick mark.
+5. At the end give me the short description what I have to write in the "Add a description" box in the github pull request.
+
+---
+
 ## 2026-05-05T05:50:00Z
 
 **User prompt:**

@@ -181,3 +181,9 @@ mlruns/
 # ------------------------------------------------------------
 /grafana-export-*.json
 /prometheus-debug/
+
+# ------------------------------------------------------------
+# Kubernetes production local overlays/secrets (Phase 12)
+# ------------------------------------------------------------
+k8s/production/secret.yaml
+k8s/production/*.local.yaml

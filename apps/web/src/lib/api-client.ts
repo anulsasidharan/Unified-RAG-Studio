@@ -15,6 +15,20 @@ interface RequestOptions<TBody = unknown> {
   signal?: AbortSignal;
 }
 
+function resolveAuthHeader(): Record<string, string> {
+  const envToken = process.env.NEXT_PUBLIC_API_BEARER_TOKEN?.trim();
+  if (envToken) {
+    return { Authorization: `Bearer ${envToken}` };
+  }
+  if (typeof window !== 'undefined') {
+    const stored = window.localStorage.getItem('ragstudio.accessToken')?.trim();
+    if (stored) {
+      return { Authorization: `Bearer ${stored}` };
+    }
+  }
+  return {};
+}
+
 class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -52,6 +66,7 @@ async function request<TResponse, TBody = unknown>(
     headers: {
       'Content-Type': 'application/json',
       Accept: 'application/json',
+      ...resolveAuthHeader(),
       ...headers,
     },
   };
@@ -112,6 +127,10 @@ export async function postFormData<TResponse>(
     body: form,
     signal,
     headers: { Accept: 'application/json' },
+    ...((() => {
+      const auth = resolveAuthHeader();
+      return Object.keys(auth).length ? { headers: { Accept: 'application/json', ...auth } } : {};
+    })()),
   });
 
   if (!response.ok) {

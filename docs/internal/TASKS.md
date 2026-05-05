@@ -91,3 +91,14 @@
 | P11-1 · Structured Logging | `feature/p11-structured-logging` | ✅ done |
 | P11-2 · Prometheus Metrics | `feature/p11-prometheus-metrics` | ✅ done |
 | P11-3 · Cost & Usage Analytics | `feature/p11-usage-analytics` | ✅ done |
+
+## Phase 12 — Harden security and performance, then production launch
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P12-1 · Authentication & Authorization | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | ✅ done |
+| P12-2 · Security Hardening | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | ✅ done |
+| P12-3 · Performance Optimisation | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | ✅ done |
+| P12-4 · Kubernetes Production Manifests | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | ✅ done |
+| P12-5 · Final Documentation Pass | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | ✅ done |
+| P12-6 · Production Deployment & Launch | `feature/p12-Harden-security-auth-k8s-prod-deplloy` | ✅ done |
