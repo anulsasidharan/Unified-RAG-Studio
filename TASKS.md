@@ -106,3 +106,9 @@
 | Task | Branch | Status |
 |------|--------|--------|
 | P9-1 · MLflow Integration | `feature/p9-mlflow-integration` | ✅ done |
+
+## Phase 10 — Testing & quality gates
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P10-1 · Backend Unit Tests | `feature/p10-backend-unit-tests` | ✅ done |

@@ -5514,3 +5514,51 @@ The helper **`_flatten`** skips deep nesting beyond a bounded depth, **clips** s
 
 ---
 
+## Phase 10 · P10-1 — Backend Unit Tests
+
+### What does P10-1 deliver?
+
+A **repeatable FastAPI unit-test gate**: **`pytest`** over **`apps/api/tests/`** (excluding **`tests/test_integration`** for CI speed), **`pytest-cov`** on package **`app`** with **≥ 70%** line coverage, **`pytest-asyncio`** in auto mode, and **marked** tests (**`@pytest.mark.unit`** vs **`@pytest.mark.integration`**) so selective runs stay fast. **P10-1** extends coverage with **router-level** tests for **`/api/evaluation/*`** (previously exercised only via core evaluation modules) and **pure helpers** in **`evaluation_service`** (synthetic test-set resolution).
+
+### How does CI run backend tests?
+
+**`.github/workflows/ci.yml`** job **Backend — Unit Tests** sets **`APP_ENV=test`**, **`DATABASE_URL=sqlite+aiosqlite:///./test.db`**, Redis sidecar, and runs:
+
+`pytest tests/ --ignore=tests/test_integration --cov=app --cov-report=xml --cov-report=term-missing --cov-fail-under=70 -v --tb=short -x`
+
+The **`-x`** flag stops on the first failure to shorten feedback. **Worker** (`app/worker/*`) is **omitted** from coverage in **`pyproject.toml`** as operational rather than API logic.
+
+### What does `tests/conftest.py` set up?
+
+Before importing **`app.main`**, it sets **`APP_ENV`**, **`DATABASE_URL`** (SQLite async), **`SECRET_KEY`**, and placeholder provider keys so **Settings** and **Celery** load cleanly. Session fixtures create **SQLite ORM tables** from **`Base.metadata`** and expose **`sync_client`** (**`TestClient`**) and **`async_client`** (**`httpx.AsyncClient`** + **`ASGITransport`**).
+
+### Why mock `EvaluationService` in HTTP tests?
+
+**`POST /api/evaluation/run`** ultimately calls **`run_guarded_rag_query`**, **RAGAS**, and the **evaluation engine** — too heavy and flaky for unit gates. Tests **patch** **`app.routers.evaluation.EvaluationService.<method>`** with **`AsyncMock`** to assert **status codes** and **JSON shapes** (404 when the service returns **`None`**, 400 on **`ValueError`**, 200 on success) without hitting real models or Redis/Qdrant.
+
+### Where do you import private helpers like `_resolve_test_entries`?
+
+Only in **dedicated unit tests** (`tests/test_services/test_evaluation_service_helpers.py`) that validate **input validation** (e.g. empty **`test_set`** raises **`ValueError`**) and **synthetic test-set sizing**. Prefer **public APIs** when possible; private imports are justified when the helper guards **user-visible error semantics**.
+
+### What is the difference between `unit` and `integration` markers?
+
+**`unit`** — fast, isolated, mocks external I/O; suitable for pre-commit and tight loops. **`integration`** — hits **real SQLite** via **`TestClient`**, multiple routes, or **Celery** stubs (e.g. **`test_deployment_router.py`**). CI currently runs **all** non-integration-folder tests together; markers support future filtering (e.g. **`pytest -m unit`**).
+
+### How do you run tests locally?
+
+From **`apps/api`**: install **`requirements.txt`** + **`requirements-dev.txt`**, then **`pytest`**. On Windows, native **`pip install`** can hit **build issues** (e.g. **pyarrow**); use **WSL**, **Docker** (same image as **`Dockerfile`**), or **CI** as the source of truth for green builds.
+
+### Interview trap: Does P10-1 add E2E or Playwright tests?
+
+**No** — those are **P10-4**. **P10-2** covers **backend integration** tests; **P10-3** is **frontend** unit tests.
+
+### What should developers not commit after running coverage?
+
+**`.coverage`**, **`coverage.xml`**, and **`htmlcov/`** are listed in **`.gitignore`** so local reports never land in git.
+
+### What is the next task after P10-1?
+
+**P10-2 · Backend Integration Tests** — broaden **cross-flow** coverage for designer/autopilot paths under **`tests/test_integration`** or marked **`integration`**.
+
+---
+
