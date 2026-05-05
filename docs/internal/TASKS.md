@@ -66,3 +66,4 @@
 |------|--------|--------|
 | P8-1 · Designer → Autopilot Handoff | `feature/p8-designer-to-autopilot` | ✅ done |
 | P8-2 · Autopilot → Designer Visualization | `feature/p8-autopilot-to-designer` | ✅ done |
+| P8-3 · Evaluation API Endpoints | `feature/p8-evaluation-api` | ✅ done |
