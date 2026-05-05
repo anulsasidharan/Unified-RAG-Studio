@@ -7,7 +7,8 @@
       "PowerShell(docker exec rag-studio-vector-db-1 *)",
       "PowerShell(docker exec rag-studio-mlflow-1 *)",
       "PowerShell(docker exec rag-studio-web-1 *)",
-      "PowerShell(docker exec rag-studio-api-1 *)"
+      "PowerShell(docker exec rag-studio-api-1 *)",
+      "PowerShell(docker exec rag-studio-nginx-1 *)"
     ]
   }
 }
