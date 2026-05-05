@@ -9,6 +9,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
 from app.config import Settings, get_settings
 from app.core.guardrails.metrics import collect_guardrail_metric_samples
+from app.observability.registry import collect_metric_samples
 
 router = APIRouter(tags=["monitoring"])
 
@@ -41,4 +42,18 @@ async def guardrails_metrics_json(
     _require_metrics(settings)
     return {
         "metrics": collect_guardrail_metric_samples(),
+    }
+
+
+@router.get(
+    "/monitoring/rag",
+    summary="All RAG Studio Prometheus metrics (JSON)",
+)
+async def rag_metrics_snapshot(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, object]:
+    """Flat snapshot of every series whose Collector name begins with ``rag_``."""
+    _require_metrics(settings)
+    return {
+        "metrics": collect_metric_samples(prefixes=("rag_",)),
     }

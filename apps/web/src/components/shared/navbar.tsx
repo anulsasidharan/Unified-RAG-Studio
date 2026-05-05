@@ -72,6 +72,12 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
 
         <div className="flex flex-1 items-center justify-end gap-2 sm:gap-3">
           <Link
+            href={ROUTES.analytics}
+            className="hidden text-sm font-medium text-neutral-600 hover:text-primary-600 md:inline dark:text-neutral-400 dark:hover:text-primary-400"
+          >
+            Analytics
+          </Link>
+          <Link
             href={ROUTES.templates}
             className="hidden text-sm font-medium text-neutral-600 hover:text-primary-600 md:inline dark:text-neutral-400 dark:hover:text-primary-400"
           >
@@ -167,6 +173,12 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-100 px-3 pb-2 pt-2 sm:hidden dark:border-neutral-800">
+        <Link
+          href={ROUTES.analytics}
+          className="text-xs font-medium text-neutral-600 hover:text-primary-600 dark:text-neutral-400"
+        >
+          Analytics
+        </Link>
         <Link
           href={ROUTES.templates}
           className="text-xs font-medium text-neutral-600 hover:text-primary-600 dark:text-neutral-400"

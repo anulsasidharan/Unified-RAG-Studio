@@ -1,6 +1,5 @@
 """RAG Studio — FastAPI application entry point."""
 
-import logging
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -13,37 +12,30 @@ from sqlalchemy.pool import NullPool
 
 from app.config import get_settings
 from app.metadata import API_SEMVER
-
-# ─── Structured logging setup ────────────────────────────────────────────────
-
-def _configure_logging(log_level: str) -> None:
-    structlog.configure(
-        processors=[
-            structlog.contextvars.merge_contextvars,
-            structlog.processors.add_log_level,
-            structlog.processors.TimeStamper(fmt="iso"),
-            structlog.dev.ConsoleRenderer() if log_level == "DEBUG"
-            else structlog.processors.JSONRenderer(),
-        ],
-        wrapper_class=structlog.make_filtering_bound_logger(
-            getattr(logging, log_level, logging.INFO)
-        ),
-        context_class=dict,
-        logger_factory=structlog.PrintLoggerFactory(),
-    )
-    logging.basicConfig(level=getattr(logging, log_level, logging.INFO))
+from app.observability.context import bind_request_observability, clear_observability_context
+from app.observability.logging_setup import configure_logging
+from app.observability.rag_metrics import observe_http_request
 
 
 logger = structlog.get_logger(__name__)
 
 
+def _route_template(request: Request) -> str:
+    route = request.scope.get("route")
+    raw = getattr(route, "path", None) if route is not None else None
+    if isinstance(raw, str) and raw:
+        return raw
+    return request.url.path
+
+
 # ─── Lifespan ────────────────────────────────────────────────────────────────
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application startup and shutdown logic."""
     settings = get_settings()
-    _configure_logging(settings.log_level)
+    configure_logging(settings.log_level)
 
     logger.info(
         "RAG Studio API starting",
@@ -72,6 +64,7 @@ async def lifespan(app: FastAPI):
 
 # ─── Application factory ─────────────────────────────────────────────────────
 
+
 def create_app() -> FastAPI:
     settings = get_settings()
 
@@ -95,28 +88,82 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # ── Request ID + latency logging middleware ───────────────
+    # ── Request ID, correlation ID, Prometheus HTTP metrics, latency JSON logs ───
     @app.middleware("http")
-    async def request_logging_middleware(request: Request, call_next):
+    async def observability_http_middleware(request: Request, call_next):
         start = time.perf_counter()
-        request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-        structlog.contextvars.bind_contextvars(request_id=request_id)
 
-        response = await call_next(request)
-        response.headers["X-Request-ID"] = request_id
+        inbound_rid = (
+            request.headers.get("X-Request-ID") or request.headers.get("x-request-id") or ""
+        ).strip()
+        request_id = inbound_rid if inbound_rid else str(uuid.uuid4())
+        inbound_cid = (
+            request.headers.get("X-Correlation-ID") or request.headers.get("x-correlation-id") or ""
+        ).strip()
+        correlation_id = inbound_cid if inbound_cid else request_id
 
-        duration_ms = round((time.perf_counter() - start) * 1000, 2)
-        logger.info(
-            "request",
-            method=request.method,
-            path=request.url.path,
-            status=response.status_code,
-            duration_ms=duration_ms,
+        route_path = _route_template(request)
+
+        bind_request_observability(
+            request_id=request_id,
+            correlation_id=correlation_id,
         )
-        structlog.contextvars.clear_contextvars()
-        return response
+
+        try:
+            response = await call_next(request)
+            elapsed = max(time.perf_counter() - start, 1e-9)
+            duration_ms = round(elapsed * 1000, 2)
+            status_code = response.status_code
+
+            response.headers["X-Request-ID"] = request_id
+            response.headers.setdefault("X-Correlation-ID", correlation_id)
+
+            logger.info(
+                "request",
+                method=request.method,
+                path=route_path,
+                status_code=status_code,
+                duration_ms=duration_ms,
+                client_host=(
+                    getattr(request.client, "host", None) if settings.is_development else None
+                ),
+            )
+
+            if settings.prometheus_metrics_enabled:
+                observe_http_request(
+                    method=request.method,
+                    route_template=route_path,
+                    status_code=status_code,
+                    duration_seconds=elapsed,
+                )
+
+            return response
+
+        except Exception:
+            elapsed = max(time.perf_counter() - start, 1e-9)
+
+            logger.exception(
+                "request_failed",
+                method=request.method,
+                path=route_path,
+                duration_ms=round(elapsed * 1000, 2),
+            )
+
+            if settings.prometheus_metrics_enabled:
+                observe_http_request(
+                    method=request.method,
+                    route_template=route_path,
+                    status_code=500,
+                    duration_seconds=elapsed,
+                )
+
+            raise
+
+        finally:
+            clear_observability_context()
 
     # ── Routes ───────────────────────────────────────────────
+    from app.routers.analytics import router as analytics_router
     from app.routers.autopilot import router as autopilot_router
     from app.routers.deployment import router as deployment_router
     from app.routers.designer import router as designer_router
@@ -132,6 +179,7 @@ def create_app() -> FastAPI:
     app.include_router(health_router)
     app.include_router(utilities_router)
     app.include_router(jobs_router)
+    app.include_router(analytics_router)
     app.include_router(autopilot_router)
     app.include_router(projects_router)
     app.include_router(templates_router)

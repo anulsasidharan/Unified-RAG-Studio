@@ -89,9 +89,9 @@
 | 73 | Phase 10 | P10-3 · Frontend Unit Tests | `feature/p10-frontend-unit-tests` | Build frontend component/store/unit tests with coverage targets. | ✅ done |
 | 74 | Phase 10 | P10-4 · End-to-End Tests | `feature/p10-e2e-tests` | Build Playwright end-to-end tests for key user journeys. | ✅ done |
 |  | `Phase 11` | `Implement production-grade observability with structured logs, metrics, and analytics.` |  |  |  |
-| 75 | Phase 11 | P11-1 · Structured Logging | `feature/p11-structured-logging` | Implement structured logging and request/agent traceability. | ⬜ pending |
-| 76 | Phase 11 | P11-2 · Prometheus Metrics | `feature/p11-prometheus-metrics` | Add metrics endpoint, custom metrics, and Prometheus/Grafana integration. | ⬜ pending |
-| 77 | Phase 11 | P11-3 · Cost & Usage Analytics | `feature/p11-usage-analytics` | Add usage/cost analytics APIs and frontend analytics page. | ⬜ pending |
+| 75 | Phase 11 | P11-1 · Structured Logging | `feature/p11-structured-logging` | Implement structured logging and request/agent traceability. | ✅ done |
+| 76 | Phase 11 | P11-2 · Prometheus Metrics | `feature/p11-prometheus-metrics` | Add metrics endpoint, custom metrics, and Prometheus/Grafana integration. | ✅ done |
+| 77 | Phase 11 | P11-3 · Cost & Usage Analytics | `feature/p11-usage-analytics` | Add usage/cost analytics APIs and frontend analytics page. | ✅ done |
 |  | `Phase 12` | `Harden security and performance, then execute production deployment and launch.` |  |  |  |
 | 78 | Phase 12 | P12-1 · Authentication & Authorization | `feature/p12-auth` | Implement auth flows, endpoint protection, and user-level access control. | ⬜ pending |
 | 79 | Phase 12 | P12-2 · Security Hardening | `feature/p12-security-hardening` | Implement security controls, validation, rate limits, and scanning. | ⬜ pending |

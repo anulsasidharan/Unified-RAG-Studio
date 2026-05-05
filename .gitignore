@@ -175,3 +175,9 @@ apps/api/config/guardrails/local/
 # MLflow — default local file store when not using Docker volume (P9-1)
 # ------------------------------------------------------------
 mlruns/
+
+# ------------------------------------------------------------
+# Observability — optional local dumps (Phase 11; Compose uses named volumes)
+# ------------------------------------------------------------
+/grafana-export-*.json
+/prometheus-debug/

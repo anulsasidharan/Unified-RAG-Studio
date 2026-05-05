@@ -1,0 +1,59 @@
+# RAG Studio — Optional Prometheus + Grafana (Phase 11)
+#
+# Compose merge (same ``name: rag-studio`` as base files):
+#   docker compose \\
+#     -f docker/docker-compose.yml \\
+#     -f docker/docker-compose.build.yml \\
+#     -f docker/docker-compose.dev.yml \\
+#     -f docker/docker-compose.observability.yml \\
+#     up --build -d
+#
+# UI:
+#   - Prometheus http://localhost:9090 (or ``$PROMETHEUS_PORT``)
+#   - Grafana http://localhost:3100 (or ``$GF_SERVER_HTTP_PORT``); default login admin / admin
+
+name: rag-studio
+
+services:
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:11.4.0
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_SECURITY_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_SECURITY_ADMIN_PASSWORD:-admin}
+      - GF_USERS_DEFAULT_THEME=dark
+      - GF_INSTALL_PLUGINS=
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    ports:
+      - "${GF_SERVER_HTTP_PORT:-3100}:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

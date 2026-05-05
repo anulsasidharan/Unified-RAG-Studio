@@ -43,6 +43,8 @@ from app.services.autopilot_object_storage import (
     upload_blobs_sync,
     validate_upload_candidate,
 )
+from app.observability.context import bind_build_context
+from app.observability.rag_metrics import record_autopilot_enqueued, record_autopilot_terminal
 from app.worker import celery_app
 from app.worker.tasks import run_pipeline_build
 
@@ -314,6 +316,10 @@ async def start_build(
     async_result = run_pipeline_build.delay(str(build.id))
     await _svc(session).attach_celery_task_id(build.id, async_result.id)
 
+    bind_build_context(build.id)
+    record_autopilot_enqueued()
+    logger.info("autopilot_build_enqueued", build_id=str(build.id))
+
     return StartBuildResponse(
         build_id=str(build.id),
         status="pending",
@@ -403,6 +409,7 @@ async def cancel_build(
             logger.warning("autopilot_celery_revoke_failed", task_id=task_id, exc_info=True)
 
     await _svc(session).mark_cancelled(build_id)
+    record_autopilot_terminal("cancelled")
     return CancelBuildResponse(build_id=str(build_id))
 
 

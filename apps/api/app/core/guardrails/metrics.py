@@ -5,7 +5,9 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from prometheus_client import REGISTRY, Counter, Histogram
+from prometheus_client import Counter, Histogram
+
+from app.observability.registry import collect_metric_samples
 
 from .types import GuardrailStage
 
@@ -75,17 +77,4 @@ def record_guarded_rag_outcome(outcome: str) -> None:
 
 def collect_guardrail_metric_samples(*, prefix: str = "rag_guardrail") -> list[dict[str, Any]]:
     """Return flat samples from the default registry for dashboard / JSON APIs."""
-    rows: list[dict[str, Any]] = []
-    for metric in REGISTRY.collect():
-        name = getattr(metric, "name", "") or ""
-        if not name.startswith(prefix):
-            continue
-        for sample in metric.samples:
-            rows.append(
-                {
-                    "name": sample.name,
-                    "labels": dict(sample.labels),
-                    "value": float(sample.value),
-                }
-            )
-    return rows
+    return collect_metric_samples(prefixes=(prefix,))

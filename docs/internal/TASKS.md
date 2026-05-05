@@ -83,3 +83,11 @@
 | P10-2 · Backend Integration Tests | `feature/p10-backend-integration-tests` | ✅ done |
 | P10-3 · Frontend Unit Tests | `feature/p10-frontend-unit-tests` | ✅ done |
 | P10-4 · End-to-End Tests | `feature/p10-e2e-tests` | ✅ done |
+
+## Phase 11 — Production-grade observability
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P11-1 · Structured Logging | `feature/p11-structured-logging` | ✅ done |
+| P11-2 · Prometheus Metrics | `feature/p11-prometheus-metrics` | ✅ done |
+| P11-3 · Cost & Usage Analytics | `feature/p11-usage-analytics` | ✅ done |
