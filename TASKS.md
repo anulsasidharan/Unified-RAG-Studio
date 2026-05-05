@@ -100,3 +100,9 @@
 | P8-2 · Autopilot → Designer Visualization | `feature/p8-autopilot-to-designer` | ✅ done |
 | P8-3 · Evaluation API Endpoints | `feature/p8-evaluation-api` | ✅ done |
 | P8-4 · Deployment API Endpoints | `feature/p8-deployment-api` | ✅ done |
+
+## Phase 9 — MLflow experiment tracking
+
+| Task | Branch | Status |
+|------|--------|--------|
+| P9-1 · MLflow Integration | `feature/p9-mlflow-integration` | ✅ done |

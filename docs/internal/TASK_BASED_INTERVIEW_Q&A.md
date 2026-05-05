@@ -5450,7 +5450,67 @@ Calling **`DELETE`** on an already **teardown** deployment still requires **owne
 
 ### What is the next task after P8-4?
 
-**P9-1 · MLflow Integration** — experiment tracking for Autopilot runs (see `docs/internal/project_status.md`).
+**P9-1 · MLflow Integration** is complete (see Phase 9 · P9-1 below). Next on the roadmap: **P10-1 · Backend Unit Tests**.
+
+---
+
+## Phase 9 · P9-1 — MLflow Integration
+
+### Why add MLflow to RAG Studio?
+
+Autopilot runs many stochastic and configuration-heavy steps (chunking, embeddings, retrieval, evaluation). **MLflow** gives a **durable audit trail**: each build becomes a **run** with **parameters** (requirements and stage choices), **metrics** (RAGAS-style scores, embedding benchmarks, iteration count), and **artifacts** (JSON snapshot of `stage_outputs`). Teams can **compare runs**, reproduce decisions, and tie UI build IDs to tracking-server runs.
+
+### Where is MLflow triggered in the backend?
+
+The **Celery** task **`jobs.run_pipeline_build`** in **`app/worker/tasks.py`** invokes the LangGraph orchestrator, persists the build row, and then calls **`log_autopilot_build_to_mlflow`** from **`app/services/mlflow_tracking.py`**. A second call on **graph failure** logs a **failed** run with the exception message and empty `stage_outputs`.
+
+### What happens if MLflow is down?
+
+Logging is **best-effort**. Errors when setting the experiment, starting a run, or uploading artifacts are **caught and logged**; they **do not** change build status. Set **`MLFLOW_ENABLED=false`** (see **`.env.example`**) to skip all client calls in environments without a server.
+
+### Which settings control tracking?
+
+| Variable | Role |
+|----------|------|
+| **`MLFLOW_TRACKING_URI`** | Tracking server URL (Compose defaults to **`http://mlflow:5000`** inside the stack, **`http://localhost:5000`** on the host). |
+| **`MLFLOW_ENABLED`** | Master switch; when false, the worker skips MLflow entirely. |
+| **`MLFLOW_EXPERIMENT_NAME`** | Experiment name (default **`rag-studio-autopilot`**). |
+
+### What is logged as parameters vs metrics?
+
+**Parameters** (string-valued, capped in count and length): flattened **`requirements`** (e.g. `optimize_for`, `target_metrics.*`) and high-signal **stage** fields (status, selected embedding provider/model, chunking strategy, retrieval strategy). **Metrics**: **`eval.*`** from the evaluation stage when present (faithfulness, answer relevance, context precision/recall, latency), **`eval.meets_targets`** as 0/1, **`autopilot.iteration`**, **embedding candidate** composite scores and latencies, and **`deployment.complete`** as 0/1.
+
+### What artifact is stored?
+
+A JSON file under the run’s **`autopilot/`** artifact path containing **`build_id`**, **`project_id`**, **`requirements`**, **`stage_outputs`**, **`build_status`**, **`iteration`**, and optionally the list of **normalized result keys** from the composed API payload.
+
+### Does the API surface the MLflow run id?
+
+On **successful** builds, **`AutopilotBuild.result`** may include **`mlflow_run_id`**, **`mlflow_tracking_uri`**, and **`mlflow_experiment_name`** when logging succeeds—useful for deep-linking from an internal dashboard to the MLflow UI (exact URL shape depends on deployment).
+
+### Why log from the worker and not FastAPI?
+
+The **heavy graph work** runs in **Celery**; keeping MLflow beside the orchestrator avoids duplicating calls, ensures **one run per completed job**, and matches the machine that already holds **`stage_outputs`** and iteration counts.
+
+### How do you avoid huge parameter cardinality?
+
+The helper **`_flatten`** skips deep nesting beyond a bounded depth, **clips** string lengths, caps the number of **params** and **tags**, and omits bulky keys such as **`per_row_scores`** and full **`candidates_tried`** rows from param extraction (benchmarks still appear as **metrics** for the first few candidates).
+
+### Where is MLflow wired in Docker Compose?
+
+**`docker/docker-compose.yml`** passes **`MLFLOW_TRACKING_URI`**, **`MLFLOW_ENABLED`**, and **`MLFLOW_EXPERIMENT_NAME`** into both **`api`** and **`worker`** services so workers resolve the tracking server on the Compose network.
+
+### Interview trap: Does every evaluation API call log to MLflow?
+
+**No** — **P9-1** scopes logging to **`run_pipeline_build`**. Standalone **`jobs.run_evaluation`** tasks are unchanged unless extended in a future task.
+
+### What is ignored locally for CLI MLflow?
+
+**`.gitignore`** includes **`mlruns/`** so a developer running MLflow’s default file-backed store beside the repo does not commit local run directories (Docker Compose continues to use the **`mlflow-data`** volume for the server).
+
+### What is the next milestone after P9-1?
+
+**Phase 10** — **`P10-1`** backend unit testing gates (`docs/internal/project_status.md`).
 
 ---
 

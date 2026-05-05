@@ -19,7 +19,9 @@ from app.core.agents.state import AUTOPILOT_STAGE_ORDER, initial_autopilot_graph
 from app.core.evaluation.service import EvaluationEngine
 from app.core.evaluation.strategies import EvaluationExample
 from app.models import AutopilotBuild, Deployment, EvaluationRun
+from app.config import get_settings
 from app.services.autopilot_build_result import compose_build_result_payload
+from app.services.mlflow_tracking import log_autopilot_build_to_mlflow
 
 from app.worker.celery_app import celery_app
 from app.worker.db_sync import sync_session_scope
@@ -133,6 +135,15 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
                 row.status = "failed"
                 row.error = str(exc)
                 row.completed_at = datetime.now(timezone.utc)
+        log_autopilot_build_to_mlflow(
+            build_id=str(bid),
+            project_id=str(snapshot.get("project_id") or ""),
+            requirements=dict(snapshot.get("requirements") or {}),
+            stage_outputs={},
+            iteration=0,
+            build_status="failed",
+            error_message=str(exc),
+        )
         return {"build_id": build_id, "status": "failed", "error": str(exc)}
 
     traces: list[dict[str, Any]] = list(final.get("agent_trace") or [])
@@ -204,6 +215,22 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         )
         if norm:
             prev.update(norm)
+
+        mlflow_rid = log_autopilot_build_to_mlflow(
+            build_id=str(bid),
+            project_id=str(snapshot.get("project_id") or ""),
+            requirements=dict(snapshot.get("requirements") or {}),
+            stage_outputs=dict(compact_outputs),
+            iteration=total_iter,
+            build_status="complete",
+            result_keys=list(prev.keys()),
+        )
+        if mlflow_rid:
+            cfg = get_settings()
+            prev["mlflow_run_id"] = mlflow_rid
+            prev["mlflow_tracking_uri"] = cfg.mlflow_tracking_uri
+            prev["mlflow_experiment_name"] = cfg.mlflow_experiment_name
+
         row.result = prev
         row.completed_at = datetime.now(timezone.utc)
         row.error = None
