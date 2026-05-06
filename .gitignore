@@ -132,6 +132,11 @@ yarn-error.log*
 apps/web/playwright-report/
 apps/web/test-results/
 
+# Product tour screen-capture temp (see record:product-tour)
+apps/web/.cache/
+apps/web/public/videos/product-tour-main.silent.tmp.mp4
+apps/web/public/videos/*.muxing.tmp.mp4
+
 # Vitest snapshot files are committed (they are the expected output)
 # Vitest coverage output is ignored
 apps/web/coverage/
