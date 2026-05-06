@@ -29,6 +29,9 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
     pathname === '/password-reset' ||
     pathname.startsWith('/password-reset/confirm');
 
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
   useEffect(() => {
     if (isPublicRoute) return;
     // Avoid redirecting while we still have a token and the profile is loading.
@@ -36,13 +39,6 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
       router.replace('/login');
     }
   }, [isPublicRoute, isAuthenticated, accessToken, isLoadingProfile, hasInitialized, router]);
-
-  if (!isPublicRoute && !hasInitialized) {
-    return null;
-  }
-
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -68,6 +64,10 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   useEffect(() => {
     setMobileSidebarOpen(false);
   }, [pathname]);
+
+  if (!isPublicRoute && !hasInitialized) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
