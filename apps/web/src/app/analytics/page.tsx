@@ -5,24 +5,40 @@ import { BarChart3, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 import { ROUTES } from '@/lib/constants';
-import { ApiError, apiClient } from '@/lib/api-client';
+import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth-store';
 
 type CountBreakdown = { counts: Record<string, number> };
 
 type AnalyticsSummaryResponse = {
   projects: number;
   pipeline_configs: number;
-  autopilot_builds: CountBreakdown;
-  evaluation_runs: CountBreakdown;
-  deployments: CountBreakdown;
+  autopilot_builds?: CountBreakdown;
+  evaluation_runs?: CountBreakdown;
+  deployments?: CountBreakdown;
   documents_uploaded_recent_builds_hint: number;
-  cost_signals: {
+  cost_signals?: {
     avg_cost_per_query_usd: number | null;
     builds_with_cost_sample: number;
     avg_budget_constraint_usd_per_1k_queries: number | null;
     builds_with_budget_sample: number;
   };
 };
+
+function normalizeAnalyticsSummary(raw: AnalyticsSummaryResponse): AnalyticsSummaryResponse {
+  return {
+    ...raw,
+    autopilot_builds: raw.autopilot_builds ?? { counts: {} },
+    evaluation_runs: raw.evaluation_runs ?? { counts: {} },
+    deployments: raw.deployments ?? { counts: {} },
+    cost_signals: raw.cost_signals ?? {
+      avg_cost_per_query_usd: null,
+      builds_with_cost_sample: 0,
+      avg_budget_constraint_usd_per_1k_queries: null,
+      builds_with_budget_sample: 0,
+    },
+  };
+}
 
 function formatCounts(row: Record<string, number>): string {
   const parts = Object.entries(row)
@@ -32,18 +48,28 @@ function formatCounts(row: Record<string, number>): string {
 }
 
 export default function AnalyticsPage() {
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [data, setData] = useState<AnalyticsSummaryResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const costSignals = data?.cost_signals;
 
   const load = useCallback(async () => {
+    if (!useAuthStore.getState().accessToken?.trim()) {
+      setLoading(false);
+      setError(
+        'Sign in to load analytics. If you were signed in, your session may have expired — log in again.'
+      );
+      setData(null);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
       const res = await apiClient.get<AnalyticsSummaryResponse>('/api/analytics/summary');
-      setData(res);
+      setData(normalizeAnalyticsSummary(res));
     } catch (e) {
-      if (e instanceof ApiError) setError(e.message);
+      if (e instanceof ApiError) setError(formatApiErrorForUi(e));
       else setError(String(e));
       setData(null);
     } finally {
@@ -52,8 +78,8 @@ export default function AnalyticsPage() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    void load();
+  }, [load, accessToken]);
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
@@ -111,19 +137,19 @@ export default function AnalyticsPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Autopilot builds
             </h2>
-            <p className="mt-2 text-sm">{formatCounts(data.autopilot_builds.counts)}</p>
+            <p className="mt-2 text-sm">{formatCounts(data.autopilot_builds?.counts ?? {})}</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-800">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Evaluation runs
             </h2>
-            <p className="mt-2 text-sm">{formatCounts(data.evaluation_runs.counts)}</p>
+            <p className="mt-2 text-sm">{formatCounts(data.evaluation_runs?.counts ?? {})}</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-800">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Deployments
             </h2>
-            <p className="mt-2 text-sm">{formatCounts(data.deployments.counts)}</p>
+            <p className="mt-2 text-sm">{formatCounts(data.deployments?.counts ?? {})}</p>
           </div>
           <div className="rounded-lg border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-800 sm:col-span-2">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Cost signals</h2>
@@ -131,23 +157,23 @@ export default function AnalyticsPage() {
               <div>
                 <dt className="text-muted-foreground">Avg cost / query</dt>
                 <dd className="font-mono text-base font-semibold">
-                  {data.cost_signals.avg_cost_per_query_usd != null
-                    ? `$${data.cost_signals.avg_cost_per_query_usd.toFixed(4)}`
+                  {costSignals?.avg_cost_per_query_usd != null
+                    ? `$${costSignals.avg_cost_per_query_usd.toFixed(4)}`
                     : '—'}
                 </dd>
                 <div className="text-xs text-muted-foreground">
-                  sample n={data.cost_signals.builds_with_cost_sample}
+                  sample n={costSignals?.builds_with_cost_sample ?? 0}
                 </div>
               </div>
               <div>
                 <dt className="text-muted-foreground">Avg budget constraint (/1k queries)</dt>
                 <dd className="font-mono text-base font-semibold">
-                  {data.cost_signals.avg_budget_constraint_usd_per_1k_queries != null
-                    ? `$${data.cost_signals.avg_budget_constraint_usd_per_1k_queries.toFixed(4)}`
+                  {costSignals?.avg_budget_constraint_usd_per_1k_queries != null
+                    ? `$${costSignals.avg_budget_constraint_usd_per_1k_queries.toFixed(4)}`
                     : '—'}
                 </dd>
                 <div className="text-xs text-muted-foreground">
-                  sample n={data.cost_signals.builds_with_budget_sample}
+                  sample n={costSignals?.builds_with_budget_sample ?? 0}
                 </div>
               </div>
             </dl>

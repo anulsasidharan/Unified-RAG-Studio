@@ -25,6 +25,7 @@ type AuthState = {
   lastError: string | null;
   isAuthenticated: boolean;
   hasInitialized: boolean;
+  syncProjectsInBackground: () => Promise<void>;
 
   initFromToken: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -52,6 +53,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   hasInitialized: false,
 
+  // Keep project sync non-blocking so auth-gated route transitions feel immediate.
+  syncProjectsInBackground: async () => {
+    try {
+      await useProjectStore.getState().syncFromServer();
+    } catch (e) {
+      set({ lastError: e instanceof Error ? e.message : String(e) });
+    }
+  },
+
   initFromToken: async () => {
     const token = readToken();
     set({ accessToken: token, lastError: null });
@@ -64,15 +74,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     useProjectStore.getState().clearProjects();
     try {
       await get().loadMe();
-      if (get().isAuthenticated) {
-        try {
-          await useProjectStore.getState().syncFromServer();
-        } catch (e) {
-          set({ lastError: e instanceof Error ? e.message : String(e) });
-        }
-      }
     } finally {
       set({ hasInitialized: true });
+    }
+    if (get().isAuthenticated) {
+      void get().syncProjectsInBackground();
     }
   },
 
@@ -102,11 +108,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // Sync the user-owned workspace.
     useProjectStore.getState().clearProjects();
-    try {
-      await useProjectStore.getState().syncFromServer();
-    } catch (e) {
-      set({ lastError: e instanceof Error ? e.message : String(e) });
-    }
+    void get().syncProjectsInBackground();
   },
 
   register: async (input) => {
