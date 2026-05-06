@@ -3,9 +3,10 @@
 import { Calculator, Loader2, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ApiError, apiClient } from '@/lib/api-client';
+import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
+import { useAuthStore } from '@/stores/auth-store';
 import type { CostEstimate, PipelineConfiguration } from '@/types/pipeline';
 
 const DEBOUNCE_MS = 450;
@@ -52,6 +53,7 @@ export function CostEstimator({
   id?: string;
 }>) {
   const draft = useDesignerStore((s) => s.draft);
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const [assumptions, setAssumptions] = useState<CostAssumptions>({
     queriesPerMonth: 100_000,
@@ -78,6 +80,12 @@ export function CostEstimator({
 
   const fetchEstimate = useCallback(
     async (config: PipelineConfiguration, body: CostAssumptions, signal: AbortSignal) => {
+      if (!useAuthStore.getState().accessToken?.trim()) {
+        setLoading(false);
+        setError('Sign in to load cost estimates.');
+        setEstimate(null);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
@@ -98,11 +106,7 @@ export function CostEstimator({
       } catch (e) {
         if (signal.aborted) return;
         if (e instanceof ApiError) {
-          const detail =
-            e.data && typeof e.data === 'object' && 'detail' in e.data
-              ? String((e.data as { detail?: unknown }).detail)
-              : e.message;
-          setError(detail || e.message);
+          setError(formatApiErrorForUi(e));
         } else {
           setError(e instanceof Error ? e.message : 'Cost request failed');
         }
@@ -115,6 +119,12 @@ export function CostEstimator({
   );
 
   useEffect(() => {
+    if (!accessToken?.trim()) {
+      setLoading(false);
+      setError('Sign in to load cost estimates.');
+      setEstimate(null);
+      return;
+    }
     const ctrl = new AbortController();
     const delay = firstFetch.current ? 0 : DEBOUNCE_MS;
     firstFetch.current = false;
@@ -125,7 +135,7 @@ export function CostEstimator({
       window.clearTimeout(tid);
       ctrl.abort();
     };
-  }, [payloadDigest, fetchEstimate]);
+  }, [payloadDigest, fetchEstimate, accessToken]);
 
   const breakdown = estimate?.breakdown ?? [];
 

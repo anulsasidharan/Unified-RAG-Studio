@@ -3,10 +3,11 @@
 import { Check, Copy, Download, Loader2, Package, RefreshCw, Rocket } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { ApiError, apiClient } from '@/lib/api-client';
+import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
 import { deployHintCaption, deployHintCommand } from '@/lib/deploy-hints';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
+import { useAuthStore } from '@/stores/auth-store';
 import type { DesignerExportFormat, DesignerExportResponse, PipelineConfiguration } from '@/types/pipeline';
 
 const DEBOUNCE_MS = 450;
@@ -27,6 +28,7 @@ export function CodeExporter({
   id?: string;
 }>) {
   const draft = useDesignerStore((s) => s.draft);
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [format, setFormat] = useState<DesignerExportFormat>('python');
   const [result, setResult] = useState<DesignerExportResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,6 +43,12 @@ export function CodeExporter({
 
   const fetchExport = useCallback(
     async (config: PipelineConfiguration, fmt: DesignerExportFormat, signal: AbortSignal) => {
+      if (!useAuthStore.getState().accessToken?.trim()) {
+        setLoading(false);
+        setError('Sign in to export pipeline code.');
+        setResult(null);
+        return;
+      }
       setLoading(true);
       setError(null);
       try {
@@ -55,11 +63,7 @@ export function CodeExporter({
       } catch (e) {
         if (signal.aborted) return;
         if (e instanceof ApiError) {
-          const detail =
-            e.data && typeof e.data === 'object' && 'detail' in e.data
-              ? String((e.data as { detail?: unknown }).detail)
-              : e.message;
-          setError(detail || e.message);
+          setError(formatApiErrorForUi(e));
         } else {
           setError(e instanceof Error ? e.message : 'Export request failed');
         }
@@ -72,6 +76,12 @@ export function CodeExporter({
   );
 
   useEffect(() => {
+    if (!accessToken?.trim()) {
+      setLoading(false);
+      setError('Sign in to export pipeline code.');
+      setResult(null);
+      return;
+    }
     const ctrl = new AbortController();
     const formatJustChanged = prevFormat.current !== format;
     prevFormat.current = format;
@@ -85,7 +95,7 @@ export function CodeExporter({
       window.clearTimeout(tid);
       ctrl.abort();
     };
-  }, [draftDigest, format, draft, fetchExport]);
+  }, [draftDigest, format, draft, fetchExport, accessToken]);
 
   const deployCmd = useMemo(() => {
     if (!result) return '';

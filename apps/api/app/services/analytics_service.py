@@ -96,7 +96,7 @@ class AnalyticsService:
         return AnalyticsSummarySchema(
             projects=n_projects,
             pipeline_configs=n_configs,
-            autopilot_builds=CountBreakdownSchema(counts=autopilot_counts),
+            autopilot_builds=CountBreakdownSchema(counts=_sum_counts(ab_rows)),
             evaluation_runs=CountBreakdownSchema(counts=_sum_counts(ev_rows)),
             deployments=CountBreakdownSchema(counts=_sum_counts(dep_rows)),
             documents_uploaded_recent_builds_hint=doc_hint,
