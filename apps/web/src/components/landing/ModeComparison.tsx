@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowRight, Palette, Zap } from 'lucide-react';
+import { ArrowRight, Palette, Zap, Check } from 'lucide-react';
 
 const designerFeatures = [
   'Multi-stage guided visual builder',
@@ -21,93 +21,99 @@ const autopilotFeatures = [
 
 export function ModeComparison() {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-      <div className="mb-14 text-center">
-        <h2 className="mb-4 text-3xl font-bold text-neutral-900 sm:text-4xl">
+    <section className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
+      <div className="mb-16 text-center">
+        <h2 className="mb-4 font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
           Two Modes, One Platform
         </h2>
-        <p className="mx-auto max-w-2xl text-lg text-neutral-600">
+        <p className="mx-auto max-w-2xl text-lg text-neutral-500">
           Choose the approach that fits your workflow — or use both together.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {/* Designer Card */}
-        <div className="group relative overflow-hidden rounded-2xl border border-primary-200 bg-gradient-to-br from-primary-50 via-white to-white p-8 shadow-sm transition-shadow hover:shadow-md">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-              <Palette className="h-6 w-6 text-primary-600" />
+        <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-lg">
+          {/* Gradient header */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-primary-600 via-primary-700 to-indigo-700 p-8 pb-10">
+            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+                <Palette className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-display text-xl font-bold text-white">Designer Mode</h3>
+                <p className="text-sm font-medium text-white/70">Visual pipeline builder</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-neutral-900">Designer Mode</h3>
-              <p className="text-sm text-primary-600 font-medium">Visual builder</p>
-            </div>
+            <p className="mt-5 text-sm leading-relaxed text-white/80">
+              Configure every stage of your RAG pipeline manually with intelligent
+              recommendations, real-time cost estimates, and a live pipeline diagram.
+            </p>
           </div>
 
-          <p className="mb-6 text-neutral-600">
-            Configure every stage of your RAG pipeline manually with intelligent
-            recommendations, real-time cost estimates, and a live pipeline diagram.
-          </p>
-
-          <ul className="mb-8 space-y-3">
-            {designerFeatures.map((feature) => (
-              <li key={feature} className="flex items-center gap-3 text-sm text-neutral-700">
-                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-600 font-bold text-xs">
-                  ✓
-                </span>
-                {feature}
-              </li>
-            ))}
-          </ul>
-
-          <Link
-            href="/register"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary-600 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700"
-          >
-            Open Designer
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-
-          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary-100/50 blur-2xl" />
+          {/* Feature list */}
+          <div className="flex flex-1 flex-col p-8">
+            <ul className="mb-8 flex-1 space-y-3">
+              {designerFeatures.map((feature) => (
+                <li key={feature} className="flex items-center gap-3 text-sm text-neutral-700">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary-100">
+                    <Check className="h-3 w-3 text-primary-600" />
+                  </span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/register"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-primary-200 transition-colors hover:bg-primary-700"
+            >
+              Open Designer
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
 
         {/* Autopilot Card */}
-        <div className="group relative overflow-hidden rounded-2xl border border-neutral-200 bg-gradient-to-br from-slate-50 via-white to-purple-50/30 p-8 shadow-sm transition-shadow hover:shadow-md">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100">
-              <Zap className="h-6 w-6 text-purple-600" />
+        <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-shadow hover:shadow-lg">
+          {/* Gradient header */}
+          <div className="relative overflow-hidden bg-gradient-to-br from-purple-600 via-purple-700 to-violet-800 p-8 pb-10">
+            <div className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm">
+                <Zap className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-display text-xl font-bold text-white">Autopilot Mode</h3>
+                <p className="text-sm font-medium text-white/70">AI-powered builder</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-neutral-900">Autopilot Mode</h3>
-              <p className="text-sm text-purple-600 font-medium">AI-powered builder</p>
-            </div>
+            <p className="mt-5 text-sm leading-relaxed text-white/80">
+              Upload your documents, set requirements, and let AI agents build,
+              benchmark, and optimize the entire RAG pipeline automatically.
+            </p>
           </div>
 
-          <p className="mb-6 text-neutral-600">
-            Upload your documents, set requirements, and let AI agents build,
-            benchmark, and optimize the entire RAG pipeline automatically.
-          </p>
-
-          <ul className="mb-8 space-y-3">
-            {autopilotFeatures.map((feature) => (
-              <li key={feature} className="flex items-center gap-3 text-sm text-neutral-700">
-                <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-600 font-bold text-xs">
-                  ✓
-                </span>
-                {feature}
-              </li>
-            ))}
-          </ul>
-
-          <Link
-            href="/register"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-neutral-200 bg-white px-6 py-3 text-sm font-semibold text-neutral-900 transition-colors hover:border-purple-300 hover:bg-purple-50"
-          >
-            Launch Autopilot
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-
-          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-purple-100/50 blur-2xl" />
+          {/* Feature list */}
+          <div className="flex flex-1 flex-col p-8">
+            <ul className="mb-8 flex-1 space-y-3">
+              {autopilotFeatures.map((feature) => (
+                <li key={feature} className="flex items-center gap-3 text-sm text-neutral-700">
+                  <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-purple-100">
+                    <Check className="h-3 w-3 text-purple-600" />
+                  </span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/register"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-sm shadow-purple-200 transition-colors hover:bg-purple-700"
+            >
+              Launch Autopilot
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </section>

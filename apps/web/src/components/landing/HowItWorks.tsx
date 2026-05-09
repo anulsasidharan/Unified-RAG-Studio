@@ -44,74 +44,73 @@ const autopilotSteps = [
   },
 ];
 
+interface StepListProps {
+  steps: typeof designerSteps;
+  accent: 'blue' | 'purple';
+}
+
+function StepList({ steps, accent }: StepListProps) {
+  const ring = accent === 'blue'
+    ? 'border-primary-200 bg-primary-50 text-primary-700'
+    : 'border-purple-200 bg-purple-50 text-purple-700';
+  const line = accent === 'blue' ? 'bg-primary-100' : 'bg-purple-100';
+
+  return (
+    <div className="space-y-0">
+      {steps.map((item, idx) => (
+        <div key={item.step} className="flex gap-5">
+          <div className="flex flex-col items-center">
+            <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 font-bold text-sm ${ring}`}>
+              {item.step}
+            </div>
+            {idx < steps.length - 1 && (
+              <div className={`mt-0 h-full min-h-[2.5rem] w-px ${line}`} />
+            )}
+          </div>
+          <div className="pb-8">
+            <h4 className="mb-1 font-display font-semibold text-neutral-900">{item.title}</h4>
+            <p className="text-sm leading-relaxed text-neutral-500">{item.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function HowItWorks() {
   return (
-    <section className="bg-neutral-50/80 py-20">
+    <section id="how-it-works" className="py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-14 text-center">
-          <h2 className="mb-4 text-3xl font-bold text-neutral-900 sm:text-4xl">
+        <div className="mb-16 text-center">
+          <h2 className="mb-4 font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
             How It Works
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-neutral-600">
+          <p className="mx-auto max-w-2xl text-lg text-neutral-500">
             Both modes produce the same production-ready output — choose based on how you want to work.
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
           {/* Designer steps */}
-          <div>
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
             <div className="mb-8 flex items-center gap-3">
-              <span className="rounded-full bg-primary-600 px-4 py-1.5 text-sm font-semibold text-white">
+              <span className="rounded-full bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm shadow-primary-200/60">
                 Designer Mode
               </span>
-              <span className="text-sm text-neutral-500">Manual control</span>
+              <span className="text-sm text-neutral-400">Manual control</span>
             </div>
-            <div className="space-y-6">
-              {designerSteps.map((item, idx) => (
-                <div key={item.step} className="flex gap-5">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-primary-200 bg-white font-bold text-sm text-primary-600">
-                      {item.step}
-                    </div>
-                    {idx < designerSteps.length - 1 && (
-                      <div className="mt-2 h-full w-px bg-primary-100" />
-                    )}
-                  </div>
-                  <div className="pb-6">
-                    <h4 className="mb-1 font-semibold text-neutral-900">{item.title}</h4>
-                    <p className="text-sm leading-relaxed text-neutral-600">{item.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <StepList steps={designerSteps} accent="blue" />
           </div>
 
           {/* Autopilot steps */}
-          <div>
+          <div className="rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
             <div className="mb-8 flex items-center gap-3">
-              <span className="rounded-full bg-purple-600 px-4 py-1.5 text-sm font-semibold text-white">
+              <span className="rounded-full bg-gradient-to-r from-purple-600 to-violet-600 px-4 py-1.5 text-sm font-semibold text-white shadow-sm shadow-purple-200/60">
                 Autopilot Mode
               </span>
-              <span className="text-sm text-neutral-500">AI-powered automation</span>
+              <span className="text-sm text-neutral-400">AI-powered automation</span>
             </div>
-            <div className="space-y-6">
-              {autopilotSteps.map((item, idx) => (
-                <div key={item.step} className="flex gap-5">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border-2 border-purple-200 bg-white font-bold text-sm text-purple-600">
-                      {item.step}
-                    </div>
-                    {idx < autopilotSteps.length - 1 && (
-                      <div className="mt-2 h-full w-px bg-purple-100" />
-                    )}
-                  </div>
-                  <div className="pb-6">
-                    <h4 className="mb-1 font-semibold text-neutral-900">{item.title}</h4>
-                    <p className="text-sm leading-relaxed text-neutral-600">{item.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <StepList steps={autopilotSteps} accent="purple" />
           </div>
         </div>
       </div>

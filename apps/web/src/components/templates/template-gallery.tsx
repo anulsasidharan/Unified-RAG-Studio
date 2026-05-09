@@ -250,21 +250,22 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
     <div className={cn('mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:py-12', className)}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Designer
-          </p>
-          <h1 className="mt-1 flex items-center gap-2 text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-            <LayoutTemplate className="h-8 w-8 text-primary-600 dark:text-primary-400" aria-hidden />
-            Template gallery
-          </h1>
-          <p className="mt-2 max-w-2xl text-neutral-600 dark:text-neutral-400">
+          <div className="flex items-center gap-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-indigo-600 shadow-sm shadow-primary-200">
+              <LayoutTemplate className="h-5 w-5 text-white" aria-hidden />
+            </div>
+            <h1 className="font-display text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+              Template gallery
+            </h1>
+          </div>
+          <p className="mt-3 max-w-2xl text-neutral-600 dark:text-neutral-400">
             {catalog?.description ??
               'Start from a curated RAG pipeline preset, then refine every stage in Designer mode.'}
           </p>
         </div>
         <Link
           href={ROUTES.designer}
-          className="inline-flex items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-accent dark:border-neutral-700"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
         >
           Blank pipeline
         </Link>
@@ -281,11 +282,11 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, use case, or tag…"
-            className="w-full rounded-lg border border-neutral-200 bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:border-neutral-700"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">
             <Filter className="h-3.5 w-3.5" aria-hidden />
             Complexity
           </span>
@@ -295,10 +296,10 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
               type="button"
               onClick={() => setComplexity(c)}
               className={cn(
-                'rounded-full border px-3 py-1 text-xs font-medium transition',
+                'rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
                 complexity === c
-                  ? 'border-primary-600 bg-primary-600 text-white dark:border-primary-500 dark:bg-primary-600'
-                  : 'border-neutral-200 bg-card text-muted-foreground hover:border-primary-400 dark:border-neutral-700'
+                  ? 'border-primary-600 bg-gradient-to-r from-primary-600 to-indigo-600 text-white shadow-sm'
+                  : 'border-neutral-200 bg-white text-neutral-500 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400'
               )}
             >
               {c === 'all' ? 'All' : c}
@@ -324,69 +325,77 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
           </p>
         </div>
       ) : (
-        <ul className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+        <ul className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((t) => (
             <li key={t.id}>
-              <article
-                className={cn(
-                  'flex h-full flex-col rounded-xl border border-neutral-200 bg-card p-5 shadow-sm transition hover:border-primary-400/60 hover:shadow-md dark:border-neutral-700'
-                )}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <h2 className="text-lg font-semibold text-foreground">{t.name}</h2>
-                  <span
-                    className={cn(
-                      'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                      complexityBadgeClass(t.complexity)
-                    )}
-                  >
-                    {t.complexity}
-                  </span>
-                </div>
-                <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{t.description}</p>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  <span className="font-medium text-foreground">Use case:</span> {t.useCase}
-                </p>
-                <p className="mt-1 text-xs font-medium text-foreground">{t.estimatedMonthlyCost}</p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {(t.tags ?? []).slice(0, 6).map((tag) => (
+              <article className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all hover:border-primary-200 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-950">
+                {/* Top accent bar by complexity */}
+                <div className={cn(
+                  'h-1 w-full rounded-t-2xl',
+                  t.complexity === 'beginner' ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
+                  t.complexity === 'intermediate' ? 'bg-gradient-to-r from-amber-400 to-orange-500' :
+                  'bg-gradient-to-r from-violet-500 to-purple-600'
+                )} aria-hidden />
+                <div className="flex flex-1 flex-col p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <h2 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-50 group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors">{t.name}</h2>
                     <span
-                      key={tag}
-                      className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
+                      className={cn(
+                        'shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+                        complexityBadgeClass(t.complexity)
+                      )}
                     >
-                      {tag}
+                      {t.complexity}
                     </span>
-                  ))}
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1">
-                  {(t.providerLogos ?? []).map((p) => (
-                    <span
-                      key={p}
-                      className="rounded border border-neutral-200 px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground dark:border-neutral-600"
+                  </div>
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{t.description}</p>
+                  <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-900">
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Use case</span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">{t.useCase}</span>
+                  </div>
+                  <p className="mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400">{t.estimatedMonthlyCost}</p>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {(t.tags ?? []).slice(0, 5).map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                  {(t.providerLogos ?? []).length > 0 ? (
+                    <div className="mt-2.5 flex flex-wrap gap-1">
+                      {(t.providerLogos ?? []).map((p) => (
+                        <span
+                          key={p}
+                          className="rounded-md border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400"
+                        >
+                          {p}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-auto flex flex-wrap gap-2 pt-5">
+                    <button
+                      type="button"
+                      onClick={() => openApply(t)}
+                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 active:scale-[0.98]"
                     >
-                      {p}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-auto flex flex-wrap gap-2 pt-5">
-                  <button
-                    type="button"
-                    onClick={() => openApply(t)}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary-600 px-3 py-2 text-sm font-medium text-white shadow hover:bg-primary-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-primary-600 dark:hover:bg-primary-500"
-                  >
-                    <Sparkles className="h-4 w-4" aria-hidden />
-                    Use template
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      loadPipeline(t.config);
-                      router.push(`${ROUTES.designer}/review`);
-                    }}
-                    className="inline-flex items-center justify-center rounded-lg border border-neutral-200 px-3 py-2 text-sm font-medium text-foreground hover:bg-accent dark:border-neutral-700"
-                  >
-                    Preview locally
-                  </button>
+                      <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                      Use template
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        loadPipeline(t.config);
+                        router.push(`${ROUTES.designer}/review`);
+                      }}
+                      className="inline-flex items-center justify-center rounded-xl border border-neutral-200 px-3 py-2.5 text-sm font-medium text-neutral-700 transition-all hover:border-neutral-300 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    >
+                      Preview
+                    </button>
+                  </div>
                 </div>
               </article>
             </li>
@@ -403,8 +412,8 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
           <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out" />
           <Dialog.Content
             className={cn(
-              'fixed left-1/2 top-1/2 z-50 w-[min(100%,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-neutral-200 bg-card p-6 shadow-xl',
-              'focus:outline-none dark:border-neutral-700'
+              'fixed left-1/2 top-1/2 z-50 w-[min(100%,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl',
+              'focus:outline-none dark:border-neutral-700 dark:bg-neutral-950'
             )}
           >
             <div className="flex items-start justify-between gap-2">
@@ -533,7 +542,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
                     (projectsLoading || !selectedProjectId))
                 }
                 onClick={() => void handleApply()}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50 dark:bg-primary-600"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 disabled:opacity-50"
               >
                 {applyLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
                 Apply & open Designer

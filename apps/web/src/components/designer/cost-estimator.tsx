@@ -143,21 +143,23 @@ export function CostEstimator({
     <section
       id={id}
       className={cn(
-        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800 scroll-mt-4',
+        'w-full shrink-0 border-t border-neutral-200 bg-white py-6 dark:border-neutral-800 dark:bg-neutral-950 scroll-mt-4',
         className
       )}
       aria-labelledby="cost-estimator-heading"
     >
-      <h2 id="cost-estimator-heading" className="sr-only">
-        Pipeline cost estimate
-      </h2>
-
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Calculator className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="text-sm font-medium text-foreground">Cost estimate</span>
-            <span className="text-xs text-muted-foreground">(live, heuristic)</span>
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-100 dark:bg-primary-950/40">
+              <Calculator className="h-4 w-4 text-primary-600 dark:text-primary-400" aria-hidden />
+            </div>
+            <div>
+              <h2 id="cost-estimator-heading" className="font-display text-sm font-bold text-neutral-900 dark:text-neutral-50">
+                Cost estimate
+              </h2>
+              <p className="text-[11px] text-neutral-500 dark:text-neutral-400">Live heuristic · updates with draft</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {loading ? (
@@ -174,7 +176,7 @@ export function CostEstimator({
                 const ctrl = new AbortController();
                 void fetchEstimate(draft, assumptions, ctrl.signal);
               }}
-              className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-background px-2 py-1 text-xs font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+              className="inline-flex items-center gap-1 rounded-lg border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-medium shadow-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
               title="Refresh estimate now"
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden />
@@ -183,16 +185,11 @@ export function CostEstimator({
           </div>
         </div>
 
-        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-          Estimates use the shared pricing catalog on the API (embedding, storage, retrieval units, reranking, and
-          generation). Tune workload assumptions below; the draft pipeline is sent on each change (debounced).
-        </p>
-
-        <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
-          <div className="space-y-3 rounded-lg border border-neutral-200 bg-muted/20 p-3 dark:border-neutral-700">
-            <p className="text-xs font-medium text-foreground">Workload assumptions</p>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,16rem)_minmax(0,1fr)]">
+          <div className="space-y-3 rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Workload assumptions</p>
             <div>
-              <label htmlFor="cost-qpm" className="text-sm font-medium text-foreground">
+              <label htmlFor="cost-qpm" className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                 Queries / month
               </label>
               <input
@@ -211,7 +208,7 @@ export function CostEstimator({
               />
             </div>
             <div>
-              <label htmlFor="cost-docs" className="text-sm font-medium text-foreground">
+              <label htmlFor="cost-docs" className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                 Documents in corpus
               </label>
               <input
@@ -230,7 +227,7 @@ export function CostEstimator({
               />
             </div>
             <div>
-              <label htmlFor="cost-tok" className="text-sm font-medium text-foreground">
+              <label htmlFor="cost-tok" className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                 Avg tokens / document
               </label>
               <input
@@ -263,23 +260,23 @@ export function CostEstimator({
             {estimate ? (
               <>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-lg border border-neutral-200 bg-background p-3 dark:border-neutral-700">
-                    <p className="text-xs text-muted-foreground">Per query</p>
-                    <p className="mt-1 text-lg font-semibold tabular-nums">{formatUsd(estimate.perQuery)}</p>
+                  <div className="rounded-xl border border-primary-100 bg-gradient-to-br from-primary-50 to-indigo-50 p-4 dark:border-primary-900/30 dark:from-primary-950/30 dark:to-indigo-950/30">
+                    <p className="text-xs font-medium text-primary-600 dark:text-primary-400">Per query</p>
+                    <p className="mt-1 font-display text-xl font-bold tabular-nums text-neutral-900 dark:text-neutral-50">{formatUsd(estimate.perQuery)}</p>
                   </div>
-                  <div className="rounded-lg border border-neutral-200 bg-background p-3 dark:border-neutral-700">
-                    <p className="text-xs text-muted-foreground">Monthly total</p>
-                    <p className="mt-1 text-lg font-semibold tabular-nums">{formatUsd(estimate.perMonth)}</p>
+                  <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-purple-50 p-4 dark:border-indigo-900/30 dark:from-indigo-950/30 dark:to-purple-950/30">
+                    <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400">Monthly total</p>
+                    <p className="mt-1 font-display text-xl font-bold tabular-nums text-neutral-900 dark:text-neutral-50">{formatUsd(estimate.perMonth)}</p>
                   </div>
-                  <div className="rounded-lg border border-neutral-200 bg-background p-3 dark:border-neutral-700">
-                    <p className="text-xs text-muted-foreground">Currency</p>
-                    <p className="mt-1 text-lg font-semibold">{estimate.currency}</p>
+                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                    <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">Currency</p>
+                    <p className="mt-1 font-display text-xl font-bold text-neutral-900 dark:text-neutral-50">{estimate.currency}</p>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-neutral-200 bg-muted/10 p-3 dark:border-neutral-700">
-                  <p className="text-xs font-medium text-foreground">Category totals (monthly)</p>
-                  <ul className="mt-3 space-y-2">
+                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Category totals (monthly)</p>
+                  <ul className="mt-4 space-y-2.5">
                     {(
                       [
                         ['Embedding', estimate.embedding],
@@ -289,17 +286,17 @@ export function CostEstimator({
                         ['Generation', estimate.generation],
                       ] as const
                     ).map(([label, amt]) => (
-                      <li key={label} className="flex items-center gap-2 text-sm">
-                        <span className="w-28 shrink-0 text-muted-foreground">{label}</span>
-                        <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-muted">
+                      <li key={label} className="flex items-center gap-3 text-sm">
+                        <span className="w-24 shrink-0 text-xs font-medium text-neutral-600 dark:text-neutral-400">{label}</span>
+                        <div className="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
                           <div
-                            className="h-full rounded-full bg-primary-600/80"
+                            className="h-full rounded-full bg-gradient-to-r from-primary-500 to-indigo-500"
                             style={{
                               width: `${estimate.perMonth > 0 ? Math.min(100, (100 * amt) / estimate.perMonth) : 0}%`,
                             }}
                           />
                         </div>
-                        <span className="w-24 shrink-0 text-right tabular-nums text-foreground">{formatUsd(amt)}</span>
+                        <span className="w-20 shrink-0 text-right text-xs tabular-nums font-semibold text-neutral-800 dark:text-neutral-200">{formatUsd(amt)}</span>
                       </li>
                     ))}
                   </ul>

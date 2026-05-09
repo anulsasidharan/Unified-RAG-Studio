@@ -119,15 +119,18 @@ export function StageNavigator() {
 
   return (
     <nav
-      className="sticky top-0 z-30 flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-card/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:sticky lg:top-0 lg:z-10 lg:border-b-0 lg:px-2 lg:py-4 dark:border-neutral-800"
+      className="sticky top-0 z-30 flex shrink-0 flex-col gap-3 border-b border-neutral-200 bg-white/95 px-3 py-3 backdrop-blur supports-[backdrop-filter]:bg-white/90 lg:sticky lg:top-0 lg:z-10 lg:border-b-0 lg:border-r lg:border-neutral-100 lg:px-2 lg:py-5 dark:border-neutral-800 dark:bg-neutral-950/95 dark:lg:border-neutral-800"
       aria-label="Designer pipeline stages"
     >
       <div className="hidden px-2 lg:block">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          Pipeline builder
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Move through stages to configure your pipeline. A live graph and summary update as you edit the draft.
+        <div className="flex items-center gap-2">
+          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-primary-600 to-indigo-600" />
+          <p className="font-display text-xs font-bold uppercase tracking-widest text-neutral-700 dark:text-neutral-300">
+            Pipeline builder
+          </p>
+        </div>
+        <p className="mt-2 pl-3 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
+          Configure each stage. Live graph updates as you go.
         </p>
       </div>
 
@@ -159,31 +162,35 @@ export function StageNavigator() {
             DESIGNER_STAGES.findIndex((x) => x.path === normalized) > idx;
 
           return (
-            <li key={stage.id}>
+            <li key={stage.id} className="relative">
+              {isActive && (
+                <span className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-primary-600 to-indigo-600" aria-hidden />
+              )}
               <Link
                 href={stage.path}
                 className={cn(
-                  'group flex items-start gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors',
+                  'group flex items-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-all',
                   isActive &&
-                    'bg-primary-600/15 font-medium text-primary-900 dark:bg-primary-500/20 dark:text-primary-50',
-                  !isActive && 'hover:bg-accent hover:text-accent-foreground'
+                    'bg-primary-50 font-semibold text-primary-800 dark:bg-primary-950/40 dark:text-primary-200',
+                  !isActive && isPast && 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300',
+                  !isActive && !isPast && 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/60 dark:hover:text-neutral-200'
                 )}
               >
                 <span
                   className={cn(
-                    'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold',
+                    'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
                     isActive &&
-                      'border-primary-600 bg-primary-600 text-primary-foreground',
+                      'bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-sm shadow-primary-200',
                     !isActive &&
                       isPast &&
-                      'border-primary-600/60 bg-background text-primary-700 dark:text-primary-300',
+                      'bg-emerald-500 text-white shadow-sm shadow-emerald-200 dark:shadow-emerald-900',
                     !isActive &&
                       !isPast &&
-                      'border-muted-foreground/30 bg-muted/40 text-muted-foreground'
+                      'border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-500'
                   )}
                   aria-hidden
                 >
-                  {isPast ? <Check className="h-3.5 w-3.5" /> : idx + 1}
+                  {isPast ? <Check className="h-3 w-3" /> : idx + 1}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block leading-snug">{stage.label}</span>

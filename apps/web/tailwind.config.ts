@@ -71,6 +71,25 @@ const config: Config = {
           500: 'hsl(0 72% 51%)',
           600: 'hsl(0 74% 42%)',
         },
+        purple: {
+          50:  'hsl(270 100% 98%)',
+          100: 'hsl(269 100% 95%)',
+          200: 'hsl(269 100% 92%)',
+          300: 'hsl(269 97% 85%)',
+          400: 'hsl(270 95% 75%)',
+          500: 'hsl(271 91% 65%)',
+          600: 'hsl(262 83% 58%)',
+          700: 'hsl(263 70% 50%)',
+          800: 'hsl(263 69% 42%)',
+          900: 'hsl(264 67% 35%)',
+        },
+        indigo: {
+          50:  'hsl(226 100% 97%)',
+          100: 'hsl(226 100% 94%)',
+          500: 'hsl(239 84% 67%)',
+          600: 'hsl(243 75% 59%)',
+          700: 'hsl(245 58% 51%)',
+        },
         neutral: {
           50: 'hsl(210 40% 98%)',
           100: 'hsl(210 40% 96%)',
@@ -91,6 +110,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-geist-sans)', 'system-ui', 'sans-serif'],
+        display: ['DM Sans', 'var(--font-geist-sans)', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)', 'Menlo', 'monospace'],
       },
       keyframes: {
@@ -111,6 +131,8 @@ const config: Config = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in': 'fade-in 0.3s ease-out',
+        'shimmer': 'shimmer 2s linear infinite',
+        'slide-in': 'slide-in 0.3s ease-out',
       },
     },
   },

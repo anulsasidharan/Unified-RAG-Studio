@@ -144,23 +144,25 @@ export function CodeExporter({
     <section
       id={id}
       className={cn(
-        'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800 scroll-mt-4',
+        'w-full shrink-0 border-t border-neutral-200 bg-neutral-950 py-6 dark:border-neutral-800 scroll-mt-4',
         className
       )}
       aria-labelledby="code-exporter-heading"
     >
-      <h2 id="code-exporter-heading" className="sr-only">
-        Pipeline code export
-      </h2>
-
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <Package className="h-4 w-4 shrink-0" aria-hidden />
-            <span className="text-sm font-medium text-foreground">Code export</span>
-            <span className="text-xs text-muted-foreground">(from draft)</span>
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-800">
+              <Package className="h-4 w-4 text-neutral-300" aria-hidden />
+            </div>
+            <div>
+              <h2 id="code-exporter-heading" className="font-display text-sm font-bold text-neutral-100">
+                Code export
+              </h2>
+              <p className="text-[11px] text-neutral-400">From current draft · auto-updates</p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-neutral-400">
             {loading ? (
               <span className="inline-flex items-center gap-1">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -175,7 +177,7 @@ export function CodeExporter({
                 const ctrl = new AbortController();
                 void fetchExport(draft, format, ctrl.signal);
               }}
-              className="inline-flex items-center gap-1 rounded-md border border-neutral-200 bg-background px-2 py-1 text-xs font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+              className="inline-flex items-center gap-1 rounded-lg border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-xs font-medium text-neutral-300 shadow-sm transition-all hover:border-neutral-600 hover:bg-neutral-700"
               title="Regenerate export now"
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden />
@@ -184,15 +186,8 @@ export function CodeExporter({
           </div>
         </div>
 
-        <p className="mt-1 text-[11px] leading-snug text-muted-foreground">
-          Generated artefacts match{' '}
-          <span className="font-medium text-foreground">POST /api/designer/export</span> (Python LangChain sketch, YAML,
-          Terraform, Docker Compose, or Kubernetes). Copy, download, or use the deploy hints as a starting point — review
-          secrets and cloud context before production.
-        </p>
-
         <div
-          className="mt-4 flex flex-wrap gap-2"
+          className="mt-5 flex flex-wrap gap-1.5 rounded-xl border border-neutral-800 bg-neutral-900 p-1.5"
           role="tablist"
           aria-label="Export format"
         >
@@ -204,10 +199,10 @@ export function CodeExporter({
               aria-selected={format === opt.id}
               onClick={() => setFormat(opt.id)}
               className={cn(
-                'rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
+                'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                 format === opt.id
-                  ? 'border-primary-600 bg-primary-600 text-primary-50 dark:border-primary-500 dark:bg-primary-600'
-                  : 'border-neutral-200 bg-background text-muted-foreground hover:bg-muted dark:border-neutral-600'
+                  ? 'bg-gradient-to-r from-primary-600 to-indigo-600 text-white shadow-sm'
+                  : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
               )}
             >
               {opt.short}
@@ -218,7 +213,7 @@ export function CodeExporter({
         {error ? (
           <div
             role="alert"
-            className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="mt-4 rounded-lg border border-red-800/50 bg-red-950/30 px-3 py-2 text-sm text-red-300"
           >
             {error}
           </div>
@@ -229,10 +224,10 @@ export function CodeExporter({
             type="button"
             disabled={!result?.code || loading}
             onClick={() => void copyCode()}
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50 dark:border-neutral-600"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-200 shadow-sm transition-all hover:border-neutral-600 hover:bg-neutral-700 disabled:pointer-events-none disabled:opacity-50"
           >
             {copiedCode ? (
-              <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+              <Check className="h-4 w-4 text-emerald-400" aria-hidden />
             ) : (
               <Copy className="h-4 w-4" aria-hidden />
             )}
@@ -242,42 +237,40 @@ export function CodeExporter({
             type="button"
             disabled={!result?.code || loading}
             onClick={download}
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50 dark:border-neutral-600"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-200 shadow-sm transition-all hover:border-neutral-600 hover:bg-neutral-700 disabled:pointer-events-none disabled:opacity-50"
           >
             <Download className="h-4 w-4" aria-hidden />
             Download
           </button>
-          <span className="text-xs text-muted-foreground">
-            {result ? (
-              <>
-                Suggested file: <span className="font-mono text-foreground">{result.filename}</span>
-              </>
-            ) : null}
-          </span>
+          {result ? (
+            <span className="text-xs text-neutral-500">
+              <span className="font-mono text-neutral-400">{result.filename}</span>
+            </span>
+          ) : null}
         </div>
 
-        <details className="mt-4 rounded-lg border border-neutral-200 bg-muted/15 dark:border-neutral-700">
-          <summary className="cursor-pointer list-none px-3 py-2 text-sm font-medium text-foreground outline-none ring-offset-background marker:content-none [&::-webkit-details-marker]:hidden">
+        <details className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900">
+          <summary className="cursor-pointer list-none px-4 py-3 text-sm font-medium text-neutral-300 outline-none marker:content-none [&::-webkit-details-marker]:hidden">
             <span className="inline-flex items-center gap-2">
-              <Rocket className="h-4 w-4 text-muted-foreground" aria-hidden />
+              <Rocket className="h-4 w-4 text-neutral-500" aria-hidden />
               Deploy hints
             </span>
           </summary>
-          <div className="space-y-2 border-t border-neutral-200 px-3 py-3 text-sm dark:border-neutral-700">
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-3 border-t border-neutral-800 px-4 py-3 text-sm">
+            <p className="text-xs text-neutral-500">
               {deployHintCaption(result?.format ?? format)}
             </p>
-            <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-all rounded-md bg-background p-3 font-mono text-xs text-foreground">
+            <pre className="max-h-32 overflow-auto whitespace-pre-wrap break-all rounded-lg bg-neutral-950 p-3 font-mono text-xs text-neutral-300">
               {result ? deployCmd : 'Generate an export to see suggested commands.'}
             </pre>
             <button
               type="button"
               disabled={!deployCmd || loading}
               onClick={() => void copyDeploy()}
-              className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-2 py-1 text-xs font-medium shadow-sm transition-colors hover:bg-muted disabled:pointer-events-none disabled:opacity-50 dark:border-neutral-600"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-700 bg-neutral-800 px-2.5 py-1.5 text-xs font-medium text-neutral-300 transition-all hover:bg-neutral-700 disabled:pointer-events-none disabled:opacity-50"
             >
               {copiedCmd ? (
-                <Check className="h-3.5 w-3.5 text-emerald-600" aria-hidden />
+                <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
               ) : (
                 <Copy className="h-3.5 w-3.5" aria-hidden />
               )}
@@ -286,16 +279,16 @@ export function CodeExporter({
           </div>
         </details>
 
-        <div className="mt-4 overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+        <div className="mt-4 overflow-hidden rounded-xl border border-neutral-800">
           {loading && !result ? (
-            <div className="flex items-center gap-2 bg-muted/20 p-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 bg-neutral-900 p-6 text-sm text-neutral-400">
               <Loader2 className="h-5 w-5 animate-spin shrink-0" aria-hidden />
               Generating {FORMAT_OPTIONS.find((f) => f.id === format)?.label ?? format}…
             </div>
           ) : (
             <pre
               className={cn(
-                'max-h-[min(420px,50vh)] overflow-auto bg-neutral-950 p-4 font-mono text-[11px] leading-relaxed text-neutral-100 transition-opacity dark:bg-neutral-950',
+                'max-h-[min(420px,50vh)] overflow-auto bg-neutral-950 p-4 font-mono text-[11px] leading-relaxed text-neutral-100 transition-opacity',
                 loading && 'opacity-60'
               )}
               tabIndex={0}
