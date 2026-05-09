@@ -283,6 +283,76 @@ class EvaluationConfigSchema(RAGBaseModel):
     schedule: Literal["on-demand", "continuous"] | None = None
 
 
+HitlTier = Literal["simple", "medium", "advanced"]
+
+HitlRole = Literal[
+    "reviewer",
+    "approver",
+    "corrector",
+    "escalation_handler",
+    "trainer",
+    "data_curator",
+]
+
+HitlEscalationMode = Literal[
+    "soft_warn",
+    "hard_block",
+    "silent_route",
+    "deferred_queue",
+    "human_takeover",
+]
+
+HitlOrchestrationHint = Literal[
+    "langgraph",
+    "temporal",
+    "step_functions",
+    "prefect",
+    "camunda",
+    "airflow",
+]
+
+
+class HitlPlacementSchema(RAGBaseModel):
+    pre_ingestion_validation: bool = False
+    retrieval_time: bool = False
+    generation_time: bool = True
+    post_response_feedback: bool = False
+
+
+class HitlConfidenceSchema(RAGBaseModel):
+    retriever_score_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+    reranker_score_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+    llm_uncertainty_signals: bool = False
+    escalation_mode: HitlEscalationMode = "deferred_queue"
+
+
+class HitlWorkflowSchema(RAGBaseModel):
+    synchronous_review: bool = True
+    allow_human_edit: bool = True
+    sequential_approval_roles: list[HitlRole] = Field(default_factory=list)
+
+
+class HitlAdvancedSchema(RAGBaseModel):
+    orchestration_hint: HitlOrchestrationHint | None = None
+    agentic_tool_approval: bool = False
+    multi_reviewer_consensus: bool = False
+    audit_logging_required: bool = False
+    human_guided_retrieval: bool = False
+    active_learning_feedback: bool = False
+
+
+class HumanInTheLoopConfigSchema(RAGBaseModel):
+    """Human-in-the-loop gates — design-time configuration for exports and orchestration."""
+
+    enabled: bool = False
+    tier: HitlTier = "simple"
+    roles: list[HitlRole] = Field(default_factory=lambda: ["approver"])
+    placement: HitlPlacementSchema = Field(default_factory=HitlPlacementSchema)
+    confidence: HitlConfidenceSchema = Field(default_factory=HitlConfidenceSchema)
+    workflow: HitlWorkflowSchema = Field(default_factory=HitlWorkflowSchema)
+    advanced: HitlAdvancedSchema = Field(default_factory=HitlAdvancedSchema)
+
+
 # ─── Pipeline Stages ──────────────────────────────────────────────────────────
 
 
@@ -304,6 +374,7 @@ class PipelineStagesSchema(RAGBaseModel):
     routing: RoutingConfigSchema | None = None
     memory: MemoryConfigSchema | None = None
     evaluation: EvaluationConfigSchema | None = None
+    human_in_the_loop: HumanInTheLoopConfigSchema | None = None
 
 
 # ─── Pipeline Metadata ────────────────────────────────────────────────────────
