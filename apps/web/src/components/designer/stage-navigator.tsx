@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { getEmbeddingModelMeta } from '@/lib/embeddings-catalog';
 import { getGenerationModelMeta } from '@/lib/generation-catalog';
 import { getVectorStoreMeta } from '@/lib/vector-stores-catalog';
+import { hitlNavigatorHint } from '@/lib/hitl-summary';
 import { guardrailsNavigatorHint } from '@/lib/guardrails-summary';
 import { useDesignerStore } from '@/stores/designer-store';
 import type { ChunkingStrategy, DataIngestionConfig, RetrievalStrategy } from '@/types/pipeline';
@@ -241,6 +242,10 @@ export function StageNavigator() {
                   ) : stage.id === 'guardrails' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {guardrailsNavigatorHint(draft.guardrails)}
+                    </span>
+                  ) : stage.id === 'hitl' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {hitlNavigatorHint(draft.stages.humanInTheLoop)}
                     </span>
                   ) : null}
                 </span>

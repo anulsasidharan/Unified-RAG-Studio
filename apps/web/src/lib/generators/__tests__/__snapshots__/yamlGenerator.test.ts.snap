@@ -80,7 +80,9 @@ pipeline:
         - answer_relevance
         - context_precision
       testSetSize: 100
-      schedule: on-demand"
+      schedule: on-demand
+    humanInTheLoop:
+      enabled: false"
 `;
 
 exports[`generateYAML > matches snapshot for minimal config 1`] = `
@@ -136,5 +138,7 @@ pipeline:
     memory:
       type: none
     evaluation:
+      enabled: false
+    humanInTheLoop:
       enabled: false"
 `;

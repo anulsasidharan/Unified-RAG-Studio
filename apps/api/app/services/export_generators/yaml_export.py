@@ -89,6 +89,7 @@ def generate_yaml(config: PipelineConfigurationSchema, generated_at: str | None 
             _routing_section(stages, 2),
             _memory_section(stages, 2),
             _evaluation_section(stages, 2),
+            _human_in_the_loop_section(stages, 2),
         ]
     )
     return "\n".join(s for s in sections if s != "")
@@ -296,4 +297,52 @@ def _evaluation_section(stages: PipelineStagesSchema, lvl: int) -> str:
             lines.append(f"{_indent(lvl + 1)}testSetSize: {ev.test_set_size}")
         if ev.schedule:
             lines.append(f"{_indent(lvl + 1)}schedule: {_yaml_string(ev.schedule)}")
+    return "\n".join(lines)
+
+
+def _human_in_the_loop_section(stages: PipelineStagesSchema, lvl: int) -> str:
+    h = stages.human_in_the_loop
+    if not h:
+        return f"{_indent(lvl)}humanInTheLoop:\n{_indent(lvl + 1)}enabled: false"
+    p = h.placement
+    c = h.confidence
+    w = h.workflow
+    a = h.advanced
+    lines = [
+        f"{_indent(lvl)}humanInTheLoop:",
+        f"{_indent(lvl + 1)}enabled: {_yaml_bool(h.enabled)}",
+        f"{_indent(lvl + 1)}tier: {_yaml_string(h.tier)}",
+        f"{_indent(lvl + 1)}roles: {_yaml_array([str(r) for r in h.roles], lvl + 2)}",
+        f"{_indent(lvl + 1)}placement:",
+        f"{_indent(lvl + 2)}preIngestionValidation: {_yaml_bool(p.pre_ingestion_validation)}",
+        f"{_indent(lvl + 2)}retrievalTime: {_yaml_bool(p.retrieval_time)}",
+        f"{_indent(lvl + 2)}generationTime: {_yaml_bool(p.generation_time)}",
+        f"{_indent(lvl + 2)}postResponseFeedback: {_yaml_bool(p.post_response_feedback)}",
+    ]
+    if not h.enabled:
+        return "\n".join(lines)
+    lines.extend(
+        [
+            f"{_indent(lvl + 1)}confidence:",
+            f"{_indent(lvl + 2)}retrieverScoreThreshold: "
+            f"{c.retriever_score_threshold if c.retriever_score_threshold is not None else 'null'}",
+            f"{_indent(lvl + 2)}rerankerScoreThreshold: "
+            f"{c.reranker_score_threshold if c.reranker_score_threshold is not None else 'null'}",
+            f"{_indent(lvl + 2)}llmUncertaintySignals: {_yaml_bool(c.llm_uncertainty_signals)}",
+            f"{_indent(lvl + 2)}escalationMode: {_yaml_string(c.escalation_mode)}",
+            f"{_indent(lvl + 1)}workflow:",
+            f"{_indent(lvl + 2)}synchronousReview: {_yaml_bool(w.synchronous_review)}",
+            f"{_indent(lvl + 2)}allowHumanEdit: {_yaml_bool(w.allow_human_edit)}",
+            f"{_indent(lvl + 2)}sequentialApprovalRoles: "
+            f"{_yaml_array([str(r) for r in w.sequential_approval_roles], lvl + 3)}",
+            f"{_indent(lvl + 1)}advanced:",
+            f"{_indent(lvl + 2)}orchestrationHint: "
+            f"{_yaml_string(a.orchestration_hint) if a.orchestration_hint else 'null'}",
+            f"{_indent(lvl + 2)}agenticToolApproval: {_yaml_bool(a.agentic_tool_approval)}",
+            f"{_indent(lvl + 2)}multiReviewerConsensus: {_yaml_bool(a.multi_reviewer_consensus)}",
+            f"{_indent(lvl + 2)}auditLoggingRequired: {_yaml_bool(a.audit_logging_required)}",
+            f"{_indent(lvl + 2)}humanGuidedRetrieval: {_yaml_bool(a.human_guided_retrieval)}",
+            f"{_indent(lvl + 2)}activeLearningFeedback: {_yaml_bool(a.active_learning_feedback)}",
+        ]
+    )
     return "\n".join(lines)

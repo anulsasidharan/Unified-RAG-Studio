@@ -77,6 +77,7 @@ Chunking: ${config.stages.chunking.strategy} (${config.stages.chunking.chunkSize
 function buildImports(stages: PipelineStages): string {
   const lines: string[] = [
     'import os',
+    ...(stages.humanInTheLoop?.enabled ? ['import json'] : []),
     'from typing import List',
     '',
     '# LangChain core',
@@ -125,6 +126,25 @@ function buildImports(stages: PipelineStages): string {
   return lines.join('\n');
 }
 
+function buildHumanInTheLoopBlock(stages: PipelineStages): string[] {
+  const h = stages.humanInTheLoop;
+  if (!h?.enabled) return [];
+  const cfg = {
+    tier: h.tier,
+    roles: h.roles,
+    placement: h.placement,
+    confidence: h.confidence,
+    workflow: h.workflow,
+    advanced: h.advanced,
+  };
+  const inner = JSON.stringify(cfg);
+  return [
+    '',
+    '# ─── Human in the Loop (designer configuration) ─────────────────────────────',
+    `HITL_CONFIG = json.loads(${JSON.stringify(inner)})`,
+  ];
+}
+
 function buildConfig(stages: PipelineStages, cloudProvider: string): string {
   const embClass = EMBEDDING_CLASS[stages.embedding.provider] ?? 'CustomEmbeddings';
   const llmClass = LLM_CLASS[stages.generation.provider] ?? 'CustomLLM';
@@ -154,6 +174,7 @@ function buildConfig(stages: PipelineStages, cloudProvider: string): string {
     '# ─── Text splitter ──────────────────────────────────────────────────────────',
     '',
     ...buildTextSplitter(stages),
+    ...buildHumanInTheLoopBlock(stages),
   ];
 
   return lines.join('\n');

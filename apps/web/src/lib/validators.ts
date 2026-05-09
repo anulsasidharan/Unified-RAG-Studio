@@ -236,6 +236,65 @@ export const EvaluationConfigSchema = z.object({
   schedule: z.enum(['on-demand', 'continuous']).optional(),
 });
 
+export const HitlTierSchema = z.enum(['simple', 'medium', 'advanced']);
+
+export const HitlRoleSchema = z.enum([
+  'reviewer',
+  'approver',
+  'corrector',
+  'escalation_handler',
+  'trainer',
+  'data_curator',
+]);
+
+export const HitlEscalationModeSchema = z.enum([
+  'soft_warn',
+  'hard_block',
+  'silent_route',
+  'deferred_queue',
+  'human_takeover',
+]);
+
+export const HitlOrchestrationHintSchema = z.enum([
+  'langgraph',
+  'temporal',
+  'step_functions',
+  'prefect',
+  'camunda',
+  'airflow',
+]);
+
+export const HumanInTheLoopConfigSchema = z.object({
+  enabled: z.boolean(),
+  tier: HitlTierSchema,
+  roles: z.array(HitlRoleSchema),
+  placement: z.object({
+    preIngestionValidation: z.boolean(),
+    retrievalTime: z.boolean(),
+    generationTime: z.boolean(),
+    postResponseFeedback: z.boolean(),
+  }),
+  confidence: z.object({
+    retrieverScoreThreshold: z.number().min(0).max(1).nullable(),
+    rerankerScoreThreshold: z.number().min(0).max(1).nullable(),
+    llmUncertaintySignals: z.boolean(),
+    escalationMode: HitlEscalationModeSchema,
+  }),
+  workflow: z.object({
+    synchronousReview: z.boolean(),
+    allowHumanEdit: z.boolean(),
+    sequentialApprovalRoles: z.array(HitlRoleSchema),
+  }),
+  advanced: z.object({
+    orchestrationHint: HitlOrchestrationHintSchema.nullable(),
+    agenticToolApproval: z.boolean(),
+    multiReviewerConsensus: z.boolean(),
+    auditLoggingRequired: z.boolean(),
+    humanGuidedRetrieval: z.boolean(),
+    activeLearningFeedback: z.boolean(),
+  }),
+});
+
 // ─── Top-Level Schemas ───────────────────────────────────────────────────────
 
 export const PipelineStagesSchema = z.object({
@@ -249,6 +308,7 @@ export const PipelineStagesSchema = z.object({
   routing: RoutingConfigSchema.optional(),
   memory: MemoryConfigSchema.optional(),
   evaluation: EvaluationConfigSchema.optional(),
+  humanInTheLoop: HumanInTheLoopConfigSchema.optional(),
 });
 
 export const PipelineMetadataSchema = z.object({

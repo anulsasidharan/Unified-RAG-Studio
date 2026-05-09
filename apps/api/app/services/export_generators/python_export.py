@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pprint import pformat
 
 from app.schemas.pipeline import (
     ChunkingStrategy,
@@ -14,6 +15,52 @@ from app.schemas.pipeline import (
     VectorStoreProvider,
 )
 from app.services.export_generators._compat import ev as _ev
+
+
+def _human_in_the_loop_block(stages: PipelineStagesSchema) -> list[str]:
+    h = stages.human_in_the_loop
+    if h is None or not h.enabled:
+        return []
+    p = h.placement
+    c = h.confidence
+    w = h.workflow
+    a = h.advanced
+    cfg = {
+        "tier": h.tier,
+        "roles": list(h.roles),
+        "placement": {
+            "preIngestionValidation": p.pre_ingestion_validation,
+            "retrievalTime": p.retrieval_time,
+            "generationTime": p.generation_time,
+            "postResponseFeedback": p.post_response_feedback,
+        },
+        "confidence": {
+            "retrieverScoreThreshold": c.retriever_score_threshold,
+            "rerankerScoreThreshold": c.reranker_score_threshold,
+            "llmUncertaintySignals": c.llm_uncertainty_signals,
+            "escalationMode": c.escalation_mode,
+        },
+        "workflow": {
+            "synchronousReview": w.synchronous_review,
+            "allowHumanEdit": w.allow_human_edit,
+            "sequentialApprovalRoles": list(w.sequential_approval_roles),
+        },
+        "advanced": {
+            "orchestrationHint": a.orchestration_hint,
+            "agenticToolApproval": a.agentic_tool_approval,
+            "multiReviewerConsensus": a.multi_reviewer_consensus,
+            "auditLoggingRequired": a.audit_logging_required,
+            "humanGuidedRetrieval": a.human_guided_retrieval,
+            "activeLearningFeedback": a.active_learning_feedback,
+        },
+    }
+    return [
+        "",
+        "# ─── Human in the Loop (designer configuration) ─────────────────────────────",
+        "# Implement gates with interrupts, review queues, or BPM — not executed here.",
+        "HITL_CONFIG = " + pformat(cfg, width=96, sort_dicts=False),
+    ]
+
 
 _EMBEDDING_IMPORTS: dict[str, str] = {
     "openai": "from langchain_openai import OpenAIEmbeddings",
@@ -234,6 +281,7 @@ def _build_config(stages: PipelineStagesSchema, cloud_provider: str) -> str:
         "# ─── Text splitter ──────────────────────────────────────────────────────────",
         "",
         *_build_text_splitter(stages),
+        *_human_in_the_loop_block(stages),
     ]
     return "\n".join(lines)
 

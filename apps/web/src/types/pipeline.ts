@@ -213,6 +213,73 @@ export interface EvaluationConfig {
   schedule?: 'on-demand' | 'continuous';
 }
 
+/** Human-in-the-loop capability tier — controls how much configuration is surfaced in the designer. */
+export type HitlTier = 'simple' | 'medium' | 'advanced';
+
+export type HitlRole =
+  | 'reviewer'
+  | 'approver'
+  | 'corrector'
+  | 'escalation_handler'
+  | 'trainer'
+  | 'data_curator';
+
+export type HitlEscalationMode =
+  | 'soft_warn'
+  | 'hard_block'
+  | 'silent_route'
+  | 'deferred_queue'
+  | 'human_takeover';
+
+export type HitlOrchestrationHint =
+  | 'langgraph'
+  | 'temporal'
+  | 'step_functions'
+  | 'prefect'
+  | 'camunda'
+  | 'airflow';
+
+export interface HitlPlacementConfig {
+  preIngestionValidation: boolean;
+  retrievalTime: boolean;
+  generationTime: boolean;
+  postResponseFeedback: boolean;
+}
+
+export interface HitlConfidenceConfig {
+  /** When max similarity falls below this, route to human (retrieval-time HITL). */
+  retrieverScoreThreshold: number | null;
+  rerankerScoreThreshold: number | null;
+  llmUncertaintySignals: boolean;
+  escalationMode: HitlEscalationMode;
+}
+
+export interface HitlWorkflowConfig {
+  synchronousReview: boolean;
+  allowHumanEdit: boolean;
+  /** Ordered roles for sequential approvals (e.g. SME then compliance). */
+  sequentialApprovalRoles: HitlRole[];
+}
+
+export interface HitlAdvancedConfig {
+  orchestrationHint: HitlOrchestrationHint | null;
+  agenticToolApproval: boolean;
+  multiReviewerConsensus: boolean;
+  auditLoggingRequired: boolean;
+  humanGuidedRetrieval: boolean;
+  activeLearningFeedback: boolean;
+}
+
+export interface HumanInTheLoopConfig {
+  enabled: boolean;
+  tier: HitlTier;
+  roles: HitlRole[];
+  placement: HitlPlacementConfig;
+  confidence: HitlConfidenceConfig;
+  workflow: HitlWorkflowConfig;
+  advanced: HitlAdvancedConfig;
+}
+
 // ─── Guardrails (P4.5) — optional on saved pipeline JSON ─────────────────────
 
 export interface GuardrailStageSettings {
@@ -298,6 +365,8 @@ export interface PipelineStages {
   routing?: RoutingConfig;
   memory?: MemoryConfig;
   evaluation?: EvaluationConfig;
+  /** Optional human review / approval gates — exported with pipeline artifacts. */
+  humanInTheLoop?: HumanInTheLoopConfig;
 }
 
 export interface PipelineMetadata {

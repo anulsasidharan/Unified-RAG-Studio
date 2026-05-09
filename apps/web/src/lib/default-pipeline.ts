@@ -1,4 +1,4 @@
-import type { GuardrailsConfig, PipelineConfiguration } from '@/types/pipeline';
+import type { GuardrailsConfig, HumanInTheLoopConfig, PipelineConfiguration } from '@/types/pipeline';
 import {
   DEFAULT_CHUNK_OVERLAP,
   DEFAULT_CHUNK_SIZE,
@@ -43,6 +43,40 @@ function mergeGuardrailsConfig(base: GuardrailsConfig, patch: Partial<Guardrails
     input: patch.input ? { ...base.input, ...patch.input } : base.input,
     retrieval: patch.retrieval ? { ...base.retrieval, ...patch.retrieval } : base.retrieval,
     output: patch.output ? { ...base.output, ...patch.output } : base.output,
+  };
+}
+
+/** Default HITL block — matches API `HumanInTheLoopConfigSchema`; disabled until the customer opts in. */
+export function createDefaultHumanInTheLoopConfig(): HumanInTheLoopConfig {
+  return {
+    enabled: false,
+    tier: 'simple',
+    roles: ['approver'],
+    placement: {
+      preIngestionValidation: false,
+      retrievalTime: false,
+      generationTime: true,
+      postResponseFeedback: false,
+    },
+    confidence: {
+      retrieverScoreThreshold: 0.72,
+      rerankerScoreThreshold: null,
+      llmUncertaintySignals: false,
+      escalationMode: 'deferred_queue',
+    },
+    workflow: {
+      synchronousReview: true,
+      allowHumanEdit: true,
+      sequentialApprovalRoles: ['approver'],
+    },
+    advanced: {
+      orchestrationHint: 'langgraph',
+      agenticToolApproval: false,
+      multiReviewerConsensus: false,
+      auditLoggingRequired: false,
+      humanGuidedRetrieval: false,
+      activeLearningFeedback: false,
+    },
   };
 }
 
@@ -120,6 +154,7 @@ export function createDefaultPipelineConfiguration(
         testSetSize: 50,
         schedule: 'on-demand',
       },
+      humanInTheLoop: createDefaultHumanInTheLoopConfig(),
     },
     metadata: {
       createdAt: now,

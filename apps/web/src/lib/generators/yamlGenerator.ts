@@ -213,6 +213,52 @@ function evaluationSection(stages: PipelineStages, lvl: number): string {
   return lines.join('\n');
 }
 
+function humanInTheLoopSection(stages: PipelineStages, lvl: number): string {
+  const h = stages.humanInTheLoop;
+  if (!h) return `${indent(lvl)}humanInTheLoop:\n${indent(lvl + 1)}enabled: false`;
+  const p = h.placement;
+  const c = h.confidence;
+  const w = h.workflow;
+  const a = h.advanced;
+  const lines = [
+    `${indent(lvl)}humanInTheLoop:`,
+    `${indent(lvl + 1)}enabled: ${yamlBool(h.enabled)}`,
+    `${indent(lvl + 1)}tier: ${yamlString(h.tier)}`,
+    `${indent(lvl + 1)}roles: ${yamlArray(h.roles, lvl + 2)}`,
+    `${indent(lvl + 1)}placement:`,
+    `${indent(lvl + 2)}preIngestionValidation: ${yamlBool(p.preIngestionValidation)}`,
+    `${indent(lvl + 2)}retrievalTime: ${yamlBool(p.retrievalTime)}`,
+    `${indent(lvl + 2)}generationTime: ${yamlBool(p.generationTime)}`,
+    `${indent(lvl + 2)}postResponseFeedback: ${yamlBool(p.postResponseFeedback)}`,
+  ];
+  if (!h.enabled) return lines.join('\n');
+  lines.push(
+    `${indent(lvl + 1)}confidence:`,
+    `${indent(lvl + 2)}retrieverScoreThreshold: ${
+      c.retrieverScoreThreshold != null ? String(c.retrieverScoreThreshold) : 'null'
+    }`,
+    `${indent(lvl + 2)}rerankerScoreThreshold: ${
+      c.rerankerScoreThreshold != null ? String(c.rerankerScoreThreshold) : 'null'
+    }`,
+    `${indent(lvl + 2)}llmUncertaintySignals: ${yamlBool(c.llmUncertaintySignals)}`,
+    `${indent(lvl + 2)}escalationMode: ${yamlString(c.escalationMode)}`,
+    `${indent(lvl + 1)}workflow:`,
+    `${indent(lvl + 2)}synchronousReview: ${yamlBool(w.synchronousReview)}`,
+    `${indent(lvl + 2)}allowHumanEdit: ${yamlBool(w.allowHumanEdit)}`,
+    `${indent(lvl + 2)}sequentialApprovalRoles: ${yamlArray(w.sequentialApprovalRoles, lvl + 3)}`,
+    `${indent(lvl + 1)}advanced:`,
+    `${indent(lvl + 2)}orchestrationHint: ${
+      a.orchestrationHint != null ? yamlString(a.orchestrationHint) : 'null'
+    }`,
+    `${indent(lvl + 2)}agenticToolApproval: ${yamlBool(a.agenticToolApproval)}`,
+    `${indent(lvl + 2)}multiReviewerConsensus: ${yamlBool(a.multiReviewerConsensus)}`,
+    `${indent(lvl + 2)}auditLoggingRequired: ${yamlBool(a.auditLoggingRequired)}`,
+    `${indent(lvl + 2)}humanGuidedRetrieval: ${yamlBool(a.humanGuidedRetrieval)}`,
+    `${indent(lvl + 2)}activeLearningFeedback: ${yamlBool(a.activeLearningFeedback)}`
+  );
+  return lines.join('\n');
+}
+
 /**
  * Serialises a `PipelineConfiguration` to a human-readable YAML string
  * suitable for saving to `pipeline.yaml` or passing to the export API.
@@ -249,6 +295,7 @@ export function generateYAML(config: PipelineConfiguration, generatedAt?: string
     routingSection(stages, 2),
     memorySection(stages, 2),
     evaluationSection(stages, 2),
+    humanInTheLoopSection(stages, 2),
   ];
 
   return sections.filter((s) => s !== '').join('\n');

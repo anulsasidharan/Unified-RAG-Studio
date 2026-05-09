@@ -14,6 +14,7 @@ import { MemoryConfigurator } from './memory-configurator';
 import { RetrievalConfigurator } from './retrieval-configurator';
 import { GenerationConfigurator } from './generation-configurator';
 import { GuardrailsConfigurator } from './guardrails-configurator';
+import { HitlConfigurator } from './hitl-configurator';
 import { RoutingConfigurator } from './routing-configurator';
 import { VectorStoreConfigurator } from './vector-store-configurator';
 import { DesignerReviewPage } from './designer-review-page';
@@ -44,6 +45,8 @@ function phaseNoteFor(stageId: DesignerStageId): string {
       return 'Toggle evaluation, pick metrics, test set size, and schedule — saved on your pipeline draft.';
     case 'guardrails':
       return 'Toggle input, retrieval, and output safety checks — saved on draft.guardrails for export and guarded RAG preview.';
+    case 'hitl':
+      return 'Optional human review gates, escalation, and workflow hints — saved on draft.stages.humanInTheLoop for exports.';
     case 'review':
       return 'Jump to the live graph, cost strip, and export — or edit any prior stage from the checklist.';
     default:
@@ -103,6 +106,8 @@ export function DesignerStagePlaceholder({
         <EvaluationConfigurator className="mt-8" />
       ) : stageId === 'guardrails' ? (
         <GuardrailsConfigurator className="mt-8" />
+      ) : stageId === 'hitl' ? (
+        <HitlConfigurator className="mt-8" />
       ) : (
         <div className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground dark:border-neutral-600">
           Configuration UI for “{meta.label}” will appear in the numbered Phase 5 task above.
