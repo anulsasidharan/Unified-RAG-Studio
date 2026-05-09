@@ -1,10 +1,12 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 99%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -32,7 +34,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
 
-    --radius: 0.5rem;
+    --radius: 0.625rem;
+
+    /* Brand gradient stops */
+    --brand-from: #1d4ed8;
+    --brand-mid: #6366f1;
+    --brand-to: #7c3aed;
   }
 
   .dark {
@@ -77,24 +84,78 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight;
+    @apply font-display font-semibold tracking-tight;
   }
 }
 
 @layer utilities {
+  /* Brand gradient */
   .gradient-brand {
-    background: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(262 83% 58%) 100%);
+    background: linear-gradient(135deg, var(--brand-from) 0%, var(--brand-mid) 50%, var(--brand-to) 100%);
   }
 
   .gradient-text {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(221 83% 53%) 0%, hsl(262 83% 58%) 100%);
+    background-image: linear-gradient(135deg, var(--brand-from) 0%, var(--brand-mid) 50%, var(--brand-to) 100%);
   }
 
+  /* Shimmer text animation */
+  .gradient-text-animated {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      90deg,
+      var(--brand-from) 0%,
+      var(--brand-mid) 30%,
+      #a78bfa 50%,
+      var(--brand-mid) 70%,
+      var(--brand-to) 100%
+    );
+    background-size: 200% auto;
+    animation: shimmer-text 4s linear infinite;
+  }
+
+  /* Glass surface */
   .glass {
     @apply bg-white/80 backdrop-blur-sm border border-white/20;
   }
 
+  .glass-dark {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  /* Dot grid pattern */
+  .bg-dot-grid {
+    background-image: radial-gradient(circle, hsl(221 83% 53% / 0.12) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Line grid pattern */
+  .bg-line-grid {
+    background-image:
+      linear-gradient(hsl(221 83% 53% / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(221 83% 53% / 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Glow effects */
+  .glow-primary {
+    box-shadow: 0 0 40px hsl(221 83% 53% / 0.25), 0 0 80px hsl(221 83% 53% / 0.1);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 40px hsl(262 83% 58% / 0.25), 0 0 80px hsl(262 83% 58% / 0.1);
+  }
+
+  /* Card hover lift */
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+
+  .card-hover:hover {
+    @apply -translate-y-0.5 shadow-lg;
+  }
+
+  /* Animate orbs */
   .animate-float {
     animation: float 8s ease-in-out infinite;
   }
@@ -102,9 +163,54 @@
   .animate-float-delayed {
     animation: float 10s ease-in-out 2s infinite;
   }
+
+  .animate-float-slow {
+    animation: float 14s ease-in-out 4s infinite;
+  }
+
+  /* Pulse dot */
+  .animate-ping-slow {
+    animation: ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  /* Fade in up */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out both;
+  }
+
+  .animate-fade-in-up-delay-1 {
+    animation: fade-in-up 0.5s ease-out 0.1s both;
+  }
+
+  .animate-fade-in-up-delay-2 {
+    animation: fade-in-up 0.5s ease-out 0.2s both;
+  }
+
+  .animate-fade-in-up-delay-3 {
+    animation: fade-in-up 0.5s ease-out 0.3s both;
+  }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px) scale(1); }
   50%       { transform: translateY(-20px) scale(1.04); }
+}
+
+@keyframes shimmer-text {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

@@ -72,14 +72,16 @@ export function DesignerStagePlaceholder({
 
   return (
     <div className={cn('mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 lg:py-10', className)}>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        Stage {index + 1} of {DESIGNER_STAGES.length}
-      </p>
-      <h1 className="mt-2 text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-primary-600 to-indigo-600 px-2.5 py-0.5 text-[11px] font-semibold text-white shadow-sm">
+          Stage {index + 1} / {DESIGNER_STAGES.length}
+        </span>
+      </div>
+      <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
         {meta.label}
       </h1>
       <p className="mt-3 text-neutral-600 dark:text-neutral-400">
-        Configure this step of your RAG pipeline. {phaseNoteFor(stageId)}
+        {phaseNoteFor(stageId)}
       </p>
 
       {stageId === 'cloud' ? (
@@ -114,40 +116,48 @@ export function DesignerStagePlaceholder({
         </div>
       )}
 
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-neutral-100 pt-6 dark:border-neutral-800">
         <div>
           {prev ? (
             <Link
               href={prev.path}
-              className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-primary-700 dark:hover:bg-primary-950/30 dark:hover:text-primary-300"
             >
-              ← {prev.label}
+              <span aria-hidden>←</span>
+              {prev.label}
             </Link>
           ) : (
-            <span className="text-sm text-muted-foreground">First stage</span>
+            <span className="text-xs text-neutral-400">First stage</span>
           )}
         </div>
         <div>
           {next ? (
             <Link
               href={next.path}
-              className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700"
             >
-              {next.label} →
+              {next.label}
+              <span aria-hidden>→</span>
             </Link>
           ) : (
-            <span className="text-sm text-muted-foreground">Last stage</span>
+            <Link
+              href={ROUTES.designer + '/review'}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700"
+            >
+              Review pipeline
+              <span aria-hidden>→</span>
+            </Link>
           )}
         </div>
       </div>
 
-      <div className="mt-10 flex flex-wrap gap-4 text-sm">
-        <Link href={ROUTES.home} className="text-muted-foreground hover:text-foreground hover:underline">
+      <div className="mt-6 flex flex-wrap gap-4 text-sm">
+        <Link href={ROUTES.home} className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300">
           ← Back to home
         </Link>
         <Link
           href={ROUTES.templates}
-          className="text-muted-foreground hover:text-foreground hover:underline"
+          className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
         >
           Browse templates
         </Link>

@@ -56,7 +56,7 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-neutral-200/80 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 dark:border-neutral-800">
+    <header className="sticky top-0 z-40 w-full border-b border-neutral-200/60 bg-white/90 shadow-sm backdrop-blur-xl supports-[backdrop-filter]:bg-white/80 dark:border-neutral-800 dark:bg-neutral-950/90 dark:shadow-none">
       <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-3 sm:px-4 lg:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           {showSidebarTrigger ? (
@@ -206,7 +206,7 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-primary-700"
+                className="rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 hover:shadow active:scale-[0.97]"
               >
                 Sign up
               </Link>

@@ -71,10 +71,12 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <Navbar
-        showSidebarTrigger={!isPublicRoute}
-        onOpenSidebar={() => setMobileSidebarOpen(true)}
-      />
+      {!isHome && (
+        <Navbar
+          showSidebarTrigger={!isPublicRoute}
+          onOpenSidebar={() => setMobileSidebarOpen(true)}
+        />
+      )}
       <div className="flex min-h-0 flex-1">
         {!isPublicRoute ? (
           <Sidebar
@@ -86,8 +88,8 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
         ) : null}
         <div
           className={cn(
-            'min-h-[calc(100vh-3.5rem)] min-w-0 flex-1',
-            isHome && 'md:min-h-screen'
+            'min-w-0 flex-1',
+            isHome ? 'min-h-screen' : 'min-h-[calc(100vh-3.5rem)]'
           )}
         >
           {children}

@@ -1,31 +1,11 @@
 'use client';
 
-import { History, FolderKanban, Rocket } from 'lucide-react';
+import { History, FolderKanban, Rocket, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { ROUTES } from '@/lib/constants';
-import { cn } from '@/lib/utils';
 import { useAutopilotStore } from '@/stores/autopilot-store';
-
-function Panel({
-  children,
-  className,
-}: Readonly<{
-  children: React.ReactNode;
-  className?: string;
-}>) {
-  return (
-    <div
-      className={cn(
-        'flex flex-col rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950',
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
 
 export default function AutopilotEntryPage() {
   const builds = useAutopilotStore((s) => s.builds);
@@ -33,74 +13,89 @@ export default function AutopilotEntryPage() {
 
   return (
     <>
-      <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
-        Autopilot mode
-      </h1>
-      <p className="mt-3 max-w-2xl text-neutral-600 dark:text-neutral-400">
-        Let agents analyse your corpus, tune chunking, embeddings, and retrieval, then evaluate the pipeline.
-        Start here, track runs in history, and attach builds to a backend project.
-      </p>
-
-      <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        <Panel className="border-primary-200/60 dark:border-primary-900/40">
-          <div className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-            <Rocket className="h-5 w-5 text-primary-600 dark:text-primary-400" aria-hidden />
-            New build
+      {/* Header */}
+      <div className="mb-10">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-indigo-600 shadow-sm shadow-primary-200">
+            <Zap className="h-5 w-5 text-white" aria-hidden />
           </div>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Upload documents, set targets, and run the orchestrator.
-          </p>
-          <Link
-            href={ROUTES.autopilotNew}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400 sm:w-auto"
-          >
-            Start wizard
-          </Link>
-        </Panel>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+            Autopilot mode
+          </h1>
+        </div>
+        <p className="mt-3 max-w-2xl text-neutral-600 dark:text-neutral-400">
+          Let agents analyse your corpus, tune chunking, embeddings, and retrieval, then evaluate the pipeline.
+          Start here, track runs in history, and attach builds to a project.
+        </p>
+      </div>
 
-        <Panel>
-          <div className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-            <History className="h-5 w-5 text-neutral-600 dark:text-neutral-400" aria-hidden />
-            Build history
-          </div>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Browse server-side runs (newest first). Open a run to resume monitoring in the wizard.
-          </p>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              {buildCount > 0
-                ? `${buildCount} build snapshot(s) cached in this browser.`
-                : 'No local build cache yet.'}
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {/* New build — primary hero card */}
+        <div className="relative flex flex-col overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 via-primary-700 to-indigo-700 p-6 shadow-lg shadow-primary-200/40 dark:shadow-primary-900/30">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.12),transparent_60%)]" />
+          <div className="relative">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Rocket className="h-5 w-5 text-white" aria-hidden />
+            </div>
+            <h2 className="mt-4 font-display text-xl font-bold text-white">New build</h2>
+            <p className="mt-2 text-sm text-primary-100">
+              Upload documents, set targets, and run the orchestrator automatically.
             </p>
             <Link
+              href={ROUTES.autopilotNew}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-primary-700 shadow-sm transition-all hover:bg-primary-50 active:scale-[0.98]"
+            >
+              <Rocket className="h-4 w-4" aria-hidden />
+              Start wizard
+            </Link>
+          </div>
+        </div>
+
+        {/* Build history */}
+        <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+            <History className="h-5 w-5 text-neutral-600 dark:text-neutral-400" aria-hidden />
+          </div>
+          <h2 className="mt-4 font-display text-lg font-bold text-neutral-900 dark:text-neutral-50">Build history</h2>
+          <p className="mt-2 flex-1 text-sm text-neutral-600 dark:text-neutral-400">
+            Browse server-side runs newest first. Open a run to resume monitoring in the wizard.
+          </p>
+          <div className="mt-4 space-y-3">
+            {buildCount > 0 ? (
+              <p className="rounded-lg bg-neutral-50 px-3 py-2 text-xs font-medium text-neutral-500 dark:bg-neutral-900">
+                {buildCount} build snapshot{buildCount !== 1 ? 's' : ''} cached locally
+              </p>
+            ) : null}
+            <Link
               href={ROUTES.autopilotHistory}
-              className="inline-flex items-center justify-center rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+              className="inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
             >
               View history
             </Link>
           </div>
-        </Panel>
+        </div>
 
-        <Panel className="sm:col-span-2 lg:col-span-1">
-          <div className="flex items-center gap-2 text-lg font-semibold text-neutral-900 dark:text-neutral-50">
-            <FolderKanban className="h-5 w-5 text-neutral-600 dark:text-neutral-400" aria-hidden />
-            Projects
+        {/* Projects */}
+        <div className="flex flex-col rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:col-span-2 lg:col-span-1 dark:border-neutral-800 dark:bg-neutral-950">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100 dark:bg-purple-950/40">
+            <FolderKanban className="h-5 w-5 text-purple-600 dark:text-purple-400" aria-hidden />
           </div>
-          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+          <h2 className="mt-4 font-display text-lg font-bold text-neutral-900 dark:text-neutral-50">Projects</h2>
+          <p className="mt-2 flex-1 text-sm text-neutral-600 dark:text-neutral-400">
             Corpus uploads are scoped to a backend project. Create or pick the active project before uploading.
           </p>
           <Link
             href={ROUTES.autopilotProjects}
-            className="mt-4 inline-flex items-center justify-center rounded-md border border-neutral-200 bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-200 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100 dark:hover:bg-neutral-700"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:border-purple-300 hover:bg-purple-50 hover:text-purple-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300"
           >
             Manage projects
           </Link>
-        </Panel>
+        </div>
       </div>
 
       <Link
         href={ROUTES.home}
-        className="mt-10 inline-block text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+        className="mt-10 inline-block text-sm font-medium text-neutral-500 transition-colors hover:text-primary-600 dark:text-neutral-400 dark:hover:text-primary-400"
       >
         ← Back to home
       </Link>

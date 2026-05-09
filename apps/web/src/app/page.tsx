@@ -1,3 +1,4 @@
+import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { Hero } from '@/components/landing/Hero';
 import { ModeComparison } from '@/components/landing/ModeComparison';
 import { HowItWorks } from '@/components/landing/HowItWorks';
@@ -8,26 +9,38 @@ import { CTA } from '@/components/landing/CTA';
 
 export default function LandingPage() {
   return (
-    <main>
-      <Hero />
-      <ModeComparison />
-      <HowItWorks />
-      <Features />
-      <UseCases />
-      <Pricing />
-      <CTA />
+    <>
+      <LandingNavbar />
+      <main>
+        <Hero />
+        <ModeComparison />
+        <HowItWorks />
+        <Features />
+        <UseCases />
+        <Pricing />
+        <CTA />
 
-      <footer className="border-t border-neutral-200 bg-white py-10">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p className="font-bold text-neutral-900">RAG Studio</p>
-            <p className="text-sm text-neutral-500">
-              The complete RAG development platform. Build smarter, deploy faster.
-            </p>
-            <p className="text-xs text-neutral-400">© 2026 RAG Studio</p>
+        <footer className="border-t border-neutral-200 bg-white py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+              <div>
+                <p className="font-display font-bold text-neutral-900">RAG Studio</p>
+                <p className="mt-1 text-xs text-neutral-400">
+                  The complete RAG development platform.
+                </p>
+              </div>
+              <div className="flex flex-wrap justify-center gap-6 text-sm text-neutral-500">
+                <a href="#features" className="hover:text-neutral-900">Features</a>
+                <a href="#how-it-works" className="hover:text-neutral-900">How it works</a>
+                <a href="#pricing" className="hover:text-neutral-900">Pricing</a>
+                <a href="/login" className="hover:text-neutral-900">Log in</a>
+                <a href="/register" className="hover:text-neutral-900">Sign up</a>
+              </div>
+              <p className="text-xs text-neutral-400">© 2026 RAG Studio</p>
+            </div>
           </div>
-        </div>
-      </footer>
-    </main>
+        </footer>
+      </main>
+    </>
   );
 }
