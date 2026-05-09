@@ -1,3 +1,4 @@
+import { hitlHighlightBullet, hitlPlacementMermaidSubtitle } from '@/lib/hitl-summary';
 import { guardrailPolicyMermaidSubtitle, guardrailsHighlightBullet } from '@/lib/guardrails-summary';
 import type { GuardrailsConfig, PipelineStages } from '@/types/pipeline';
 
@@ -40,6 +41,10 @@ export function generateMermaidDiagram(
   const cloud = PROVIDER_LABEL[cloudProvider] ?? cloudProvider;
   const lines: string[] = [];
 
+  const hitl = stages.humanInTheLoop;
+  const hitlOn = Boolean(hitl?.enabled);
+  const hitlSub = q(hitlPlacementMermaidSubtitle(hitl));
+
   const v = {
     idx: maxVisitedStageIndex >= 0,
     ingestion: maxVisitedStageIndex >= 1,
@@ -58,6 +63,12 @@ export function generateMermaidDiagram(
     evaluation: maxVisitedStageIndex >= 10 && Boolean(stages.evaluation?.enabled),
     /** Designer stage “Guardrails” — policy checks on query path (matches stage index 11). */
     guardrails: maxVisitedStageIndex >= 11,
+    /** Designer stage “Human in the Loop” (matches stage index 12). */
+    hitl: maxVisitedStageIndex >= 12 && hitlOn,
+    hitlPreIng: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.preIngestionValidation),
+    hitlRetrieval: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.retrievalTime),
+    hitlGeneration: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.generationTime),
+    hitlFeedback: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.postResponseFeedback),
   };
 
   lines.push('flowchart LR');
@@ -81,11 +92,20 @@ export function generateMermaidDiagram(
       } else {
         lines.push('    ING[("📄 Documents")]');
       }
+      if (v.hitlPreIng) {
+        lines.push(`    HITLIDX["👤 Doc review\\n${hitlSub}"]`);
+      }
       lines.push(`    CH["${chunkLabel}"]`);
       lines.push(`    EMB["${embLabel}"]`);
       lines.push(`    VS[("${vsLabel}")]`);
       if (stages.dataIngestion) {
-        lines.push('    SRC --> ING --> CH --> EMB --> VS');
+        if (v.hitlPreIng) {
+          lines.push('    SRC --> ING --> HITLIDX --> CH --> EMB --> VS');
+        } else {
+          lines.push('    SRC --> ING --> CH --> EMB --> VS');
+        }
+      } else if (v.hitlPreIng) {
+        lines.push('    ING --> HITLIDX --> CH --> EMB --> VS');
       } else {
         lines.push('    ING --> CH --> EMB --> VS');
       }
@@ -110,7 +130,12 @@ export function generateMermaidDiagram(
 
       if (v.chunking) {
         lines.push(`    CH["${chunkLabel}"]`);
-        lines.push(`    ${idxTail} --> CH`);
+        if (v.hitlPreIng && idxTail === 'ING') {
+          lines.push(`    HITLIDX["👤 Doc review\\n${hitlSub}"]`);
+          lines.push(`    ${idxTail} --> HITLIDX --> CH`);
+        } else {
+          lines.push(`    ${idxTail} --> CH`);
+        }
         idxTail = 'CH';
       }
 
@@ -155,31 +180,54 @@ export function generateMermaidDiagram(
     lines.push(`    RET["${retLabel}"]`);
     lines.push(`    ${queryToRetTail} --> RET`);
 
-    let beforeGen = 'RET';
+    let tailAfterRet = 'RET';
+    if (v.hitlRetrieval) {
+      lines.push(`    HITLRET["👤 Retrieval gate\\n${hitlSub}"]`);
+      lines.push('    RET --> HITLRET');
+      tailAfterRet = 'HITLRET';
+    }
+
+    let beforeGen = tailAfterRet;
     if (v.rerank && stages.reranking?.enabled) {
       const rnkModel = stages.reranking.model ? q(stages.reranking.model) : 'reranker';
       const rnkTop = stages.reranking.topN ?? 5;
       lines.push(`    RNK["⚡ Rerank\\n${rnkModel} · top-${rnkTop}"]`);
-      lines.push('    RET --> RNK');
+      lines.push(`    ${tailAfterRet} --> RNK`);
       beforeGen = 'RNK';
     }
 
     if (v.generation) {
       const genLabel = `🤖 Generate\\n${q(stages.generation.model)}\\nt=${stages.generation.temperature}`;
       lines.push(`    GEN["${genLabel}"]`);
+      if (v.hitlGeneration) {
+        lines.push(`    HITLGEN["👤 Answer review\\n${hitlSub}"]`);
+      }
       lines.push('    ANSWER[/"💬 Answer"/]');
 
       if (v.routing && stages.routing?.enabled) {
         lines.push('    ROUTER{"🔀 Route"}');
         lines.push(`    ${beforeGen} --> ROUTER`);
-        lines.push('    ROUTER --> GEN --> ANSWER');
+        if (v.hitlGeneration) {
+          lines.push('    ROUTER --> GEN --> HITLGEN --> ANSWER');
+        } else {
+          lines.push('    ROUTER --> GEN --> ANSWER');
+        }
+      } else if (v.hitlGeneration) {
+        lines.push(`    ${beforeGen} --> GEN --> HITLGEN --> ANSWER`);
       } else {
         lines.push(`    ${beforeGen} --> GEN --> ANSWER`);
       }
 
+      let tailAfterAnswer = 'ANSWER';
+      if (v.hitlFeedback) {
+        lines.push(`    HITLFB["📝 Feedback\\n${hitlSub}"]`);
+        lines.push('    ANSWER --> HITLFB');
+        tailAfterAnswer = 'HITLFB';
+      }
+
       if (v.evaluation && stages.evaluation?.enabled) {
         lines.push('    EVAL["📊 Evaluate"]');
-        lines.push('    ANSWER --> EVAL');
+        lines.push(`    ${tailAfterAnswer} --> EVAL`);
       }
     }
 
@@ -281,6 +329,9 @@ export function generatePipelineHighlights(
   }
   if (maxVisitedStageIndex >= 11) {
     lines.push(guardrailsHighlightBullet(guardrails));
+  }
+  if (maxVisitedStageIndex >= 12) {
+    lines.push(hitlHighlightBullet(stages.humanInTheLoop));
   }
 
   return lines;

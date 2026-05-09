@@ -394,8 +394,8 @@ export function PipelineVisualizer({
           </div>
         <p className="text-[11px] leading-snug text-muted-foreground">
           The drawing starts empty on Cloud Provider; each stage you move into adds the next blocks. Labels use
-          your draft values; optional stages (rerank, routing, memory, evaluation, guardrails) appear once you reach
-          those steps.
+          your draft values; optional stages (rerank, routing, memory, evaluation, guardrails, human-in-the-loop)
+          appear once you reach those steps.
         </p>
         </div>
 

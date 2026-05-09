@@ -14,6 +14,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AutopilotDesignerImportBanner } from '@/components/designer/autopilot-designer-import-banner';
 import { DesignerToAutopilotHandoff } from '@/components/designer/designer-to-autopilot-handoff';
+import { createDefaultHumanInTheLoopConfig } from '@/lib/default-pipeline';
+import { hitlHighlightBullet } from '@/lib/hitl-summary';
 import { guardrailPolicyMermaidSubtitle, resolveGuardrailsConfig } from '@/lib/guardrails-summary';
 import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
@@ -137,6 +139,7 @@ export function DesignerReviewPage({
   const stages = draft.stages;
   const di = stages.dataIngestion;
   const gr = resolveGuardrailsConfig(draft.guardrails);
+  const hitl = stages.humanInTheLoop ?? createDefaultHumanInTheLoopConfig();
 
   const showAutopilotBanner =
     autopilotImportSnapshot &&
@@ -301,6 +304,11 @@ export function DesignerReviewPage({
               .join(' · ') || 'All layers off'
           }
           sub={guardrailPolicyMermaidSubtitle(gr)}
+        />
+        <SummaryCard
+          title="Human in the loop"
+          value={hitl.enabled ? `${hitl.tier} tier` : 'Off'}
+          sub={hitl.enabled ? hitlHighlightBullet(hitl) : undefined}
         />
       </div>
 
