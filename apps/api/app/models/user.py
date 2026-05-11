@@ -40,6 +40,13 @@ class User(Base):
         nullable=False,
         server_default="user",
     )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        server_default="true",
+    )
+    profile_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     __table_args__ = (
         Index("ix_users_email_lower", "email"),

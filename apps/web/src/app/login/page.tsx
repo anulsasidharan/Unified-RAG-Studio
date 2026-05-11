@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 
 import { useAuthStore } from '@/stores/auth-store';
+import { ApiError, formatApiErrorForUi } from '@/lib/api-client';
 import { AuthBrandPanel } from '@/components/auth/AuthBrandPanel';
 
 export default function LoginPage() {
@@ -26,7 +27,7 @@ export default function LoginPage() {
       await login(email, password);
       router.replace('/projects');
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof ApiError ? formatApiErrorForUi(err) : err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

@@ -12,6 +12,10 @@ from app.models.evaluation_run import EvaluationRun
 from app.models.pipeline_config import PipelineConfig
 from app.models.project import Project
 from app.models.user import User
+from app.models.subscription_plan import SubscriptionPlan
+from app.models.user_subscription import UserSubscription
+from app.models.api_key import APIKey
+from app.models.activity_log import UserActivityLog
 
 __all__ = [
     "Base",
@@ -24,4 +28,8 @@ __all__ = [
     "Deployment",
     "EmailVerificationToken",
     "PasswordResetToken",
+    "SubscriptionPlan",
+    "UserSubscription",
+    "APIKey",
+    "UserActivityLog",
 ]

@@ -24,6 +24,84 @@ from app.observability.rag_metrics import observe_http_request
 logger = structlog.get_logger(__name__)
 _rate_limit_buckets: dict[str, list[float]] = {}
 
+# ─── Additive column migrations ───────────────────────────────────────────────
+# create_all only creates missing *tables*, not missing *columns* on existing
+# tables. This function safely adds new columns introduced in user-management
+# without requiring a full Alembic migration setup.
+
+_USER_COLUMN_MIGRATIONS = [
+    # (column_name, DDL fragment for ALTER TABLE)
+    ("is_active",          "is_active BOOLEAN NOT NULL DEFAULT true"),
+    ("profile_image_url",  "profile_image_url VARCHAR(500)"),
+    ("last_login",         "last_login TIMESTAMP"),
+]
+
+_NEW_TABLES = [
+    "subscription_plans",
+    "user_subscriptions",
+    "api_keys",
+    "user_activity_logs",
+]
+
+
+def _apply_column_migrations(conn):
+    """Synchronous helper: adds missing columns and tables on existing DBs."""
+    from sqlalchemy import text, inspect
+
+    dialect = conn.dialect.name  # "sqlite" or "postgresql"
+    insp = inspect(conn)
+
+    # ── 1. Add missing columns to the users table ─────────────────────────
+    existing_cols = {c["name"] for c in insp.get_columns("users")}
+    for col_name, col_ddl in _USER_COLUMN_MIGRATIONS:
+        if col_name not in existing_cols:
+            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_ddl}"))
+            logger.info("schema_migration", action="add_column", table="users", column=col_name)
+
+    # ── 2. New tables are handled by create_all above; nothing extra needed ─
+
+
+async def _seed_bootstrap_users(settings) -> None:
+    """Idempotently seed dev/test users from the AUTH_BOOTSTRAP_USERS env var.
+
+    Format: comma-separated ``email:password:role:uuid`` entries.
+    """
+    import uuid as uuid_lib
+    from sqlalchemy import select
+    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+    from sqlalchemy.orm import sessionmaker
+    from app.core.security.auth import hash_password
+    from app.models.user import User
+
+    engine = create_async_engine(settings.database_url, echo=False, poolclass=NullPool)
+    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
+    async with async_session() as session:
+        for entry in settings.auth_bootstrap_users.split(","):
+            parts = entry.strip().split(":")
+            if len(parts) < 3:
+                continue
+            email, password, role = parts[0], parts[1], parts[2]
+            user_id = uuid_lib.UUID(parts[3]) if len(parts) >= 4 else uuid_lib.uuid4()
+
+            existing = await session.scalar(select(User).where(User.email == email))
+            if existing:
+                continue
+
+            session.add(User(
+                id=user_id,
+                email=email,
+                password_hash=hash_password(password),
+                name=email.split("@")[0].capitalize(),
+                role=role,
+                email_verified=True,
+                is_active=True,
+            ))
+            logger.info("bootstrap_user_seeded", email=email, role=role)
+
+        await session.commit()
+    await engine.dispose()
+
 
 @dataclass(frozen=True)
 class _RateLimitResult:
@@ -67,7 +145,13 @@ async def lifespan(app: FastAPI):
         )
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+            # Apply any additive column migrations for existing tables.
+            await conn.run_sync(_apply_column_migrations)
         await engine.dispose()
+
+        # Seed bootstrap users (idempotent — skips existing emails).
+        if settings.auth_bootstrap_users:
+            await _seed_bootstrap_users(settings)
 
     yield  # Application runs here
 
@@ -254,10 +338,18 @@ def create_app() -> FastAPI:
     from app.routers.projects import router as projects_router
     from app.routers.templates import router as templates_router
     from app.routers.utilities import router as utilities_router
+    from app.routers.users import router as users_router
+    from app.routers.api_keys import router as api_keys_router
+    from app.routers.subscriptions import router as subscriptions_router
+    from app.routers.admin import router as admin_router
 
     app.include_router(monitoring_router)
     app.include_router(health_router)
     app.include_router(auth_router)
+    app.include_router(users_router)
+    app.include_router(api_keys_router)
+    app.include_router(subscriptions_router)
+    app.include_router(admin_router)
     app.include_router(utilities_router)
     app.include_router(jobs_router)
     app.include_router(analytics_router)

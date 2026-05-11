@@ -9,6 +9,8 @@ import {
   FolderKanban,
   PencilLine,
   Trash2,
+  UserCircle,
+  ShieldCheck,
 } from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
@@ -184,10 +186,23 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
                 <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
                   {profile.email}
                 </span>
-                <span className="text-[11px] text-neutral-500 dark:text-neutral-400">
-                  {profile.subscriptionTier}
-                </span>
               </div>
+              <Link
+                href={ROUTES.profile}
+                title="Your profile"
+                className="rounded-md border border-neutral-200 bg-white p-1.5 text-neutral-500 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                <UserCircle className="h-4 w-4" />
+              </Link>
+              {profile.role === 'admin' ? (
+                <Link
+                  href={ROUTES.adminUsers}
+                  title="Admin panel"
+                  className="rounded-md border border-rose-200 bg-rose-50 p-1.5 text-rose-600 hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950/30 dark:text-rose-400"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                </Link>
+              ) : null}
               <button
                 type="button"
                 className="rounded-md border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"

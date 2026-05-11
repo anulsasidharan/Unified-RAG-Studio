@@ -144,26 +144,42 @@ async def login(
     if not verify_password(body.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated")
+
     _require_verified_login(user)
 
+    # Snapshot all attributes before commit — session.commit() expires ORM
+    # objects in async mode, making attribute access trigger a lazy load which
+    # raises MissingGreenlet in an async context.
+    user_id = user.id
+    user_email = user.email
+    user_role = user.role
+    user_name = user.name
+    user_tier = user.subscription_tier
+    user_verified = user.email_verified
+
+    user.last_login = datetime.now(UTC)
+    await session.commit()
+
     principal = AuthPrincipal(
-        user_id=user.id,
-        email=user.email,
-        role=user.role,
-        name=user.name,
-        subscription_tier=user.subscription_tier,
-        email_verified=user.email_verified,
+        user_id=user_id,
+        email=user_email,
+        role=user_role,
+        name=user_name,
+        subscription_tier=user_tier,
+        email_verified=user_verified,
     )
     token = create_access_token(settings=settings, subject=principal)
     return LoginResponse(
         access_token=token,
         expires_in_seconds=settings.auth_access_token_ttl_minutes * 60,
-        user_id=str(user.id),
-        role=user.role,
-        email=user.email,
-        name=user.name,
-        subscription_tier=user.subscription_tier,
-        email_verified=user.email_verified,
+        user_id=str(user_id),
+        role=user_role,
+        email=user_email,
+        name=user_name,
+        subscription_tier=user_tier,
+        email_verified=user_verified,
     )
 
 

@@ -132,7 +132,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (e) {
       // If the token is invalid/expired, clear it and treat as logged out.
       writeToken(null);
-      set({ profile: null, isAuthenticated: false });
+      set({ profile: null, isAuthenticated: false, accessToken: null });
       set({ lastError: e instanceof Error ? e.message : String(e) });
     } finally {
       set({ isLoadingProfile: false });
