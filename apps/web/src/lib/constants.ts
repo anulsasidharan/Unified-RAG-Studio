@@ -66,4 +66,9 @@ export const ROUTES = {
   projects: '/projects',
   /** Usage & cost snapshot (Phase 11). */
   analytics: '/analytics',
+  profile: '/profile',
+  admin: '/admin/users',
+  adminUsers: '/admin/users',
+  adminAnalytics: '/admin/analytics',
+  adminPlans: '/admin/plans',
 } as const;

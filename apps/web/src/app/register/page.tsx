@@ -8,6 +8,7 @@ import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 import { useAuthStore } from '@/stores/auth-store';
 import type { RegisterResponse } from '@/types/auth';
+import { ApiError, formatApiErrorForUi } from '@/lib/api-client';
 import { AuthBrandPanel } from '@/components/auth/AuthBrandPanel';
 
 export default function RegisterPage() {
@@ -29,7 +30,7 @@ export default function RegisterPage() {
       const res = await register({ email, password, name });
       setResult(res);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(err instanceof ApiError ? formatApiErrorForUi(err) : err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }

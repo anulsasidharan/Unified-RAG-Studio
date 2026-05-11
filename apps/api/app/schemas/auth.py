@@ -1,11 +1,23 @@
 """Authentication schemas."""
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field, field_validator
+
+
+def _validate_email(v: str) -> str:
+    v = v.strip().lower()
+    if "@" not in v or len(v) < 3:
+        raise ValueError("Enter a valid email address")
+    return v
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=6, max_length=256)
+
+    @field_validator("email")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return _validate_email(v)
 
 
 class LoginResponse(BaseModel):
@@ -22,9 +34,14 @@ class LoginResponse(BaseModel):
 
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=6, max_length=256)
     name: str = Field(min_length=1, max_length=255)
+
+    @field_validator("email")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return _validate_email(v)
 
 
 class RegisterResponse(BaseModel):
@@ -48,7 +65,12 @@ class VerifyEmailResponse(BaseModel):
 
 
 class PasswordResetRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=254)
+
+    @field_validator("email")
+    @classmethod
+    def normalise_email(cls, v: str) -> str:
+        return _validate_email(v)
 
 
 class PasswordResetConfirmRequest(BaseModel):
