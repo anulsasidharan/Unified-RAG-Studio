@@ -192,3 +192,7 @@ mlruns/
 # ------------------------------------------------------------
 k8s/production/secret.yaml
 k8s/production/*.local.yaml
+
+prompt_history/
+docs/
+TASKS.md
