@@ -29,6 +29,8 @@ from app.schemas.admin import (
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
+_ALLOWED_USER_ROLES = frozenset({"admin", "user"})
+
 
 def _user_to_admin_response(u: User) -> AdminUserResponse:
     return AdminUserResponse(
@@ -101,6 +103,12 @@ async def create_user(
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
+    if body.role not in _ALLOWED_USER_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid role; allowed values are admin and user.",
+        )
+
     user = User(
         email=email,
         password_hash=hash_password(body.password),
@@ -135,6 +143,11 @@ async def update_user(
     if body.name is not None:
         user.name = body.name
     if body.role is not None:
+        if body.role not in _ALLOWED_USER_ROLES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid role; allowed values are admin and user.",
+            )
         user.role = body.role
     if body.subscription_tier is not None:
         user.subscription_tier = body.subscription_tier

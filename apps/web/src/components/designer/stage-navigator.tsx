@@ -13,27 +13,32 @@ import { getVectorStoreMeta } from '@/lib/vector-stores-catalog';
 import { hitlNavigatorHint } from '@/lib/hitl-summary';
 import { guardrailsNavigatorHint } from '@/lib/guardrails-summary';
 import { useDesignerStore } from '@/stores/designer-store';
+import { getEnabledIngestionSourceTypes } from '@/lib/data-ingestion-sources';
 import type {
   ChunkingStrategy,
   ContextCompressionConfig,
   DataIngestionConfig,
+  DataIngestionSourceType,
   ObservabilityConfig,
   QueryProcessingConfig,
   RetrievalStrategy,
 } from '@/types/pipeline';
 
-function ingestionSourceHint(source?: DataIngestionConfig['sourceType']): string {
-  if (!source) return '';
-  const labels: Record<DataIngestionConfig['sourceType'], string> = {
-    'file-upload': 'Upload',
-    s3: 'S3',
-    gcs: 'GCS',
-    'azure-blob': 'Azure Blob',
-    url: 'URL',
-    database: 'Database',
-    api: 'API',
-  };
-  return labels[source];
+const INGESTION_SHORT: Record<DataIngestionSourceType, string> = {
+  'file-upload': 'Upload',
+  s3: 'S3',
+  gcs: 'GCS',
+  'azure-blob': 'Azure Blob',
+  url: 'URL',
+  database: 'Database',
+  api: 'API',
+};
+
+function ingestionSourceHint(cfg?: DataIngestionConfig): string {
+  if (!cfg) return '';
+  const enabled = getEnabledIngestionSourceTypes(cfg);
+  if (!enabled.length) return '';
+  return enabled.map((id) => INGESTION_SHORT[id]).join(' + ');
 }
 
 function chunkingHint(strategy?: ChunkingStrategy, chunkSize?: number, overlap?: number): string {
@@ -236,7 +241,7 @@ export function StageNavigator() {
                     </span>
                   ) : stage.id === 'ingestion' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {ingestionSourceHint(draft.stages.dataIngestion?.sourceType)}
+                      {ingestionSourceHint(draft.stages.dataIngestion)}
                     </span>
                   ) : stage.id === 'chunking' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">

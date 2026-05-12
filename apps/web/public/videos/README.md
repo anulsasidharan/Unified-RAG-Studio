@@ -2,8 +2,8 @@
 
 | File | Role |
 |------|------|
-| `product-tour-main.mp4` | **Pipeline Premiere** tab — full product tour (target ~2:50–3:00, 1920×1080, H.264). Currently a test-pattern placeholder; replace with final screen recording. |
-| `product-tour-teaser.mp4` | **Lightning Look** tab — 30 s social cut. Replace placeholder with final recording. |
+| `product-tour-main.mp4` | **Pipeline Premiere** — full tour (~3:10, 1920×1080, H.264 + AAC). Regenerate with `npm run record:product-tour` (Playwright records `product-tour-demo.html` + TTS). For marketing, you can still swap in a live OBS screen capture at the same paths. |
+| `product-tour-teaser.mp4` | First **30 s** excerpt of the main file (same pipeline). |
 | `product-tour-chapters.vtt` | WebVTT `chapters` track for the full tour. Re-time after replacing the main MP4. |
 | `product-tour-captions.vtt` | WebVTT `captions` track — full voiceover transcript, accessible subtitles. |
 | `hero-demo-poster.svg` | Poster image shown before playback (branded dark theme, stage rail preview, play button). |

@@ -11,14 +11,14 @@
 
 | Mode | Description |
 |------|-------------|
-| **Designer** | Guided visual workflow across cloud choice, ingestion, chunking, embeddings, vector store, retrieval, reranking, generation, routing, memory, evaluation, guardrails, and review — with live cost estimates and artifact export. |
+| **Designer** | Guided visual workflow across cloud choice, ingestion, chunking, embeddings, vector store, query processing, retrieval, context compression, reranking, generation, routing, memory, evaluation, observability and tools, guardrails, human-in-the-loop, and review — with live cost estimates and artifact export. |
 | **Autopilot** | Document-driven flow that runs optimisation passes (chunking, embeddings, retrieval, RAGAS-style evaluation, etc.) with Celery-backed jobs and optional MLflow tracking. |
 
 ---
 
 ## Features
 
-- **Designer pipeline**: 13 configurable stages from cloud/provider through guardrails and review (`DESIGNER_STAGES` in `apps/web/src/lib/constants.ts`).
+- **Designer pipeline**: 17 configurable stages from cloud/provider through observability, guardrails, human-in-the-loop, and review (`DESIGNER_STAGES` in `apps/web/src/lib/constants.ts`).
 - **API surface**: Authentication, projects, templates, designer CRUD/sync, autopilot builds, evaluation, deployment hints, utilities (incl. cost), jobs, analytics, health, and Prometheus-oriented monitoring routes (`apps/api/app/main.py`).
 - **Guardrails**: Configurable input/output policies (PII, toxicity, bias patterns, hallucination/factuality checks) wired through the orchestration layer (`apps/api/app/core/guardrails/`).
 - **Export**: Python (LangChain-style), YAML, Terraform (HCL), Docker Compose, and Kubernetes YAML via `/api/designer/export` (`apps/web/src/components/designer/code-exporter.tsx`).

@@ -36,7 +36,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;font-family:'Inter',system-
 .main-layout{display:flex;flex:1;overflow:hidden}
 
 /* ── Sidebar / stage rail ─────────────────────────────────── */
-.sidebar{width:240px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar{width:240px;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;max-height:100%}
 .sidebar-section{padding:16px 12px 8px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)}
 .stage-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;margin:2px 6px;cursor:pointer;transition:all .2s}
 .stage-item:hover{background:var(--brand-light)}
@@ -188,7 +188,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;font-family:'Inter',system-
   <div class="brand-name-lg">Unified RAG Studio</div>
   <div class="brand-tagline">From cloud to guardrails — one guided pipeline.</div>
   <div class="montage-strip" id="montageStrip">
-    <div class="montage-chip">13 Designer Stages</div>
+    <div class="montage-chip">17 Designer Stages</div>
     <div class="montage-chip">Autopilot Mode</div>
     <div class="montage-chip">Guardrails</div>
     <div class="montage-chip">Multi-format Export</div>
@@ -208,9 +208,9 @@ html,body{width:1920px;height:1080px;overflow:hidden;font-family:'Inter',system-
       <div class="mode-card" id="mc1">
         <div class="mode-icon designer">🎛️</div>
         <div class="mode-name">Designer</div>
-        <div class="mode-desc">Explicit control over every decision. Walk thirteen guided stages — cloud, ingestion, chunking, embeddings, vector store, retrieval, rerank, generation, routing, memory, evaluation, guardrails, review.</div>
+        <div class="mode-desc">Explicit control over every decision. Walk seventeen guided stages — cloud through vector store, query processing and retrieval, context compression and reranking, generation and routing, memory and evaluation, observability and tools, guardrails, human-in-the-loop, and review.</div>
         <div class="mode-pill-list">
-          <div class="mode-pill highlight">13 guided stages</div>
+          <div class="mode-pill highlight">17 guided stages</div>
           <div class="mode-pill highlight">Live validation</div>
           <div class="mode-pill">Cost signals</div>
           <div class="mode-pill">Full config control</div>
@@ -256,7 +256,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;font-family:'Inter',system-
     </div>
   </div>
   <!-- Callouts -->
-  <div class="callout" id="co1" style="top:140px;right:340px">13 Guided Stages</div>
+  <div class="callout" id="co1" style="top:140px;right:340px">17 Guided Stages</div>
   <div class="callout" id="co2" style="top:140px;right:160px">Live Cost Signals</div>
   <div class="callout" id="co3" style="bottom:100px;right:200px">Validation as You Go</div>
 </div>
@@ -397,7 +397,7 @@ html,body{width:1920px;height:1080px;overflow:hidden;font-family:'Inter',system-
 <div class="scene" id="s8">
   <canvas class="star-field" id="starCanvas8"></canvas>
   <div class="cta-title">Ready to ship your RAG?</div>
-  <div class="cta-sub">Open Unified RAG Studio — walk the thirteen stages or let Autopilot draft your first config.</div>
+  <div class="cta-sub">Seventeen stages. One studio. Export-ready — or let Autopilot draft your first-pass config.</div>
   <div class="cta-btns">
     <button class="cta-btn-primary">Start Building Free</button>
     <button class="cta-btn-outline">Book a Walkthrough</button>
@@ -409,7 +409,8 @@ html,body{width:1920px;height:1080px;overflow:hidden;font-family:'Inter',system-
 // ── Data ────────────────────────────────────────────────────
 const STAGES = [
   'Cloud Provider','Data Ingestion','Chunking','Embedding','Vector Store',
-  'Retrieval','Reranking','Generation','Routing','Memory','Evaluation','Guardrails','Review'
+  'Query processing','Retrieval','Context compression','Reranking','Generation','Routing',
+  'Memory','Evaluation','Observability & tools','Guardrails','Human in the Loop','Review'
 ];
 
 const AUTOPILOT_STAGES = [
@@ -436,12 +437,12 @@ const EXPORT_FORMATS = [
 const CAPTIONS = [
   {t:0,   text:`Retrieval-augmented generation shouldn't mean stitching a dozen tools by hand.`},
   {t:4,   text:`<em>Unified RAG Studio</em> — a single workspace for building production-ready RAG systems.`},
-  {t:9,   text:`Walk <em>thirteen</em> guided stages in the Designer, or start from your documents in <em>Autopilot</em>.`},
+  {t:9,   text:`Walk <em>seventeen</em> guided stages in the Designer, or start from your documents in <em>Autopilot</em>.`},
   {t:18,  text:`Two front doors, same truth under the hood.`},
   {t:22,  text:`<em>Designer</em> gives you explicit control over every stage of the pipeline.`},
   {t:28,  text:`<em>Autopilot</em> proposes a strong baseline from your real documents.`},
   {t:38,  text:`You're not hunting for the next file to edit — the <em>stage rail</em> is the contract.`},
-  {t:50,  text:`Configure cloud and ingestion, shape how documents become chunks, pick embeddings and the vector store.`},
+  {t:50,  text:`Configure cloud and ingestion, shape chunks, pick embeddings and the vector store, optionally tune <em>query processing</em>, then tighten retrieval.`},
   {t:62,  text:`The UI and cost estimates update so you catch bad pairings <em>before</em> you export.`},
   {t:75,  text:`Production RAG isn't only accuracy — it's <em>what you allow through</em>.`},
   {t:82,  text:`Guardrails let you set <em>input and output policies</em> so safety rides with the orchestration layer.`},
@@ -456,7 +457,7 @@ const CAPTIONS = [
   {t:154, text:`<em>Python, YAML, Terraform, Compose, Kubernetes</em> — wire into deployment without rewriting anything.`},
   {t:162, text:`Operational signals live where you <em>already</em> run the stack.`},
   {t:165, text:`If you're done duct-taping RAG pipelines — open <em>Unified RAG Studio</em>.`},
-  {t:172, text:`Walk the thirteen stages — or let Autopilot draft your first-pass config.`},
+  {t:172, text:`Walk the seventeen stages — or let Autopilot draft your first-pass config.`},
   {t:178, text:`<em>Start free</em> or book a walkthrough — we'll meet you where you ship.`},
 ];
 
@@ -556,7 +557,19 @@ const DESIGNER_PANELS = {
           <div class="field"><label>Namespace</label><input value="v2-prod"/></div>
         </div>
       </div>`,
-  5: `<div class="page-header"><div class="page-title">Retrieval Strategy</div><div class="page-sub">Configure how relevant chunks are fetched at query time.</div></div>
+  5: `<div class="page-header"><div class="page-title">Query processing</div><div class="page-sub">Optional transforms before retrieval (hygiene, expansion, routing hints).</div></div>
+      <div class="card"><div class="card-title">🔀 Query transforms</div>
+        <div class="field-row">
+          <div class="field"><label>Hyde expansion</label><select class="focused"><option>Off</option><option>On (recommended for sparse corpora)</option></select></div>
+          <div class="field"><label>Query rewrite</label><select><option>LLM rewrite</option><option>None</option></select></div>
+        </div>
+        <div class="field-row">
+          <div class="field"><label>Step-through transforms</label><select><option>Single pass</option><option>Two-pass (retrieve + refine)</option></select></div>
+          <div class="field"><label>Max transform latency</label><input class="focused" value="400 ms"/></div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:8px"><span class="valid-badge">✓ Compatible with hybrid retrieval</span></div>
+      </div>`,
+  6: `<div class="page-header"><div class="page-title">Retrieval Strategy</div><div class="page-sub">Configure how relevant chunks are fetched at query time.</div></div>
       <div class="card"><div class="card-title">🔍 Retrieval Configuration</div>
         <div class="field-row">
           <div class="field"><label>Strategy</label><select class="focused"><option>Hybrid (Dense + BM25)</option><option>Dense Only</option><option>Sparse Only</option></select></div>
@@ -665,7 +678,7 @@ function buildMetrics(){
 let selExport=0;
 const CODE_LINES = [
   ['comment','# LangChain RAG pipeline — generated by Unified RAG Studio'],
-  ['comment','# Export: Python · 2026-05-06'],
+  ['comment','# Export: Python · 2026-05-11'],
   ['',''],
   ['keyword','from ','func','langchain','keyword',' import ','string','RAGPipeline, HybridRetriever'],
   ['keyword','from ','func','langchain.embeddings','keyword',' import ','string','OpenAIEmbeddings'],
@@ -737,7 +750,8 @@ function onSceneEnter(n){
   }
   if(n===2){ // Designer
     buildRail('stageRail',0);
-    let sp=0; const order=[0,1,2,3,4,5];
+    let sp=0; const order=[0,1,2,3,4,5,6];
+    const stepMs=5280;
     const stepDesigner=()=>{
       if(sp>=order.length) return;
       const si=order[sp++];
@@ -750,17 +764,17 @@ function onSceneEnter(n){
       }
       // Callouts
       if(si===0) setTimeout(()=>{$('co1')&&$('co1').classList.add('show')},400);
-      if(si===2) setTimeout(()=>{$('co2')&&$('co2').classList.add('show')},400);
-      if(si===5) setTimeout(()=>{$('co3')&&$('co3').classList.add('show')},400);
+      if(si===3) setTimeout(()=>{$('co2')&&$('co2').classList.add('show')},400);
+      if(si===6) setTimeout(()=>{$('co3')&&$('co3').classList.add('show')},400);
     };
     stepDesigner();
     const dInterval=setInterval(()=>{
       stepDesigner();
       if(sp>=order.length) clearInterval(dInterval);
-    },6000);
+    },stepMs);
   }
   if(n===3){ // Guardrails
-    buildRail('guardrailsRail',11);
+    buildRail('guardrailsRail',14);
     buildGuardrails();
     setTimeout(()=>{$('co4')&&$('co4').classList.add('show')},1000);
     setTimeout(()=>{$('co5')&&$('co5').classList.add('show')},4000);
@@ -773,7 +787,7 @@ function onSceneEnter(n){
     apInterval=setInterval(advanceAp,3200);
   }
   if(n===5){ // Eval
-    buildRail('evalRail',10);
+    buildRail('evalRail',12);
     buildEvalResults();
     setTimeout(buildMetrics,2500);
   }

@@ -1,6 +1,6 @@
 # Unified RAG Studio — Product tour video (production pack)
 
-This pack is aligned with the current product and [`README.md`](../../README.md): **13 Designer stages** (`DESIGNER_STAGES` in `apps/web/src/lib/constants.ts`), Autopilot with Celery jobs and optional MLflow, guardrails, multi-format export, and optional Prometheus/Grafana.
+This pack is aligned with the current product and [`README.md`](../../README.md): **17 Designer stages** (`DESIGNER_STAGES` in `apps/web/src/lib/constants.ts`), Autopilot with Celery jobs and optional MLflow, guardrails, human-in-the-loop, multi-format export, and optional Prometheus/Grafana.
 
 **Deliverable format:** screen-capture demo (not slide deck), 1920×1080, H.264, AAC 192 kbps, 30 or 60 fps (prefer **60** for cursor legibility), voiceover + bed music ducked under VO.
 
@@ -13,18 +13,20 @@ This pack is aligned with the current product and [`README.md`](../../README.md)
 | Topic | What to show | Source of truth |
 |--------|----------------|-----------------|
 | Designer | Stage navigator + forms per route | `/designer` … `/designer/review` |
-| Stage count | Say **13 configurable stages** (or “thirteen guided stages”) | `DESIGNER_STAGES` |
+| Stage count | Say **17 configurable stages** (or “seventeen guided stages”) | `DESIGNER_STAGES` |
 | Autopilot | Upload → job progress → open in Designer if applicable | `/autopilot`, `/autopilot/new` |
 | Guardrails | Policies UI (PII, toxicity, etc.) | `/designer/guardrails` |
+| Human in the loop | Review gates, placement, escalation | `/designer/hitl` |
 | Export | LangChain-style Python, YAML, Terraform, Compose, K8s | Code exporter in Designer / API |
-| Cost | Live cost estimate where the UI exposes it | Designer cost components |
+| Cost | Live cost estimate where the UI exposes it | Designer cost components (Review + cost strip) |
 | Ops (optional) | Analytics route; observability as “optional stack” only if you film it | `/analytics`; Compose overlay |
+| Observability & tools | Tracing toggles, agent-tool flags, adaptive policy hints (export-aligned) | `/designer/observability` |
 
 Do **not** claim metrics (e.g. “70% faster”, “1000+ deployments”) unless marketing has substantiation. Prefer capability language.
 
 ---
 
-## 2. The thirteen Designer stages (on-screen reference)
+## 2. The seventeen Designer stages (on-screen reference)
 
 Use this order in VO or lower-third when summarizing “the full pipeline”:
 
@@ -33,16 +35,20 @@ Use this order in VO or lower-third when summarizing “the full pipeline”:
 3. **Chunking** — `/designer/chunking`
 4. **Embedding** — `/designer/embedding`
 5. **Vector Store** — `/designer/vectorstore`
-6. **Retrieval** — `/designer/retrieval`
-7. **Reranking** — `/designer/reranking`
-8. **Generation** — `/designer/generation`
-9. **Routing** — `/designer/routing`
-10. **Memory** — `/designer/memory`
-11. **Evaluation** — `/designer/evaluation`
-12. **Guardrails** — `/designer/guardrails`
-13. **Review** — `/designer/review`
+6. **Query processing** — `/designer/query-transform` (optional transforms before retrieval)
+7. **Retrieval** — `/designer/retrieval`
+8. **Context compression** — `/designer/context-compression` (post-retrieval shaping before rerank)
+9. **Reranking** — `/designer/reranking`
+10. **Generation** — `/designer/generation` (includes prompt engineering: persona, few-shot, citation grounding)
+11. **Routing** — `/designer/routing`
+12. **Memory** — `/designer/memory`
+13. **Evaluation** — `/designer/evaluation`
+14. **Observability & tools** — `/designer/observability` (tracing flags, agent tools, adaptive policies for export)
+15. **Guardrails** — `/designer/guardrails`
+16. **Human in the Loop** — `/designer/hitl`
+17. **Review** — `/designer/review`
 
-**Filming tip:** In a 2–3 minute cut, **visit ~5–7 stages** with real clicks; use a **single lower-third** or end card listing all 13 so the breadth is clear without exhausting the viewer.
+**Filming tip:** In a 2–3 minute cut, **visit ~6–8 stages** with real clicks; use a **single lower-third** or end card listing all 17 so the breadth is clear without exhausting the viewer.
 
 Autopilot workflow labels (for B-roll / progress UI): Analyzing Documents → Optimizing Chunking → Testing Embeddings → Creating Vector Index → Optimizing Retrieval → Evaluating Pipeline → Deploying System (`AUTOPILOT_STAGES` in the same constants file).
 
@@ -53,24 +59,24 @@ Autopilot workflow labels (for B-roll / progress UI): Analyzing Documents → Op
 ### Scene 1 — Hook (0:00–0:18)
 
 - **Visual:** Fade in logo/title; **3–4 quick cuts** of real UI: stage rail, ingestion, embedding picker, guardrails panel, export modal. Text overlay (one line): **“From cloud to guardrails—one guided pipeline.”**
-- **VO:** *“Retrieval-augmented generation shouldn’t mean stitching a dozen tools by hand. **Unified RAG Studio** is a single workspace: walk **thirteen** guided stages in the Designer, or start from your documents in **Autopilot**—then evaluate, harden, and export what you actually ship.”*
+- **VO:** *“Retrieval-augmented generation shouldn’t mean stitching a dozen tools by hand. **Unified RAG Studio** is a single workspace: walk **seventeen** guided stages in the Designer, or start from your documents in **Autopilot**—then evaluate, harden, and export what you actually ship.”*
 
 ### Scene 2 — Modes at a glance (0:18–0:38)
 
 - **Visual:** Home or app shell; cursor moves through **Designer** vs **Autopilot** entry; optional glimpse of **Templates** and **Projects**.
-- **VO:** *“Two front doors, same truth under the hood. **Designer** is for explicit control—cloud, ingestion, chunking, embeddings, store, retrieval, rerank, generation, routing, memory, evaluation, **guardrails**, and a final **review**. **Autopilot** is for running optimisation passes over your corpus when you want the system to propose a strong baseline.”*
+- **VO:** *“Two front doors, same truth under the hood. **Designer** is for explicit control—cloud through vector store, **query processing** and **retrieval**, optional **context compression** and **reranking**, **generation** and **routing**, **memory** and **evaluation**, **observability and tool hints**, **guardrails**, **human-in-the-loop**, and a final **review**. **Autopilot** is for running optimisation passes over your corpus when you want the system to propose a strong baseline.”*
 
 ### Scene 3 — Designer: breadth + depth (0:38–1:15)
 
-- **Visual:** Enter Designer; show **stage navigator** (`aria-label` area). Click through a **credible path** (example): **Cloud Provider** → **Data Ingestion** (set source) → **Chunking** (strategy + size) → **Embedding** (model) → **Vector Store** → **Retrieval** (strategy / top-k). Pause on **live validation** and **cost** if visible. Jump-cut once to **Reranking** or **Generation** to show later-stage polish. **Do not** simulate node-graph drag unless the UI is graph-based (this product is **stage-guided**).
-- **Callouts (on-screen, short):** *13 guided stages* · *Live cost signals* · *Validation as you go*
-- **VO:** *“You’re not hunting for the next file to edit—the **stage rail** is the contract. Configure cloud and ingestion, shape how documents become chunks, pick embeddings and the vector store, then tighten retrieval. As you move forward, the UI and estimates update so you catch bad pairings **before** you export.”*
+- **Visual:** Enter Designer; show **stage navigator** (`aria-label` area). Click through a **credible path** (example): **Cloud Provider** → **Data Ingestion** (set source) → **Chunking** (strategy + size; catalog includes strategies such as **token-aware** where listed) → **Embedding** (model, optional cache/version fields) → **Vector Store** → **Query processing** (toggle one transform) → **Retrieval** (strategy / top-k / MMR or hybrid where shown). Optionally one cut to **Context compression** or **Generation** (prompt engineering block). Pause on **live validation** and **cost** if visible. **Do not** simulate node-graph drag unless the UI is graph-based (this product is **stage-guided**).
+- **Callouts (on-screen, short):** *17 guided stages* · *Live cost signals* · *Validation as you go*
+- **VO:** *“You’re not hunting for the next file to edit—the **stage rail** is the contract. Configure ingestion and chunking, pick embeddings and the vector store, optionally shape the query before retrieval, then tighten retrieval and downstream steps. As you move forward, the UI and estimates update so you catch bad pairings **before** you export.”*
 
 ### Scene 4 — Guardrails & responsibility (1:15–1:38)
 
-- **Visual:** Navigate to **`/designer/guardrails`**. Show policy categories (align with README: PII, toxicity, bias patterns, hallucination/factuality). Toggle or expand one panel; avoid showing real harmful content—use neutral demo labels.
-- **Callouts:** *Configurable policies* · *Input/output path*
-- **VO:** *“Production RAG isn’t only accuracy—it’s **what you allow through**. Guardrails let you set **input and output** policies so safety and quality checks ride with the orchestration layer, not as an afterthought.”*
+- **Visual:** Navigate to **`/designer/guardrails`**. Show policy categories (align with README: PII, toxicity, bias patterns, hallucination/factuality). Toggle or expand one panel; avoid showing real harmful content—use neutral demo labels. Optionally a quick cut to **`/designer/hitl`** to show human review as a separate stage from guardrails.
+- **Callouts:** *Configurable policies* · *Input/output path* · *Optional HITL*
+- **VO:** *“Production RAG isn’t only accuracy—it’s **what you allow through**. Guardrails let you set **input and output** policies so safety and quality checks ride with the orchestration layer. When you need explicit human gates, **Human in the Loop** is its own stage—placement and escalation live next to the rest of the pipeline config.”*
 
 ### Scene 5 — Autopilot (1:38–2:05)
 
@@ -80,27 +86,27 @@ Autopilot workflow labels (for B-roll / progress UI): Analyzing Documents → Op
 
 ### Scene 6 — Try it against your corpus (2:05–2:28)
 
-- **Visual:** Evaluation or playground: run a sample query (**e.g.** “How do I reset my password?”). Show **retrieved chunks**, **scores**, **latency**. Adjust **top-k** or chunk settings; **re-run** to show delta.
+- **Visual:** Evaluation or playground: run a sample query (**e.g.** “How do I reset my password?”). Show **retrieved chunks**, **scores**, **latency**. Adjust **top-k** or chunk settings; **re-run** to show delta. If you show RAG preview, note honestly that preview may use **caller-supplied context** depending on the endpoint—do not imply full vector E2E unless you film that path.
 - **VO:** *“Before you freeze the config, you want receipts: what retrieved, with what scores, how fast. Tweak retrieval or chunking, rerun, and decide with data—not vibes.”*
 
 ### Scene 7 — Export & ops (2:28–2:45)
 
-- **Visual:** Open **export**: Python (LangChain-style), YAML, Terraform, Docker Compose, Kubernetes—show **real** filenames/preview pane. Optionally **analytics** (`/analytics`) or a single chart; if using Grafana/Prometheus overlay, caption **“Observability (optional Compose overlay)”**.
-- **VO:** *“When the pipeline is grounded, export the artifacts your team expects—**Python, YAML, Terraform, Compose, Kubernetes**—and wire into deployment. Operational signals live where you already run the stack.”*
+- **Visual:** Open **export**: Python (LangChain-style), YAML, Terraform, Docker Compose, Kubernetes—show **real** filenames/preview pane. Optionally **`/designer/observability`** to show flags that serialize into exports, then **`/analytics`** or a single chart; if using Grafana/Prometheus overlay, caption **“Observability (optional Compose overlay)”**.
+- **VO:** *“When the pipeline is grounded, export the artifacts your team expects—**Python, YAML, Terraform, Compose, Kubernetes**—and wire into deployment. Tracing and tool hints you set in Designer show up for operators; live metrics live where you already run the stack.”*
 
 ### Scene 8 — CTA (2:45–3:00)
 
 - **Visual:** Hero with **Start building** / **Book a demo**; subtle loop of UI or pipeline diagram.
-- **Overlay:** **Unified RAG Studio** · **Thirteen stages. One studio. Export-ready.**
-- **VO:** *“If you’re done duct-taping RAG pipelines, open **Unified RAG Studio**, walk the thirteen stages—or let Autopilot draft your first-pass config. Start free or book a walkthrough—we’ll meet you where you ship.”*
+- **Overlay:** **Unified RAG Studio** · **Seventeen stages. One studio. Export-ready.**
+- **VO:** *“If you’re done duct-taping RAG pipelines, open **Unified RAG Studio**, walk the seventeen stages—or let Autopilot draft your first-pass config. Start free or book a walkthrough—we’ll meet you where you ship.”*
 
 ---
 
 ## 4. Chapter markers
 
-Use [`video/product-tour-chapters.vtt`](video/product-tour-chapters.vtt) with `<track kind="chapters">` or your player’s chapter UI.
+Use [`video/product-tour-chapters.vtt`](video/product-tour-chapters.vtt) with `<track kind="chapters">` or your player’s chapter UI. **Update chapter cue titles** in that file if they still say “thirteen” (e.g. Designer chapter → “seventeen guided stages”).
 
-Suggested labels: Intro · Modes · Designer (13 stages) · Guardrails · Autopilot · Evaluate · Export · CTA.
+Suggested labels: Intro · Modes · Designer (17 stages) · Guardrails & HITL · Autopilot · Evaluate · Export · CTA.
 
 ---
 
@@ -124,7 +130,7 @@ Suggested labels: Intro · Modes · Designer (13 stages) · Guardrails · Autopi
 | Asset | Length | Focus |
 |--------|--------|--------|
 | Social teaser | 0:30 | Hook + 3 stage clicks + Autopilot progress + CTA — script: [`video/TEASER_30S_VOICEOVER.md`](video/TEASER_30S_VOICEOVER.md) |
-| “13 stages in 90s” | 1:30 | Accelerated navigator pass + one export click |
+| “17 stages in 90s” | 1:30 | Accelerated navigator pass + one export click |
 | Guardrails clip | 0:45 | Scene 4 only |
 | Autopilot clip | 1:00 | Scene 5 only |
 
@@ -138,4 +144,4 @@ Produce the MP4 with **OBS Studio**, **ScreenFlow**, **Camtasia**, or **DaVinci 
 
 ---
 
-*Last aligned with README and `DESIGNER_STAGES` (13 stages) as of the doc author’s pass on this branch.*
+*Last aligned with `DESIGNER_STAGES` (17 stages), Designer routes under `apps/web/src/app/designer/[[...step]]/`, and related UI as of this doc update.*

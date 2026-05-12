@@ -94,15 +94,26 @@ export interface HybridSearchConfig {
 
 // ─── Stage Configurations ────────────────────────────────────────────────────
 
+export type DataIngestionSourceType =
+  | 'file-upload'
+  | 's3'
+  | 'gcs'
+  | 'azure-blob'
+  | 'url'
+  | 'database'
+  | 'api';
+
+/** One designer-selectable ingestion channel; several may be enabled at once. */
+export interface DataIngestionSourceSlot {
+  sourceType: DataIngestionSourceType;
+  enabled: boolean;
+  connectionConfig?: Record<string, unknown>;
+}
+
 export interface DataIngestionConfig {
-  sourceType:
-    | 'file-upload'
-    | 's3'
-    | 'gcs'
-    | 'azure-blob'
-    | 'url'
-    | 'database'
-    | 'api';
+  sourceType: DataIngestionSourceType;
+  /** When set, multiple sources can run in parallel; `sourceType` stays the primary (first enabled) for legacy consumers. */
+  sources?: DataIngestionSourceSlot[];
   fileTypes: string[];
   preprocessing: {
     stripHtml: boolean;

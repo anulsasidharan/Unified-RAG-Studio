@@ -169,10 +169,19 @@ class DataIngestionMetadataSchema(RAGBaseModel):
     custom_metadata: dict[str, str] | None = None
 
 
+class DataIngestionSourceSlotSchema(RAGBaseModel):
+    """One selectable ingestion channel in the designer."""
+
+    source_type: Literal["file-upload", "s3", "gcs", "azure-blob", "url", "database", "api"]
+    enabled: bool = True
+    connection_config: dict[str, object] | None = None
+
+
 class DataIngestionConfigSchema(RAGBaseModel):
     source_type: Literal[
         "file-upload", "s3", "gcs", "azure-blob", "url", "database", "api"
     ]
+    sources: list[DataIngestionSourceSlotSchema] | None = None
     file_types: list[str] = Field(default_factory=list)
     preprocessing: DataIngestionPreprocessingSchema = Field(
         default_factory=DataIngestionPreprocessingSchema
@@ -181,6 +190,16 @@ class DataIngestionConfigSchema(RAGBaseModel):
         default_factory=DataIngestionMetadataSchema
     )
     connection_config: dict[str, object] | None = None
+
+    @model_validator(mode="after")
+    def validate_sources(self) -> DataIngestionConfigSchema:
+        if self.sources:
+            if not any(s.enabled for s in self.sources):
+                raise ValueError("Enable at least one data source in stages.dataIngestion.sources")
+            types = [s.source_type for s in self.sources]
+            if len(types) != len(set(types)):
+                raise ValueError("Each data source type may appear only once in sources")
+        return self
 
 
 class ChunkingConfigSchema(RAGBaseModel):

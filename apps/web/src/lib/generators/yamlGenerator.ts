@@ -1,4 +1,4 @@
-import type { PipelineConfiguration, PipelineStages } from '@/types/pipeline';
+import type { DataIngestionConfig, PipelineConfiguration, PipelineStages } from '@/types/pipeline';
 
 // ─── Indented YAML helpers ────────────────────────────────────────────────────
 
@@ -29,6 +29,26 @@ function yamlArray(items: string[], lvl: number): string {
 
 // ─── Section builders ─────────────────────────────────────────────────────────
 
+function yamlConnectionMap(obj: Record<string, unknown> | undefined, lvl: number): string[] {
+  if (!obj || Object.keys(obj).length === 0) return [];
+  const lines: string[] = [`${indent(lvl)}connectionConfig:`];
+  for (const [k, v] of Object.entries(obj)) {
+    lines.push(`${indent(lvl + 1)}${k}: ${yamlString(String(v))}`);
+  }
+  return lines;
+}
+
+function yamlIngestionSources(di: DataIngestionConfig, lvl: number): string[] {
+  if (!di.sources?.length) return [];
+  const lines: string[] = [`${indent(lvl)}sources:`];
+  for (const s of di.sources) {
+    lines.push(`${indent(lvl + 1)}- sourceType: ${yamlString(s.sourceType)}`);
+    lines.push(`${indent(lvl + 2)}enabled: ${yamlBool(s.enabled)}`);
+    lines.push(...yamlConnectionMap(s.connectionConfig as Record<string, unknown> | undefined, lvl + 2));
+  }
+  return lines;
+}
+
 function ingestionSection(stages: PipelineStages, lvl: number): string {
   const di = stages.dataIngestion;
   if (!di) return `${indent(lvl)}dataIngestion: ~`;
@@ -36,6 +56,7 @@ function ingestionSection(stages: PipelineStages, lvl: number): string {
   return [
     `${indent(lvl)}dataIngestion:`,
     `${indent(lvl + 1)}sourceType: ${yamlString(di.sourceType)}`,
+    ...yamlIngestionSources(di, lvl + 1),
     `${indent(lvl + 1)}fileTypes: ${yamlArray(di.fileTypes, lvl + 2)}`,
     `${indent(lvl + 1)}preprocessing:`,
     `${indent(lvl + 2)}stripHtml: ${yamlBool(di.preprocessing.stripHtml)}`,
