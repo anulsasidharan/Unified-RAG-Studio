@@ -7,7 +7,7 @@ responsive by enqueueing work and exposing status via AsyncResult IDs.
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -34,7 +34,7 @@ logger = structlog.get_logger(__name__)
 
 
 def _iso_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 _AUTOPILOT_STAGE_KEYS = AUTOPILOT_STAGE_ORDER
@@ -138,7 +138,7 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
             if row:
                 row.status = "failed"
                 row.error = str(exc)
-                row.completed_at = datetime.now(timezone.utc)
+                row.completed_at = datetime.now(UTC)
         record_autopilot_terminal("failed")
         log_autopilot_build_to_mlflow(
             build_id=str(bid),
@@ -237,7 +237,7 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
             prev["mlflow_experiment_name"] = cfg.mlflow_experiment_name
 
         row.result = prev
-        row.completed_at = datetime.now(timezone.utc)
+        row.completed_at = datetime.now(UTC)
         row.error = None
 
     record_autopilot_terminal("complete")
@@ -253,7 +253,8 @@ def run_evaluation(
     *,
     metric_names: list[str] | None = None,
 ) -> dict[str, Any]:
-    """Persist RAGAS output onto ``EvaluationRun`` when examples are supplied in the enqueue payload."""
+    """Persist RAGAS output onto ``EvaluationRun``
+    when examples are supplied in the enqueue payload."""
 
     try:
         eid = uuid.UUID(evaluation_run_id)
@@ -267,7 +268,11 @@ def run_evaluation(
                 row.status = "failed"
                 row.error = "No evaluation examples supplied to worker task."
         record_evaluation_terminal("failed")
-        return {"evaluation_run_id": evaluation_run_id, "status": "failed", "error": "empty examples"}
+        return {
+            "evaluation_run_id": evaluation_run_id,
+            "status": "failed",
+            "error": "empty examples",
+        }
 
     ex_models: list[EvaluationExample] = []
     for rec in examples:
@@ -290,7 +295,11 @@ def run_evaluation(
         row = session.get(EvaluationRun, eid)
         if row is None:
             logger.warning("evaluation_run_not_found", evaluation_run_id=evaluation_run_id)
-            return {"evaluation_run_id": evaluation_run_id, "status": "failed", "error": "run not found"}
+            return {
+                "evaluation_run_id": evaluation_run_id,
+                "status": "failed",
+                "error": "run not found",
+            }
         row.status = "running"
 
     try:
@@ -311,14 +320,18 @@ def run_evaluation(
     with sync_session_scope() as session:
         row = session.get(EvaluationRun, eid)
         if row is None:
-            return {"evaluation_run_id": evaluation_run_id, "status": "failed", "error": "run not found"}
+            return {
+                "evaluation_run_id": evaluation_run_id,
+                "status": "failed",
+                "error": "run not found",
+            }
         row.status = "complete"
         row.metrics = metrics_dump
         row.failure_analysis = (
             outcome.failure_analysis.model_dump(mode="json") if outcome.failure_analysis else None
         )
         row.test_set_size = len(examples)
-        row.completed_at = datetime.now(timezone.utc)
+        row.completed_at = datetime.now(UTC)
         row.error = None
 
     record_evaluation_terminal("complete")
@@ -331,7 +344,10 @@ def run_evaluation(
 
 @celery_app.task(bind=True, name="jobs.run_deployment")
 def run_deployment(self, deployment_id: str) -> dict[str, Any]:
-    """Marks deployment as progressing then stub-deployed — Terraform/K8s generation lands in Phase 6/12."""
+    """Marks deployment as progressing then stub-deployed.
+
+    Terraform/K8s generation lands in Phase 6/12.
+    """
 
     try:
         did = uuid.UUID(deployment_id)
@@ -342,13 +358,17 @@ def run_deployment(self, deployment_id: str) -> dict[str, Any]:
         row = session.get(Deployment, did)
         if row is None:
             logger.warning("deployment_not_found", deployment_id=deployment_id)
-            return {"deployment_id": deployment_id, "status": "failed", "error": "deployment not found"}
+            return {
+                "deployment_id": deployment_id,
+                "status": "failed",
+                "error": "deployment not found",
+            }
 
         row.status = "deploying"
         row.endpoint = f"https://stub.rag-studio.local/deployments/{deployment_id}"
         row.health_check_url = f"{row.endpoint}/healthz"
         row.docker_image_tag = row.docker_image_tag or "rag-studio-api:stub"
-        row.deployed_at = datetime.now(timezone.utc)
+        row.deployed_at = datetime.now(UTC)
         row.status = "deployed"
         row.deployment_info = dict(row.deployment_info or {})
         row.deployment_info["stub"] = True

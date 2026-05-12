@@ -3,23 +3,25 @@
 import os
 from collections.abc import AsyncIterator, Iterator
 
-# Environment must be established before importing the app stack (cached Settings + Celery).
-os.environ.setdefault("APP_ENV", "test")
-os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
-os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
-os.environ.setdefault("QDRANT_URL", "http://localhost:6333")
-os.environ.setdefault("SECRET_KEY", "test-secret-key")
-os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
-os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-placeholder")
-
 import pytest
 from fastapi.testclient import TestClient
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import create_engine
 
 from app.config import get_settings
 from app.main import app
 from app.models import Base
+
+
+def pytest_configure() -> None:
+    """Establish test environment before app imports use cached settings."""
+    os.environ.setdefault("APP_ENV", "test")
+    os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///./test.db")
+    os.environ.setdefault("REDIS_URL", "redis://localhost:6379/0")
+    os.environ.setdefault("QDRANT_URL", "http://localhost:6333")
+    os.environ.setdefault("SECRET_KEY", "test-secret-key")
+    os.environ.setdefault("OPENAI_API_KEY", "sk-test-placeholder")
+    os.environ.setdefault("ANTHROPIC_API_KEY", "sk-ant-test-placeholder")
 
 
 @pytest.fixture(scope="session", autouse=True)
