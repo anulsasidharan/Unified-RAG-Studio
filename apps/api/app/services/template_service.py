@@ -10,7 +10,7 @@ from pathlib import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import Settings, get_settings
-from app.schemas.designer import SaveConfigRequest, SaveConfigResponse
+from app.schemas.designer import SaveConfigRequest
 from app.schemas.templates import (
     ApplyTemplateRequest,
     ApplyTemplateResponse,
@@ -51,7 +51,8 @@ def load_templates_catalog(settings: Settings | None = None) -> TemplatesCatalog
         except OSError:
             continue
     raise TemplatesCatalogError(
-        "templates.json not found — set TEMPLATES_CATALOG_PATH or keep data/templates.json at repo root",
+        "templates.json not found — set TEMPLATES_CATALOG_PATH "
+        "or keep data/templates.json at repo root",
     )
 
 
@@ -84,7 +85,10 @@ class TemplateService:
         body: ApplyTemplateRequest,
         settings: Settings,
     ) -> ApplyTemplateResponse | None:
-        """Create a new ``PipelineConfig`` row from a catalog template; returns ``None`` if template or project missing."""
+        """Create a new ``PipelineConfig`` row from a catalog template.
+
+        Returns ``None`` if the template or project is missing.
+        """
         entry = self.get_template(settings, template_id)
         if entry is None:
             return None

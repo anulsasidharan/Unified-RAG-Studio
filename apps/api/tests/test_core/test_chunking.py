@@ -6,7 +6,6 @@ splitters) are mocked where needed to keep tests fast and deterministic.
 """
 
 import importlib
-import re
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -14,7 +13,6 @@ import pytest
 from langchain_core.documents import Document
 
 from app.core.chunking import (
-    Chunk,
     ChunkerFactory,
     ChunkingConfig,
     ChunkingService,
@@ -161,8 +159,8 @@ def test_fixed_size_chunker_empty_doc_skipped():
 
 @pytest.mark.unit
 def test_recursive_chunker_basic(long_doc):
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["Chunk A.", "Chunk B.", "Chunk C."]
 
         chunker = RecursiveCharacterChunker()
@@ -175,8 +173,8 @@ def test_recursive_chunker_basic(long_doc):
 
 @pytest.mark.unit
 def test_recursive_chunker_metadata_propagated(long_doc):
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["Part one.", "Part two."]
 
         chunker = RecursiveCharacterChunker()
@@ -191,21 +189,21 @@ def test_recursive_chunker_metadata_propagated(long_doc):
 @pytest.mark.unit
 def test_recursive_chunker_uses_custom_separators(long_doc):
     custom_seps = ["\n\n", " "]
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["x"]
 
         config = ChunkingConfig(separators=custom_seps)
         RecursiveCharacterChunker().chunk([long_doc], config)
 
-    call_kwargs = MockSplitter.call_args[1]
+    call_kwargs = mock_splitter.call_args[1]
     assert call_kwargs["separators"] == custom_seps
 
 
 @pytest.mark.unit
 def test_recursive_chunker_empty_splits_filtered(simple_doc):
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["  ", "Real content.", ""]
 
         chunks = RecursiveCharacterChunker().chunk([simple_doc], ChunkingConfig())
@@ -297,8 +295,8 @@ def test_semantic_chunker_metadata_propagated(simple_doc):
 
 @pytest.mark.unit
 def test_markdown_header_chunker_splits_on_headers(markdown_doc):
-    with patch("app.core.chunking.document_based.MarkdownHeaderTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.document_based.MarkdownHeaderTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = [
             Document(page_content="Intro text.", metadata={"h1": "Introduction"}),
             Document(page_content="Methods text.", metadata={"h2": "Methods"}),
@@ -314,8 +312,8 @@ def test_markdown_header_chunker_splits_on_headers(markdown_doc):
 
 @pytest.mark.unit
 def test_markdown_header_chunker_merges_parent_metadata(markdown_doc):
-    with patch("app.core.chunking.document_based.MarkdownHeaderTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.document_based.MarkdownHeaderTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = [
             Document(page_content="Content.", metadata={"h1": "Sec"}),
         ]
@@ -330,13 +328,13 @@ def test_markdown_header_chunker_merges_parent_metadata(markdown_doc):
 
 @pytest.mark.unit
 def test_markdown_header_chunker_uses_default_headers(markdown_doc):
-    with patch("app.core.chunking.document_based.MarkdownHeaderTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.document_based.MarkdownHeaderTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = []
 
         MarkdownHeaderChunker().chunk([markdown_doc], ChunkingConfig())
 
-    call_kwargs = MockSplitter.call_args[1]
+    call_kwargs = mock_splitter.call_args[1]
     headers = call_kwargs["headers_to_split_on"]
     assert ("#", "h1") in headers
     assert ("##", "h2") in headers
@@ -433,8 +431,8 @@ def test_paragraph_chunker_oversized_paragraph_split():
     long_para = "Word " * 300  # ~1500 chars
     doc = Document(page_content=long_para, metadata={"source": "big.txt"})
 
-    with patch("app.core.chunking.sentence.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.sentence.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["Part 1.", "Part 2.", "Part 3."]
 
         chunker = ParagraphChunker()
@@ -459,8 +457,8 @@ def test_paragraph_chunker_metadata_propagated(long_doc):
 
 @pytest.mark.unit
 def test_code_aware_chunker_basic(code_doc):
-    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.from_language.return_value
+    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.from_language.return_value
         instance.split_text.return_value = ["def hello():\n    pass", "class MyClass:\n    pass"]
 
         chunker = CodeAwareChunker()
@@ -473,41 +471,41 @@ def test_code_aware_chunker_basic(code_doc):
 
 @pytest.mark.unit
 def test_code_aware_chunker_auto_detects_python(code_doc):
-    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.from_language.return_value
+    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.from_language.return_value
         instance.split_text.return_value = ["snippet"]
 
         CodeAwareChunker().chunk([code_doc], ChunkingConfig(language="auto"))
 
     # Should detect Python from file_extension="py"
-    call_args = MockSplitter.from_language.call_args
+    call_args = mock_splitter.from_language.call_args
     lcts = importlib.import_module("langchain_text_splitters")
-    Language = getattr(lcts, "Language")
+    language = lcts.Language
 
-    assert call_args[1]["language"] == Language.PYTHON
+    assert call_args[1]["language"] == language.PYTHON
 
 
 @pytest.mark.unit
 def test_code_aware_chunker_explicit_language():
     doc = Document(page_content="func main() {}", metadata={"source": "main.go"})
 
-    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.from_language.return_value
+    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.from_language.return_value
         instance.split_text.return_value = ["func main() {}"]
 
         CodeAwareChunker().chunk([doc], ChunkingConfig(language="go"))
 
     lcts = importlib.import_module("langchain_text_splitters")
-    Language = getattr(lcts, "Language")
+    language = lcts.Language
 
-    call_args = MockSplitter.from_language.call_args
-    assert call_args[1]["language"] == Language.GO
+    call_args = mock_splitter.from_language.call_args
+    assert call_args[1]["language"] == language.GO
 
 
 @pytest.mark.unit
 def test_code_aware_chunker_detected_language_in_metadata(code_doc):
-    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.from_language.return_value
+    with patch("app.core.chunking.code_aware.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.from_language.return_value
         instance.split_text.return_value = ["snippet"]
 
         chunks = CodeAwareChunker().chunk([code_doc], ChunkingConfig(language="auto"))
@@ -521,7 +519,10 @@ def test_code_aware_chunker_detected_language_in_metadata(code_doc):
 @pytest.mark.unit
 def test_factory_returns_correct_chunkers():
     assert isinstance(ChunkerFactory.from_strategy("fixed-size"), FixedSizeChunker)
-    assert isinstance(ChunkerFactory.from_strategy("recursive-character"), RecursiveCharacterChunker)
+    assert isinstance(
+        ChunkerFactory.from_strategy("recursive-character"),
+        RecursiveCharacterChunker,
+    )
     assert isinstance(ChunkerFactory.from_strategy("semantic"), SemanticChunker)
     assert isinstance(ChunkerFactory.from_strategy("markdown-header"), MarkdownHeaderChunker)
     assert isinstance(ChunkerFactory.from_strategy("html-section"), HTMLSectionChunker)
@@ -551,8 +552,8 @@ def test_factory_supported_strategies_returns_sorted_list():
 
 @pytest.mark.unit
 def test_chunking_service_default_config(simple_doc):
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["Part A.", "Part B."]
 
         svc = ChunkingService()
@@ -563,8 +564,8 @@ def test_chunking_service_default_config(simple_doc):
 
 @pytest.mark.unit
 def test_chunking_service_returns_list_of_documents(simple_doc):
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["text"]
 
         chunks = ChunkingService().chunk([simple_doc])
@@ -574,8 +575,8 @@ def test_chunking_service_returns_list_of_documents(simple_doc):
 
 @pytest.mark.unit
 def test_chunking_service_chunk_many(simple_doc, long_doc):
-    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as MockSplitter:
-        instance = MockSplitter.return_value
+    with patch("app.core.chunking.recursive.RecursiveCharacterTextSplitter") as mock_splitter:
+        instance = mock_splitter.return_value
         instance.split_text.return_value = ["x", "y"]
 
         svc = ChunkingService()

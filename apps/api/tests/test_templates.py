@@ -37,7 +37,7 @@ def test_apply_template_creates_config(sync_client: TestClient):
     project_id = pr.json()["id"]
 
     r = sync_client.post(
-        f"/api/templates/faq-chatbot/apply",
+        "/api/templates/faq-chatbot/apply",
         json={"projectId": project_id, "name": "From FAQ Template"},
         headers=h,
     )

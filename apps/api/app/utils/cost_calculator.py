@@ -11,12 +11,12 @@ Formulas align with ``costCalculatorFormulas`` in the pricing catalog:
 
 from __future__ import annotations
 
-import json
-import re
 from dataclasses import dataclass
 from functools import lru_cache
+import json
 from numbers import Real
 from pathlib import Path
+import re
 
 from app.config import Settings, get_settings
 from app.schemas.designer import CostRequest
@@ -326,10 +326,16 @@ class CostEstimator:
         return 0.0
 
 
-def estimate_pipeline_cost(cfg: PipelineConfigurationSchema, pricing: dict[str, object]) -> CostEstimateSchema:
+def estimate_pipeline_cost(
+    cfg: PipelineConfigurationSchema,
+    pricing: dict[str, object],
+) -> CostEstimateSchema:
     return CostEstimator(pricing).estimate(CostRequest(config=cfg))
 
 
-def calculate_pipeline_cost(cfg: PipelineConfigurationSchema, pricing: dict[str, object]) -> CostEstimateSchema:
-    """Alias for :func:`estimate_pipeline_cost` (explicit verb used in task specs)."""
+def calculate_pipeline_cost(
+    cfg: PipelineConfigurationSchema,
+    pricing: dict[str, object],
+) -> CostEstimateSchema:
+    """Alias for :func:`estimate_pipeline_cost`."""
     return estimate_pipeline_cost(cfg, pricing)
