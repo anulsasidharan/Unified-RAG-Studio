@@ -1,0 +1,30 @@
+WEBVTT
+Kind: chapters
+Language: en
+
+NOTE
+Chapter markers for product-tour-main.mp4 (~3:00). Align with SCENE_TIMES in product-tour-demo.html.
+
+00:00:00.000 --> 00:00:18.000
+Introduction
+
+00:00:18.000 --> 00:00:38.000
+Designer & Autopilot modes
+
+00:00:38.000 --> 00:01:15.000
+Designer — seventeen guided stages
+
+00:01:15.000 --> 00:01:38.000
+Guardrails & Human in the Loop
+
+00:01:38.000 --> 00:02:05.000
+Autopilot optimisation
+
+00:02:05.000 --> 00:02:28.000
+Evaluation & iteration
+
+00:02:28.000 --> 00:02:45.000
+Export & operations
+
+00:02:45.000 --> 00:03:00.000
+Call to action

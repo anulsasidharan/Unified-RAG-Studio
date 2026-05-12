@@ -18,16 +18,16 @@ const SCENE_ENDS = [18, 38, 75, 98, 125, 148, 165, 180];
 
 export const VO_SEGMENTS = [
   {
-    text: `Retrieval-augmented generation shouldn't mean stitching a dozen tools by hand. Unified RAG Studio is a single workspace: walk thirteen guided stages in the Designer, or start from your documents in Autopilot, then evaluate, harden, and export what you actually ship.`,
+    text: `Retrieval-augmented generation shouldn't mean stitching a dozen tools by hand. Unified RAG Studio is a single workspace: walk seventeen guided stages in the Designer, or start from your documents in Autopilot, then evaluate, harden, and export what you actually ship.`,
   },
   {
-    text: `Two front doors, same truth under the hood. Designer is for explicit control: cloud, ingestion, chunking, embeddings, store, retrieval, rerank, generation, routing, memory, evaluation, guardrails, and a final review. Autopilot is for running optimisation passes over your corpus when you want the system to propose a strong baseline.`,
+    text: `Two front doors, same truth under the hood. Designer is for explicit control: cloud through vector store, query processing and retrieval, optional context compression and reranking, generation and routing, memory and evaluation, observability and tool hints, guardrails, human-in-the-loop, and a final review. Autopilot is for running optimisation passes over your corpus when you want the system to propose a strong baseline.`,
   },
   {
-    text: `You're not hunting for the next file to edit. The stage rail is the contract. Configure cloud and ingestion, shape how documents become chunks, pick embeddings and the vector store, then tighten retrieval. As you move forward, the UI and estimates update so you catch bad pairings before you export.`,
+    text: `You're not hunting for the next file to edit. The stage rail is the contract. Configure ingestion and chunking, pick embeddings and the vector store, optionally shape the query before retrieval, then tighten retrieval and downstream steps. As you move forward, the UI and estimates update so you catch bad pairings before you export.`,
   },
   {
-    text: `Production RAG isn't only accuracy. It's what you allow through. Guardrails let you set input and output policies so safety and quality checks ride with the orchestration layer, not as an afterthought.`,
+    text: `Production RAG isn't only accuracy. It's what you allow through. Guardrails let you set input and output policies so safety and quality checks ride with the orchestration layer. When you need explicit human gates, Human in the Loop is its own stage. Placement and escalation live next to the rest of the pipeline config.`,
   },
   {
     text: `When you'd rather iterate from real files, Autopilot runs structured passes: chunking, embeddings, retrieval, evaluation, and you get something you can inspect and edit back in Designer. Treat it as a smart draft, not a black box.`,
@@ -39,7 +39,7 @@ export const VO_SEGMENTS = [
     text: `When the pipeline is grounded, export the artifacts your team expects: Python, YAML, Terraform, Compose, Kubernetes, and wire into deployment. Operational signals live where you already run the stack.`,
   },
   {
-    text: `If you're done duct-taping RAG pipelines, open Unified RAG Studio. Walk the thirteen stages, or let Autopilot draft your first-pass config. Start free or book a walkthrough. We'll meet you where you ship.`,
+    text: `If you're done duct-taping RAG pipelines, open Unified RAG Studio. Walk the seventeen stages, or let Autopilot draft your first-pass config. Start free or book a walkthrough. We'll meet you where you ship.`,
   },
 ];
 

@@ -143,6 +143,15 @@ export function createDefaultPipelineConfiguration(
     stages: {
       dataIngestion: {
         sourceType: 'file-upload',
+        sources: [
+          { sourceType: 'file-upload', enabled: true },
+          { sourceType: 's3', enabled: false },
+          { sourceType: 'gcs', enabled: false },
+          { sourceType: 'azure-blob', enabled: false },
+          { sourceType: 'url', enabled: false },
+          { sourceType: 'database', enabled: false },
+          { sourceType: 'api', enabled: false },
+        ],
         fileTypes: ['pdf', 'md', 'txt', 'html'],
         preprocessing: {
           stripHtml: true,

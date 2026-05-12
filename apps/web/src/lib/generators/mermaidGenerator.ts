@@ -1,7 +1,8 @@
 import { designerStageIndex, type DesignerStageId } from '@/lib/constants';
+import { getEnabledIngestionSourceTypes } from '@/lib/data-ingestion-sources';
 import { hitlHighlightBullet, hitlPlacementMermaidSubtitle } from '@/lib/hitl-summary';
 import { guardrailPolicyMermaidSubtitle, guardrailsHighlightBullet } from '@/lib/guardrails-summary';
-import type { GuardrailsConfig, PipelineStages } from '@/types/pipeline';
+import type { DataIngestionConfig, GuardrailsConfig, PipelineStages } from '@/types/pipeline';
 
 function stageReached(maxVisitedStageIndex: number, id: DesignerStageId): boolean {
   return maxVisitedStageIndex >= designerStageIndex(id);
@@ -18,6 +19,12 @@ const FULL_DIAGRAM = Number.MAX_SAFE_INTEGER;
 
 function q(text: string): string {
   return text.replace(/["\[\]]/g, '');
+}
+
+function ingestionSourcesMermaidLabel(di: DataIngestionConfig): string {
+  const ids = getEnabledIngestionSourceTypes(di);
+  const joined = ids.length ? ids.join(' + ') : di.sourceType;
+  return q(joined);
 }
 
 /**
@@ -93,7 +100,7 @@ export function generateMermaidDiagram(
 
     if (fullIndexingChain) {
       if (stages.dataIngestion) {
-        const src = q(stages.dataIngestion.sourceType);
+        const src = ingestionSourcesMermaidLabel(stages.dataIngestion);
         lines.push(`    SRC[("📄 Source\\n${src}")]`);
         lines.push('    ING["⬆️ Ingest & Preprocess"]');
       } else {
@@ -121,7 +128,7 @@ export function generateMermaidDiagram(
 
       if (v.ingestion) {
         if (stages.dataIngestion) {
-          const src = q(stages.dataIngestion.sourceType);
+          const src = ingestionSourcesMermaidLabel(stages.dataIngestion);
           lines.push(`    SRC[("📄 Source\\n${src}")]`);
           lines.push('    ING["⬆️ Ingest & Preprocess"]');
           lines.push('    SRC --> ING');
@@ -319,7 +326,7 @@ export function generatePipelineHighlights(
   if (stageReached(maxVisitedStageIndex, 'cloud')) lines.push(`Cloud: ${cloud}`);
 
   if (stageReached(maxVisitedStageIndex, 'ingestion') && stages.dataIngestion) {
-    lines.push(`Ingestion: ${stages.dataIngestion.sourceType}`);
+    lines.push(`Ingestion: ${ingestionSourcesMermaidLabel(stages.dataIngestion)}`);
   }
 
   if (stageReached(maxVisitedStageIndex, 'chunking')) {

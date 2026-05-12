@@ -5,7 +5,7 @@ import { Volume2, VolumeX } from 'lucide-react';
 
 const DEMO = {
   title: 'Pipeline Premiere',
-  blurb: 'Full studio tour · ~3 min',
+  blurb: '17 Designer stages · full tour · ~3 min',
   src: '/videos/product-tour-main.mp4',
   loop: false,
   chapters: true,
@@ -53,7 +53,7 @@ export function HeroProductDemo() {
           <span className="gradient-text">Pipeline Premiere</span>
         </h2>
         <p className="mt-1.5 text-sm text-neutral-600 sm:text-base">
-          Product demo — full studio walkthrough ({DEMO.blurb})
+          Product demo — {DEMO.blurb}
         </p>
       </div>
 

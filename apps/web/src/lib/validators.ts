@@ -119,22 +119,49 @@ export const HybridSearchConfigSchema = z.object({
 
 // ─── Stage Configuration Schemas ─────────────────────────────────────────────
 
-export const DataIngestionConfigSchema = z.object({
+export const DataIngestionSourceSlotSchema = z.object({
   sourceType: z.enum(['file-upload', 's3', 'gcs', 'azure-blob', 'url', 'database', 'api']),
-  fileTypes: z.array(z.string()).min(1, 'Select at least one file type'),
-  preprocessing: z.object({
-    stripHtml: z.boolean(),
-    normalizeWhitespace: z.boolean(),
-    extractMetadata: z.boolean(),
-    customRules: z.array(z.string()).optional(),
-  }),
-  metadata: z.object({
-    includeSource: z.boolean(),
-    includePageNumber: z.boolean(),
-    customMetadata: z.record(z.string()).optional(),
-  }),
+  enabled: z.boolean(),
   connectionConfig: z.record(z.unknown()).optional(),
 });
+
+export const DataIngestionConfigSchema = z
+  .object({
+    sourceType: z.enum(['file-upload', 's3', 'gcs', 'azure-blob', 'url', 'database', 'api']),
+    sources: z.array(DataIngestionSourceSlotSchema).optional(),
+    fileTypes: z.array(z.string()).min(1, 'Select at least one file type'),
+    preprocessing: z.object({
+      stripHtml: z.boolean(),
+      normalizeWhitespace: z.boolean(),
+      extractMetadata: z.boolean(),
+      customRules: z.array(z.string()).optional(),
+    }),
+    metadata: z.object({
+      includeSource: z.boolean(),
+      includePageNumber: z.boolean(),
+      customMetadata: z.record(z.string()).optional(),
+    }),
+    connectionConfig: z.record(z.unknown()).optional(),
+  })
+  .refine(
+    (data) => {
+      if (!data.sources?.length) return true;
+      return data.sources.some((s) => s.enabled);
+    },
+    { message: 'Enable at least one data source.', path: ['sources'] }
+  )
+  .refine(
+    (data) => {
+      if (!data.sources?.length) return true;
+      const seen = new Set<string>();
+      for (const s of data.sources) {
+        if (seen.has(s.sourceType)) return false;
+        seen.add(s.sourceType);
+      }
+      return true;
+    },
+    { message: 'Each data source type may appear only once.', path: ['sources'] }
+  );
 
 export const ChunkingConfigSchema = z.object({
   strategy: ChunkingStrategySchema,

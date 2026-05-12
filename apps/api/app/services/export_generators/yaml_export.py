@@ -102,10 +102,21 @@ def _ingestion_section(stages: PipelineStagesSchema, lvl: int) -> str:
         return f"{_indent(lvl)}dataIngestion: ~"
     pre = di.preprocessing
     meta = di.metadata
-    return "\n".join(
+    lines: list[str] = [
+        f"{_indent(lvl)}dataIngestion:",
+        f"{_indent(lvl + 1)}sourceType: {_yaml_string(di.source_type)}",
+    ]
+    if di.sources:
+        lines.append(f"{_indent(lvl + 1)}sources:")
+        for s in di.sources:
+            lines.append(f"{_indent(lvl + 2)}- sourceType: {_yaml_string(s.source_type)}")
+            lines.append(f"{_indent(lvl + 3)}enabled: {_yaml_bool(s.enabled)}")
+            if s.connection_config:
+                lines.append(f"{_indent(lvl + 3)}connectionConfig:")
+                for ck, cv in s.connection_config.items():
+                    lines.append(f"{_indent(lvl + 4)}{ck}: {_yaml_string(str(cv))}")
+    lines.extend(
         [
-            f"{_indent(lvl)}dataIngestion:",
-            f"{_indent(lvl + 1)}sourceType: {_yaml_string(di.source_type)}",
             f"{_indent(lvl + 1)}fileTypes: {_yaml_array(di.file_types, lvl + 2)}",
             f"{_indent(lvl + 1)}preprocessing:",
             f"{_indent(lvl + 2)}stripHtml: {_yaml_bool(pre.strip_html)}",
@@ -116,6 +127,7 @@ def _ingestion_section(stages: PipelineStagesSchema, lvl: int) -> str:
             f"{_indent(lvl + 2)}includePageNumber: {_yaml_bool(meta.include_page_number)}",
         ]
     )
+    return "\n".join(lines)
 
 
 def _chunking_section(stages: PipelineStagesSchema, lvl: int) -> str:

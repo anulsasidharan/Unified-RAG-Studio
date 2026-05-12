@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { AutopilotDesignerImportBanner } from '@/components/designer/autopilot-designer-import-banner';
 import { DesignerToAutopilotHandoff } from '@/components/designer/designer-to-autopilot-handoff';
+import { getEnabledIngestionSourceTypes } from '@/lib/data-ingestion-sources';
 import { createDefaultHumanInTheLoopConfig } from '@/lib/default-pipeline';
 import { hitlHighlightBullet } from '@/lib/hitl-summary';
 import { guardrailPolicyMermaidSubtitle, resolveGuardrailsConfig } from '@/lib/guardrails-summary';
@@ -138,6 +139,17 @@ export function DesignerReviewPage({
 
   const stages = draft.stages;
   const di = stages.dataIngestion;
+  const ingestionCard = useMemo(() => {
+    if (!di) return { value: 'Not set' as string, sub: undefined as string | undefined };
+    const active = getEnabledIngestionSourceTypes(di);
+    const parts = active.length
+      ? active.map((t) => t.replace(/-/g, ' '))
+      : [di.sourceType.replace(/-/g, ' ')];
+    return {
+      value: parts.join(' · '),
+      sub: di.fileTypes?.length ? `Types: ${di.fileTypes.join(', ')}` : undefined,
+    };
+  }, [di]);
   const gr = resolveGuardrailsConfig(draft.guardrails);
   const hitl = stages.humanInTheLoop ?? createDefaultHumanInTheLoopConfig();
 
@@ -244,8 +256,8 @@ export function DesignerReviewPage({
         <SummaryCard title="Cloud" value={draft.cloudProvider.toUpperCase()} />
         <SummaryCard
           title="Ingestion"
-          value={di ? di.sourceType.replace(/-/g, ' ') : 'Not set'}
-          sub={di?.fileTypes?.length ? `Types: ${di.fileTypes.join(', ')}` : undefined}
+          value={ingestionCard.value}
+          sub={ingestionCard.sub}
         />
         <SummaryCard
           title="Chunking"

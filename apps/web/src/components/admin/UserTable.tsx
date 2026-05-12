@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import {
-  Search, ChevronLeft, ChevronRight, Trash2, Edit2, UserCheck, UserX, Loader2, Plus
+  Search, ChevronLeft, ChevronRight, Trash2, UserCheck, UserX, Loader2, Plus, Shield,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth-store';
 import type { AdminUser, AdminUsersListResponse, CreateUserRequest, UpdateUserRequest } from '@/types/user-management';
 
 type Props = {
@@ -126,8 +127,10 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
 }
 
 export function UserTable({ data, onRefresh, search, onSearchChange, page, onPageChange }: Props) {
+  const currentUserId = useAuthStore((s) => s.profile?.userId);
   const [toggling, setToggling] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [roleSaving, setRoleSaving] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
 
   const handleToggleActive = async (user: AdminUser) => {
@@ -141,6 +144,20 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
       // ignore
     } finally {
       setToggling(null);
+    }
+  };
+
+  const handleRoleChange = async (user: AdminUser, role: 'admin' | 'user') => {
+    if (user.role === role) return;
+    if (user.id === currentUserId) return;
+    setRoleSaving(user.id);
+    try {
+      await apiClient.put<unknown, UpdateUserRequest>(`/api/admin/users/${user.id}`, { role });
+      onRefresh();
+    } catch {
+      // ignore
+    } finally {
+      setRoleSaving(null);
     }
   };
 
@@ -190,7 +207,7 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-neutral-100 text-left dark:border-neutral-800">
-                {['Name', 'Role', 'Plan', 'Status', 'Last Login', 'Actions'].map((h) => (
+                {['Name', 'Access', 'Plan', 'Status', 'Last Login', 'Actions'].map((h) => (
                   <th key={h} className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">
                     {h}
                   </th>
@@ -210,7 +227,48 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
                     </div>
                   </td>
                   <td className="px-5 py-3">
-                    <RoleBadge role={user.role} />
+                    {user.id === currentUserId ? (
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <RoleBadge role={user.role} />
+                          {user.role === 'admin' ? (
+                            <Shield className="h-3.5 w-3.5 text-rose-500" aria-hidden />
+                          ) : null}
+                        </div>
+                        <p className="mt-1 text-[10px] text-neutral-400">
+                          Your account — assign admin to other users with the menu in their row.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        {user.role === 'admin' ? (
+                          <span className="inline-flex shrink-0" title="Administrator">
+                            <Shield className="h-3.5 w-3.5 text-rose-500" aria-hidden />
+                          </span>
+                        ) : null}
+                        <div className="flex min-w-0 flex-1 items-center gap-1">
+                          <label htmlFor={`role-${user.id}`} className="sr-only">
+                            Role for {user.name}
+                          </label>
+                          <select
+                            id={`role-${user.id}`}
+                            value={user.role}
+                            disabled={roleSaving === user.id}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              if (v === 'admin' || v === 'user') void handleRoleChange(user, v);
+                            }}
+                            className="w-full min-w-[120px] max-w-[160px] rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs outline-none focus:border-primary-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+                          >
+                            <option value="user">Standard user</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                          {roleSaving === user.id ? (
+                            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-400" aria-hidden />
+                          ) : null}
+                        </div>
+                      </div>
+                    )}
                   </td>
                   <td className="px-5 py-3">
                     <TierBadge tier={user.subscription_tier} />

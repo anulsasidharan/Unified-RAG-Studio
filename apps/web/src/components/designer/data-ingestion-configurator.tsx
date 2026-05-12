@@ -11,15 +11,20 @@ import {
 } from 'lucide-react';
 
 import { createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
+import {
+  buildIngestionConfigWithSources,
+  ensureIngestionSources,
+  getEnabledIngestionSourceTypes,
+} from '@/lib/data-ingestion-sources';
 import { DataIngestionConfigSchema } from '@/lib/validators';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { DataIngestionConfig } from '@/types/pipeline';
+import type { DataIngestionConfig, DataIngestionSourceSlot, DataIngestionSourceType } from '@/types/pipeline';
 
 const DEFAULT_INGESTION = createDefaultPipelineConfiguration().stages.dataIngestion!;
 
 const SOURCE_OPTIONS: {
-  id: DataIngestionConfig['sourceType'];
+  id: DataIngestionSourceType;
   label: string;
   description: string;
   icon: typeof FileUp;
@@ -85,7 +90,7 @@ type ConnField = {
   type?: 'text' | 'password';
 };
 
-const CONNECTION_FIELDS: Record<DataIngestionConfig['sourceType'], ConnField[]> = {
+const CONNECTION_FIELDS: Record<DataIngestionSourceType, ConnField[]> = {
   'file-upload': [
     {
       key: 'watchPath',
@@ -135,6 +140,7 @@ function mergeIngestion(
   patch: Partial<DataIngestionConfig> & {
     preprocessing?: Partial<DataIngestionConfig['preprocessing']>;
     metadata?: Partial<DataIngestionConfig['metadata']>;
+    sources?: DataIngestionSourceSlot[];
   }
 ): DataIngestionConfig {
   const base = current ?? DEFAULT_INGESTION;
@@ -150,6 +156,7 @@ function mergeIngestion(
       ...patch.metadata,
     },
     fileTypes: patch.fileTypes ?? base.fileTypes,
+    sources: patch.sources !== undefined ? patch.sources : base.sources,
     connectionConfig:
       patch.connectionConfig !== undefined ? patch.connectionConfig : base.connectionConfig,
   };
@@ -164,6 +171,7 @@ export function DataIngestionConfigurator({
   const updateStages = useDesignerStore((s) => s.updateStages);
 
   const cfg = draft.stages.dataIngestion ?? DEFAULT_INGESTION;
+  const sourceSlots = useMemo(() => ensureIngestionSources(cfg), [cfg]);
 
   const setIngestion = useCallback(
     (next: DataIngestionConfig) => {
@@ -177,6 +185,43 @@ export function DataIngestionConfigurator({
       setIngestion(mergeIngestion(draft.stages.dataIngestion, patch));
     },
     [draft.stages.dataIngestion, setIngestion]
+  );
+
+  const commitSourceSlots = useCallback(
+    (nextSlots: DataIngestionSourceSlot[]) => {
+      const base = draft.stages.dataIngestion ?? DEFAULT_INGESTION;
+      setIngestion(buildIngestionConfigWithSources(base, nextSlots));
+    },
+    [draft.stages.dataIngestion, setIngestion]
+  );
+
+  const toggleSourceEnabled = useCallback(
+    (sourceType: DataIngestionSourceType, enabled: boolean) => {
+      const slots = ensureIngestionSources(cfg);
+      const next = slots.map((s) => (s.sourceType === sourceType ? { ...s, enabled } : s));
+      const stillHas = next.some((s) => s.enabled);
+      if (!stillHas) return;
+      commitSourceSlots(next);
+    },
+    [cfg, commitSourceSlots]
+  );
+
+  const patchSlotConnection = useCallback(
+    (sourceType: DataIngestionSourceType, key: string, value: string) => {
+      const slots = ensureIngestionSources(cfg);
+      const next = slots.map((s) => {
+        if (s.sourceType !== sourceType) return s;
+        const raw = { ...(s.connectionConfig as Record<string, string> | undefined) };
+        if (!value.trim()) delete raw[key];
+        else raw[key] = value.trim();
+        return {
+          ...s,
+          connectionConfig: Object.keys(raw).length ? raw : undefined,
+        };
+      });
+      commitSourceSlots(next);
+    },
+    [cfg, commitSourceSlots]
   );
 
   const validation = useMemo(() => DataIngestionConfigSchema.safeParse(cfg), [cfg]);
@@ -193,22 +238,11 @@ export function DataIngestionConfigurator({
     patchIngestion({ fileTypes: Array.from(set) });
   };
 
-  const connValue = (key: string): string => {
-    const raw = cfg.connectionConfig?.[key];
+  const connValueFor = (sourceType: DataIngestionSourceType, key: string): string => {
+    const slot = sourceSlots.find((s) => s.sourceType === sourceType);
+    const raw = slot?.connectionConfig?.[key];
     if (raw === undefined || raw === null) return '';
     return typeof raw === 'string' ? raw : String(raw);
-  };
-
-  const setConnField = (key: string, value: string) => {
-    const next = { ...(cfg.connectionConfig ?? {}) };
-    if (!value.trim()) {
-      delete next[key];
-    } else {
-      next[key] = value.trim();
-    }
-    patchIngestion({
-      connectionConfig: Object.keys(next).length ? next : undefined,
-    });
   };
 
   const customRulesText = (cfg.preprocessing.customRules ?? []).join('\n');
@@ -235,52 +269,53 @@ export function DataIngestionConfigurator({
 
   return (
     <div className={cn('space-y-8', className)}>
-      <div
-        role="radiogroup"
-        aria-label="Ingestion source"
-        className="grid gap-4 sm:grid-cols-2"
-      >
-        {SOURCE_OPTIONS.map((opt) => {
-          const Icon = opt.icon;
-          const selected = cfg.sourceType === opt.id;
-          return (
-            <button
-              key={opt.id}
-              type="button"
-              role="radio"
-              aria-checked={selected}
-              onClick={() =>
-                patchIngestion({
-                  sourceType: opt.id,
-                  connectionConfig: {},
-                })
-              }
-              className={cn(
-                'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                selected
-                  ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                  : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
-              )}
-            >
-              <div className="flex items-start gap-3">
-                <span
-                  className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
-                    selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
-                  )}
-                  aria-hidden
-                >
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <span className="font-semibold text-foreground">{opt.label}</span>
-                  <p className="mt-1 text-sm text-muted-foreground">{opt.description}</p>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Enable every channel you want to ingest from in parallel. Connection hints are stored per source.
+        </p>
+        <div
+          role="group"
+          aria-label="Ingestion sources"
+          className="grid gap-4 sm:grid-cols-2"
+        >
+          {SOURCE_OPTIONS.map((opt) => {
+            const Icon = opt.icon;
+            const slot = sourceSlots.find((s) => s.sourceType === opt.id);
+            const selected = Boolean(slot?.enabled);
+            return (
+              <button
+                key={opt.id}
+                type="button"
+                role="checkbox"
+                aria-checked={selected}
+                onClick={() => toggleSourceEnabled(opt.id, !selected)}
+                className={cn(
+                  'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  selected
+                    ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
+                    : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
+                )}
+              >
+                <div className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
+                      selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                    )}
+                    aria-hidden
+                  >
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <span className="font-semibold text-foreground">{opt.label}</span>
+                    <p className="mt-1 text-sm text-muted-foreground">{opt.description}</p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       <section
@@ -502,8 +537,10 @@ export function DataIngestionConfigurator({
               Connection hints
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Non-secret placeholders saved in <code className="rounded bg-muted px-1 text-xs">connectionConfig</code>.
-              Store credentials via your cloud secret manager at deploy time.
+              One block per enabled source. Non-secret placeholders are saved under each slot&apos;s{' '}
+              <code className="rounded bg-muted px-1 text-xs">connectionConfig</code>. Primary source (
+              <span className="font-medium text-foreground">{cfg.sourceType}</span>) stays first in the enabled list for
+              exports that still expect a single <code className="rounded bg-muted px-1 text-xs">sourceType</code>.
             </p>
           </div>
           <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
@@ -511,23 +548,37 @@ export function DataIngestionConfigurator({
             Reference only
           </span>
         </div>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          {CONNECTION_FIELDS[cfg.sourceType].map((field) => (
-            <div key={field.key} className={cn(field.key === 'seedUrls' && 'sm:col-span-2')}>
-              <label htmlFor={`conn-${field.key}`} className="text-sm font-medium text-foreground">
-                {field.label}
-              </label>
-              <input
-                id={`conn-${field.key}`}
-                type={field.type ?? 'text'}
-                autoComplete="off"
-                placeholder={field.placeholder}
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
-                value={connValue(field.key)}
-                onChange={(e) => setConnField(field.key, e.target.value)}
-              />
-            </div>
-          ))}
+        <div className="mt-6 space-y-8">
+          {getEnabledIngestionSourceTypes(cfg).map((stype) => {
+            const label = SOURCE_OPTIONS.find((o) => o.id === stype)?.label ?? stype;
+            return (
+              <div
+                key={stype}
+                className="rounded-lg border border-border bg-muted/10 p-4 dark:bg-muted/5"
+                aria-label={`Connection hints for ${label}`}
+              >
+                <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  {CONNECTION_FIELDS[stype].map((field) => (
+                    <div key={field.key} className={cn(field.key === 'seedUrls' && 'sm:col-span-2')}>
+                      <label htmlFor={`conn-${stype}-${field.key}`} className="text-sm font-medium text-foreground">
+                        {field.label}
+                      </label>
+                      <input
+                        id={`conn-${stype}-${field.key}`}
+                        type={field.type ?? 'text'}
+                        autoComplete="off"
+                        placeholder={field.placeholder}
+                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                        value={connValueFor(stype, field.key)}
+                        onChange={(e) => patchSlotConnection(stype, field.key, e.target.value)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
