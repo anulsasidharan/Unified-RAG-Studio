@@ -41,6 +41,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        working-directory: ${{ github.workspace }}
         run: npm ci
 
       - name: Run ESLint
@@ -72,6 +73,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
+        working-directory: ${{ github.workspace }}
         run: npm ci
 
       - name: Run unit tests
