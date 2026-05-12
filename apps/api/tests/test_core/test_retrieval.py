@@ -13,6 +13,7 @@ from app.core.retrieval import (
     RerankingRuntimeConfig,
     RetrievalRuntimeConfig,
     RetrievalService,
+    reranking_runtime_from_pipeline,
     retrieval_runtime_from_pipeline,
 )
 from app.core.retrieval.fusion import mmr_order, reciprocal_rank_fusion_keys
@@ -224,7 +225,7 @@ def test_retrieval_runtime_from_pipeline_maps_filters():
         filters=[
             MetadataFilter(key="source", operator=FilterOperator.EQ, value="wiki"),
         ],
-        hybrid_search=HybridSearchConfig(alpha=0.7),
+        hybrid_search=HybridSearchConfig(alpha=0.7, fusion="weighted"),
     )
     rt = retrieval_runtime_from_pipeline(p)
     assert rt.strategy == "similarity"
@@ -232,3 +233,46 @@ def test_retrieval_runtime_from_pipeline_maps_filters():
     assert rt.score_threshold == 0.25
     assert rt.filters is not None and rt.filters[0].key == "source"
     assert abs(rt.hybrid_search_alpha - 0.7) < 1e-6
+    assert rt.hybrid_fusion == "weighted"
+
+
+@pytest.mark.unit
+def test_retrieval_runtime_from_pipeline_mmr_and_ensemble():
+    p = RetrievalConfigSchema(
+        strategy=RetrievalStrategy.MMR,
+        top_k=5,
+        mmr_fetch_k=40,
+        mmr_lambda_mult=0.62,
+    )
+    rt = retrieval_runtime_from_pipeline(p)
+    assert rt.mmr_fetch_k == 40
+    assert abs(rt.mmr_lambda - 0.62) < 1e-9
+
+    ens = RetrievalConfigSchema(
+        strategy=RetrievalStrategy.ENSEMBLE,
+        top_k=8,
+        ensemble_strategies=["mmr", "hybrid"],
+        ensemble_rrf_k=42,
+    )
+    rt2 = retrieval_runtime_from_pipeline(ens)
+    assert rt2.ensemble_strategies == ("mmr", "hybrid")
+    assert rt2.rrf_k == 42
+
+
+@pytest.mark.unit
+def test_reranking_runtime_from_pipeline_maps_thresholds():
+    from app.schemas.pipeline import RerankingConfigSchema
+
+    rr = RerankingConfigSchema(
+        enabled=True,
+        model="cohere-rerank-v3",
+        top_n=10,
+        provider="cohere",
+        min_relevance_score=0.33,
+        diversity_max_similarity=0.9,
+    )
+    rt = reranking_runtime_from_pipeline(rr)
+    assert rt is not None
+    assert rt.enabled is True
+    assert rt.min_relevance_score == pytest.approx(0.33)
+    assert rt.diversity_max_similarity == pytest.approx(0.9)

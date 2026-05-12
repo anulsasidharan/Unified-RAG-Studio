@@ -18,6 +18,10 @@ def generation_runtime_from_pipeline(cfg: GenerationConfigSchema) -> GenerationR
         out_s = out_fmt
     else:
         out_s = str(out_fmt.value)
+    few: tuple[tuple[str, str], ...] = ()
+    if cfg.few_shot_messages:
+        few = tuple((str(m.role), m.content) for m in cfg.few_shot_messages)
+
     return GenerationRuntimeConfig(
         model=cfg.model,
         provider=prov,
@@ -26,4 +30,7 @@ def generation_runtime_from_pipeline(cfg: GenerationConfigSchema) -> GenerationR
         top_p=cfg.top_p,
         system_prompt=cfg.system_prompt,
         output_format=out_s,
+        few_shots=few,
+        persona=cfg.persona,
+        citation_grounding=bool(cfg.citation_grounding),
     )

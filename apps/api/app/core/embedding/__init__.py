@@ -120,7 +120,10 @@ class EmbeddingService:
         embedder = EmbedderFactory.from_provider(cfg.provider)
         texts = [c.page_content for c in chunks]
 
-        if self._cache is not None:
+        if cfg.cache_embeddings:
+            layer = self._cache or EmbeddingCache()
+            vectors = layer.embed_with_cache(embedder, texts, cfg)
+        elif self._cache is not None:
             vectors = self._cache.embed_with_cache(embedder, texts, cfg)
         else:
             vectors = embedder.embed_documents(texts, cfg)
@@ -133,6 +136,8 @@ class EmbeddingService:
                 "embedding_provider": cfg.provider,
                 "embedding_dimensions": cfg.dimensions,
             }
+            if cfg.embedding_version:
+                enriched_meta["embedding_version"] = cfg.embedding_version
             result.append(
                 (Document(page_content=chunk.page_content, metadata=enriched_meta), vector)
             )

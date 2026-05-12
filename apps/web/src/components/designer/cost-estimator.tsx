@@ -29,6 +29,9 @@ function componentLabel(component: string): string {
     retrieval_ops: 'Retrieval / read units',
     reranking: 'Reranking',
     generation: 'Generation',
+    query_transforms: 'Query transforms',
+    context_compression: 'Context compression',
+    observability: 'Observability (logging/trace)',
   };
   return map[component] ?? component.replace(/_/g, ' ');
 }

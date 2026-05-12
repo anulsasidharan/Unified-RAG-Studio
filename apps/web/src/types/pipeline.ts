@@ -11,7 +11,8 @@ export type ChunkingStrategy =
   | 'markdown-header'
   | 'sentence-based'
   | 'paragraph-based'
-  | 'code-aware';
+  | 'code-aware'
+  | 'token-aware';
 
 export type VectorStoreProvider =
   | 'pinecone'
@@ -53,7 +54,9 @@ export type MemoryType =
   | 'none'
   | 'conversation-buffer'
   | 'summary-buffer'
-  | 'vector-memory';
+  | 'vector-memory'
+  | 'entity-memory'
+  | 'episodic-memory';
 
 export type OutputFormat = 'text' | 'json' | 'markdown';
 
@@ -78,11 +81,15 @@ export interface MetadataFilter {
   value: string | number | boolean | string[];
 }
 
+export type HybridFusionMode = 'rrf' | 'weighted';
+
 export interface HybridSearchConfig {
   /** Weight between dense (1.0) and sparse/BM25 (0.0) */
   alpha: number;
   sparseWeight?: number;
   denseWeight?: number;
+  /** How dense and sparse rankings are merged in the retrieval runtime. */
+  fusion?: HybridFusionMode;
 }
 
 // ─── Stage Configurations ────────────────────────────────────────────────────
@@ -129,6 +136,8 @@ export interface EmbeddingConfig {
   dimensions: number;
   batchSize?: number;
   maxTokens?: number;
+  cacheEmbeddings?: boolean;
+  embeddingVersion?: string;
 }
 
 export interface VectorStoreConfig {
@@ -146,6 +155,55 @@ export interface VectorStoreConfig {
   };
 }
 
+/** Pre-retrieval query transforms (design-time; Autopilot uses deterministic expansion). */
+export interface QueryProcessingConfig {
+  enabled: boolean;
+  queryRewrite: boolean;
+  hyde: boolean;
+  multiQueryExpansion: boolean;
+  decomposition: boolean;
+  stepBack: boolean;
+  intentClassification: boolean;
+  entityExtraction: boolean;
+  keywordAugmentation: boolean;
+  llmModel?: string;
+}
+
+export type ContextCompressionMode = 'none' | 'relevance_filter' | 'dedupe' | 'summarize_stub';
+
+export interface ContextCompressionConfig {
+  enabled: boolean;
+  mode: ContextCompressionMode;
+  minScore?: number | null;
+  maxTokenBudget?: number | null;
+}
+
+export interface ObservabilityConfig {
+  tokenTracking: boolean;
+  latencyMonitoring: boolean;
+  retrievalTracing: boolean;
+  promptTracing: boolean;
+}
+
+export interface AdaptivePolicyRule {
+  predicate: string;
+  action: string;
+}
+
+export interface AgentToolsConfig {
+  calculatorEnabled: boolean;
+  webSearchEnabled: boolean;
+  sqlAgentEnabled: boolean;
+}
+
+/** Sub-strategies run in parallel for ensemble retrieval (RRF fusion). */
+export type EnsembleMemberStrategy = 'similarity' | 'mmr' | 'hybrid' | 'multi-query' | 'parent-child';
+
+export interface FewShotMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
 export interface RetrievalConfig {
   strategy: RetrievalStrategy;
   topK: number;
@@ -160,6 +218,14 @@ export interface RetrievalConfig {
     numVariants: number;
     llmModel: string;
   };
+  /** MMR: candidate pool size before diversity selection (retrieval runtime). */
+  mmrFetchK?: number | null;
+  /** MMR: 0 = max diversity, 1 = max relevance to query. */
+  mmrLambdaMult?: number;
+  /** Ensemble: member strategies fused with RRF (order preserved). */
+  ensembleStrategies?: EnsembleMemberStrategy[];
+  /** Ensemble: RRF smoothing constant `k` (higher = more smoothing). */
+  ensembleRrfK?: number;
 }
 
 export interface RerankingConfig {
@@ -167,6 +233,13 @@ export interface RerankingConfig {
   model?: string;
   topN?: number;
   provider?: 'cohere' | 'huggingface' | 'custom';
+  /** When the reranker returns relevance scores (e.g. Cohere), drop chunks below this threshold. */
+  minRelevanceScore?: number | null;
+  /**
+   * Optional post-rerank diversity: skip a document if its normalized text is more similar than this
+   * to any already-kept document (0–1). Omitted or null = no deduplication pass.
+   */
+  diversityMaxSimilarity?: number | null;
 }
 
 export interface GenerationConfig {
@@ -177,10 +250,21 @@ export interface GenerationConfig {
   topP?: number;
   systemPrompt?: string;
   outputFormat?: OutputFormat;
+  fewShotMessages?: FewShotMessage[];
+  persona?: string;
+  citationGrounding?: boolean;
 }
 
 export interface RoutingRule {
-  condition: 'keyword' | 'query-length' | 'semantic-complexity';
+  condition:
+    | 'keyword'
+    | 'query-length'
+    | 'semantic-complexity'
+    | 'semantic-routing'
+    | 'cost-aware'
+    | 'latency-aware'
+    | 'confidence-routing'
+    | 'tool-routing';
   threshold?: number;
   keywords?: string[];
   targetModel: string;
@@ -204,7 +288,11 @@ export type EvaluationMetricName =
   | 'answer_relevance'
   | 'context_precision'
   | 'context_recall'
-  | 'latency';
+  | 'latency'
+  | 'groundedness'
+  | 'safety'
+  | 'human_evaluation'
+  | 'retrieval_ndcg';
 
 export interface EvaluationConfig {
   enabled: boolean;
@@ -359,7 +447,9 @@ export interface PipelineStages {
   chunking: ChunkingConfig;
   embedding: EmbeddingConfig;
   vectorStore: VectorStoreConfig;
+  queryProcessing?: QueryProcessingConfig;
   retrieval: RetrievalConfig;
+  contextCompression?: ContextCompressionConfig;
   reranking?: RerankingConfig;
   generation: GenerationConfig;
   routing?: RoutingConfig;
@@ -389,4 +479,7 @@ export interface PipelineConfiguration {
   estimatedPerformance?: PerformanceEstimate;
   /** When omitted, the API applies default guardrail policy (all stages on). */
   guardrails?: GuardrailsConfig | null;
+  observability?: ObservabilityConfig | null;
+  adaptivePolicies?: AdaptivePolicyRule[];
+  agentTools?: AgentToolsConfig;
 }

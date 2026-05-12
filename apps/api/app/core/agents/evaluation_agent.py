@@ -138,7 +138,7 @@ def run_evaluation_agent(
     if len(chunks) == 1:
         chunks = [chunks[0], chunks[0] + "\n\n(autopilot evaluation bench duplicate.)"]
 
-    queries = _build_eval_queries(analyze_payload, requirements)
+    queries = _build_eval_queries(analyze_payload, requirements, pipeline_config)
     if not queries:
         return {
             "status": "failed",

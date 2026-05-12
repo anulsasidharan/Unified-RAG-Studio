@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 import re
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from app.schemas.pipeline import PipelineConfigurationSchema, PipelineStagesSchema
+from app.schemas.pipeline import PipelineConfigurationSchema, PipelineStagesSchema
 
 from app.services.export_generators._compat import ev
 
@@ -83,7 +81,9 @@ def generate_yaml(config: PipelineConfigurationSchema, generated_at: str | None 
             _chunking_section(stages, 2),
             _embedding_section(stages, 2),
             _vector_store_section(stages, 2),
+            _query_processing_section(stages, 2),
             _retrieval_section(stages, 2),
+            _context_compression_section(stages, 2),
             _reranking_section(stages, 2),
             _generation_section(stages, 2),
             _routing_section(stages, 2),
@@ -92,6 +92,7 @@ def generate_yaml(config: PipelineConfigurationSchema, generated_at: str | None 
             _human_in_the_loop_section(stages, 2),
         ]
     )
+    sections.append(_pipeline_root_extras(config))
     return "\n".join(s for s in sections if s != "")
 
 
@@ -142,6 +143,9 @@ def _embedding_section(stages: PipelineStagesSchema, lvl: int) -> str:
         lines.append(f"{_indent(lvl + 1)}batchSize: {e.batch_size}")
     if e.max_tokens is not None:
         lines.append(f"{_indent(lvl + 1)}maxTokens: {e.max_tokens}")
+    lines.append(f"{_indent(lvl + 1)}cacheEmbeddings: {_yaml_bool(e.cache_embeddings)}")
+    if e.embedding_version:
+        lines.append(f"{_indent(lvl + 1)}embeddingVersion: {_yaml_string(e.embedding_version)}")
     return "\n".join(lines)
 
 
@@ -172,6 +176,42 @@ def _vector_store_section(stages: PipelineStagesSchema, lvl: int) -> str:
     return "\n".join(lines)
 
 
+def _query_processing_section(stages: PipelineStagesSchema, lvl: int) -> str:
+    q = stages.query_processing
+    if not q:
+        return f"{_indent(lvl)}queryProcessing: ~"
+    return "\n".join(
+        [
+            f"{_indent(lvl)}queryProcessing:",
+            f"{_indent(lvl + 1)}enabled: {_yaml_bool(q.enabled)}",
+            f"{_indent(lvl + 1)}queryRewrite: {_yaml_bool(q.query_rewrite)}",
+            f"{_indent(lvl + 1)}hyde: {_yaml_bool(q.hyde)}",
+            f"{_indent(lvl + 1)}multiQueryExpansion: {_yaml_bool(q.multi_query_expansion)}",
+            f"{_indent(lvl + 1)}decomposition: {_yaml_bool(q.decomposition)}",
+            f"{_indent(lvl + 1)}stepBack: {_yaml_bool(q.step_back)}",
+            f"{_indent(lvl + 1)}intentClassification: {_yaml_bool(q.intent_classification)}",
+            f"{_indent(lvl + 1)}entityExtraction: {_yaml_bool(q.entity_extraction)}",
+            f"{_indent(lvl + 1)}keywordAugmentation: {_yaml_bool(q.keyword_augmentation)}",
+        ]
+    )
+
+
+def _context_compression_section(stages: PipelineStagesSchema, lvl: int) -> str:
+    c = stages.context_compression
+    if not c:
+        return f"{_indent(lvl)}contextCompression: ~"
+    lines = [
+        f"{_indent(lvl)}contextCompression:",
+        f"{_indent(lvl + 1)}enabled: {_yaml_bool(c.enabled)}",
+        f"{_indent(lvl + 1)}mode: {_yaml_string(ev(c.mode))}",
+    ]
+    if c.min_score is not None:
+        lines.append(f"{_indent(lvl + 1)}minScore: {c.min_score}")
+    if c.max_token_budget is not None:
+        lines.append(f"{_indent(lvl + 1)}maxTokenBudget: {c.max_token_budget}")
+    return "\n".join(lines)
+
+
 def _retrieval_section(stages: PipelineStagesSchema, lvl: int) -> str:
     r = stages.retrieval
     lines = [
@@ -184,6 +224,18 @@ def _retrieval_section(stages: PipelineStagesSchema, lvl: int) -> str:
     if r.hybrid_search:
         lines.append(f"{_indent(lvl + 1)}hybridSearch:")
         lines.append(f"{_indent(lvl + 2)}alpha: {r.hybrid_search.alpha}")
+        if r.hybrid_search.fusion:
+            lines.append(f"{_indent(lvl + 2)}fusion: {_yaml_string(r.hybrid_search.fusion)}")
+    if r.mmr_fetch_k is not None:
+        lines.append(f"{_indent(lvl + 1)}mmrFetchK: {r.mmr_fetch_k}")
+    if r.mmr_lambda_mult is not None:
+        lines.append(f"{_indent(lvl + 1)}mmrLambdaMult: {r.mmr_lambda_mult}")
+    if r.ensemble_strategies:
+        lines.append(f"{_indent(lvl + 1)}ensembleStrategies:")
+        for s in r.ensemble_strategies:
+            lines.append(f"{_indent(lvl + 2)}- {_yaml_string(s)}")
+    if r.ensemble_rrf_k is not None:
+        lines.append(f"{_indent(lvl + 1)}ensembleRrfK: {r.ensemble_rrf_k}")
     if r.parent_child_config:
         lines.append(f"{_indent(lvl + 1)}parentChildConfig:")
         lines.append(
@@ -216,6 +268,10 @@ def _reranking_section(stages: PipelineStagesSchema, lvl: int) -> str:
             lines.append(f"{_indent(lvl + 1)}topN: {rr.top_n}")
         if rr.provider:
             lines.append(f"{_indent(lvl + 1)}provider: {_yaml_string(rr.provider)}")
+        if rr.min_relevance_score is not None:
+            lines.append(f"{_indent(lvl + 1)}minRelevanceScore: {rr.min_relevance_score}")
+        if rr.diversity_max_similarity is not None:
+            lines.append(f"{_indent(lvl + 1)}diversityMaxSimilarity: {rr.diversity_max_similarity}")
     return "\n".join(lines)
 
 
@@ -236,6 +292,15 @@ def _generation_section(stages: PipelineStagesSchema, lvl: int) -> str:
         lines.append(f"{_indent(lvl + 1)}systemPrompt: |")
         for line in g.system_prompt.split("\n"):
             lines.append(f"{_indent(lvl + 2)}{line}")
+    if g.persona:
+        lines.append(f"{_indent(lvl + 1)}persona: {_yaml_string(g.persona)}")
+    if g.citation_grounding:
+        lines.append(f"{_indent(lvl + 1)}citationGrounding: true")
+    if g.few_shot_messages:
+        lines.append(f"{_indent(lvl + 1)}fewShotMessages:")
+        for m in g.few_shot_messages:
+            lines.append(f"{_indent(lvl + 2)}- role: {_yaml_string(m.role)}")
+            lines.append(f"{_indent(lvl + 3)}content: {_yaml_string(m.content)}")
     return "\n".join(lines)
 
 
@@ -346,3 +411,38 @@ def _human_in_the_loop_section(stages: PipelineStagesSchema, lvl: int) -> str:
         ]
     )
     return "\n".join(lines)
+
+
+def _pipeline_root_extras(config: PipelineConfigurationSchema) -> str:
+    blocks: list[str] = []
+    if config.observability is not None:
+        o = config.observability
+        blocks.extend(
+            [
+                "",
+                "  observability:",
+                f"    tokenTracking: {_yaml_bool(o.token_tracking)}",
+                f"    latencyMonitoring: {_yaml_bool(o.latency_monitoring)}",
+                f"    retrievalTracing: {_yaml_bool(o.retrieval_tracing)}",
+                f"    promptTracing: {_yaml_bool(o.prompt_tracing)}",
+            ]
+        )
+    at = config.agent_tools
+    if at is not None:
+        blocks.extend(
+            [
+                "",
+                "  agentTools:",
+                f"    calculatorEnabled: {_yaml_bool(at.calculator_enabled)}",
+                f"    webSearchEnabled: {_yaml_bool(at.web_search_enabled)}",
+                f"    sqlAgentEnabled: {_yaml_bool(at.sql_agent_enabled)}",
+            ]
+        )
+    ap = config.adaptive_policies
+    if ap:
+        blocks.append("")
+        blocks.append("  adaptivePolicies:")
+        for r in ap:
+            blocks.append(f"    - predicate: {_yaml_string(r.predicate)}")
+            blocks.append(f"      action: {_yaml_string(r.action)}")
+    return "\n".join(blocks) if blocks else ""

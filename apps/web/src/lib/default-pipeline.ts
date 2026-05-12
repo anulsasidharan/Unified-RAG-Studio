@@ -1,4 +1,12 @@
-import type { GuardrailsConfig, HumanInTheLoopConfig, PipelineConfiguration } from '@/types/pipeline';
+import type {
+  AgentToolsConfig,
+  ContextCompressionConfig,
+  GuardrailsConfig,
+  HumanInTheLoopConfig,
+  ObservabilityConfig,
+  PipelineConfiguration,
+  QueryProcessingConfig,
+} from '@/types/pipeline';
 import {
   DEFAULT_CHUNK_OVERLAP,
   DEFAULT_CHUNK_SIZE,
@@ -47,6 +55,46 @@ function mergeGuardrailsConfig(base: GuardrailsConfig, patch: Partial<Guardrails
 }
 
 /** Default HITL block — matches API `HumanInTheLoopConfigSchema`; disabled until the customer opts in. */
+export function createDefaultQueryProcessingConfig(): QueryProcessingConfig {
+  return {
+    enabled: false,
+    queryRewrite: false,
+    hyde: false,
+    multiQueryExpansion: false,
+    decomposition: false,
+    stepBack: false,
+    intentClassification: false,
+    entityExtraction: false,
+    keywordAugmentation: false,
+  };
+}
+
+export function createDefaultContextCompressionConfig(): ContextCompressionConfig {
+  return {
+    enabled: false,
+    mode: 'none',
+    minScore: null,
+    maxTokenBudget: null,
+  };
+}
+
+export function createDefaultObservabilityConfig(): ObservabilityConfig {
+  return {
+    tokenTracking: true,
+    latencyMonitoring: true,
+    retrievalTracing: false,
+    promptTracing: false,
+  };
+}
+
+export function createDefaultAgentToolsConfig(): AgentToolsConfig {
+  return {
+    calculatorEnabled: false,
+    webSearchEnabled: false,
+    sqlAgentEnabled: false,
+  };
+}
+
 export function createDefaultHumanInTheLoopConfig(): HumanInTheLoopConfig {
   return {
     enabled: false,
@@ -117,6 +165,8 @@ export function createDefaultPipelineConfiguration(
         provider: 'openai',
         dimensions: 1536,
         batchSize: 100,
+        cacheEmbeddings: false,
+        embeddingVersion: undefined,
       },
       vectorStore: {
         provider: 'qdrant',
@@ -127,11 +177,13 @@ export function createDefaultPipelineConfiguration(
           shards: 1,
         },
       },
+      queryProcessing: createDefaultQueryProcessingConfig(),
       retrieval: {
         strategy: 'similarity',
         topK: DEFAULT_TOP_K,
         scoreThreshold: null,
       },
+      contextCompression: createDefaultContextCompressionConfig(),
       reranking: {
         enabled: false,
       },
@@ -163,6 +215,9 @@ export function createDefaultPipelineConfiguration(
       source: 'designer',
     },
     guardrails: createDefaultGuardrailsConfig(),
+    observability: createDefaultObservabilityConfig(),
+    adaptivePolicies: [],
+    agentTools: createDefaultAgentToolsConfig(),
   };
 
   if (!overrides) {
@@ -173,6 +228,9 @@ export function createDefaultPipelineConfiguration(
     stages: overrideStages,
     metadata: overrideMetadata,
     guardrails: overrideGuardrails,
+    observability: overrideObservability,
+    adaptivePolicies: overrideAdaptivePolicies,
+    agentTools: overrideAgentTools,
     ...restOverrides
   } = overrides;
 
@@ -188,5 +246,16 @@ export function createDefaultPipelineConfiguration(
         : overrideGuardrails === null
           ? null
           : mergeGuardrailsConfig(base.guardrails!, overrideGuardrails),
+    observability:
+      overrideObservability === undefined
+        ? base.observability
+        : overrideObservability === null
+          ? null
+          : { ...base.observability!, ...overrideObservability },
+    adaptivePolicies: overrideAdaptivePolicies ?? base.adaptivePolicies,
+    agentTools:
+      overrideAgentTools === undefined
+        ? base.agentTools
+        : { ...base.agentTools!, ...overrideAgentTools },
   };
 }

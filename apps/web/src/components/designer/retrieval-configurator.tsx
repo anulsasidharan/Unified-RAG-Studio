@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
   Check,
@@ -10,7 +10,6 @@ import {
   Layers,
   Search,
   Sparkles,
-  Zap,
 } from 'lucide-react';
 
 import { createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
@@ -29,7 +28,13 @@ import { ROUTES } from '@/lib/constants';
 import { RetrievalConfigSchema, RerankingConfigSchema } from '@/lib/validators';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { FilterOperator, MetadataFilter, RetrievalConfig, RetrievalStrategy } from '@/types/pipeline';
+import type {
+  EnsembleMemberStrategy,
+  FilterOperator,
+  MetadataFilter,
+  RetrievalConfig,
+  RetrievalStrategy,
+} from '@/types/pipeline';
 
 const DEFAULT_STAGES = createDefaultPipelineConfiguration().stages;
 const DEFAULT_RETRIEVAL = DEFAULT_STAGES.retrieval;
@@ -47,6 +52,14 @@ const OPERATORS: FilterOperator[] = [
   'contains',
 ];
 
+const ENSEMBLE_MEMBERS: { id: EnsembleMemberStrategy; label: string }[] = [
+  { id: 'similarity', label: 'Similarity' },
+  { id: 'mmr', label: 'MMR' },
+  { id: 'hybrid', label: 'Hybrid' },
+  { id: 'multi-query', label: 'Multi-query' },
+  { id: 'parent-child', label: 'Parent–child' },
+];
+
 function complexityBadgeStyles(level: string): string {
   const l = level.toLowerCase();
   if (l === 'high') {
@@ -60,14 +73,22 @@ function complexityBadgeStyles(level: string): string {
 
 function mergeRetrieval(current: RetrievalConfig | undefined, patch: Partial<RetrievalConfig>): RetrievalConfig {
   const base = current ?? DEFAULT_RETRIEVAL;
+  const hybridSearch =
+    patch.hybridSearch !== undefined
+      ? { ...{ alpha: 0.5, fusion: 'rrf' as const }, ...base.hybridSearch, ...patch.hybridSearch }
+      : base.hybridSearch;
   return {
     ...base,
     ...patch,
     filters: patch.filters !== undefined ? patch.filters : base.filters,
-    hybridSearch: patch.hybridSearch !== undefined ? patch.hybridSearch : base.hybridSearch,
+    hybridSearch,
     parentChildConfig: patch.parentChildConfig !== undefined ? patch.parentChildConfig : base.parentChildConfig,
     multiQueryConfig: patch.multiQueryConfig !== undefined ? patch.multiQueryConfig : base.multiQueryConfig,
     scoreThreshold: patch.scoreThreshold !== undefined ? patch.scoreThreshold : base.scoreThreshold,
+    mmrFetchK: patch.mmrFetchK !== undefined ? patch.mmrFetchK : base.mmrFetchK,
+    mmrLambdaMult: patch.mmrLambdaMult !== undefined ? patch.mmrLambdaMult : base.mmrLambdaMult,
+    ensembleStrategies: patch.ensembleStrategies !== undefined ? patch.ensembleStrategies : base.ensembleStrategies,
+    ensembleRrfK: patch.ensembleRrfK !== undefined ? patch.ensembleRrfK : base.ensembleRrfK,
   };
 }
 
@@ -76,7 +97,13 @@ function mergeReranking(
   patch: Partial<typeof DEFAULT_RERANK>
 ): typeof DEFAULT_RERANK {
   const base = current ?? DEFAULT_RERANK;
-  return { ...base, ...patch };
+  return {
+    ...base,
+    ...patch,
+    minRelevanceScore: patch.minRelevanceScore !== undefined ? patch.minRelevanceScore : base.minRelevanceScore,
+    diversityMaxSimilarity:
+      patch.diversityMaxSimilarity !== undefined ? patch.diversityMaxSimilarity : base.diversityMaxSimilarity,
+  };
 }
 
 function parseFilterValue(op: FilterOperator, raw: string): MetadataFilter['value'] {
@@ -143,6 +170,16 @@ export function RetrievalConfigurator({
     },
     [draft.stages.reranking, setReranking]
   );
+
+  useEffect(() => {
+    if (cfg.strategy !== 'ensemble') return;
+    if (cfg.ensembleStrategies && cfg.ensembleStrategies.length > 0) return;
+    patchRetrieval(
+      retrievalDefaultsFromCatalog('ensemble', {
+        fallbackLlmModel: draft.stages.generation?.model ?? 'gpt-4o-mini',
+      })
+    );
+  }, [cfg.strategy, cfg.ensembleStrategies, draft.stages.generation?.model, patchRetrieval]);
 
   const retrievalValidation = useMemo(() => RetrievalConfigSchema.safeParse(cfg), [cfg]);
   const rerankValidation = useMemo(() => RerankingConfigSchema.safeParse(rerankCfg), [rerankCfg]);
@@ -314,6 +351,58 @@ export function RetrievalConfigurator({
                 }
                 className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
               />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="rerank-minrel" className="text-sm font-medium text-foreground">
+                Min relevance score (Cohere only, optional)
+              </label>
+              <input
+                id="rerank-minrel"
+                type="text"
+                inputMode="decimal"
+                placeholder="empty = no filter"
+                value={rerankCfg.minRelevanceScore == null ? '' : String(rerankCfg.minRelevanceScore)}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  if (v === '') {
+                    patchReranking({ minRelevanceScore: null });
+                    return;
+                  }
+                  const n = Number(v);
+                  if (!Number.isFinite(n)) return;
+                  patchReranking({ minRelevanceScore: Math.min(1, Math.max(0, n)) });
+                }}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              />
+            </div>
+            <div>
+              <label htmlFor="rerank-div" className="text-sm font-medium text-foreground">
+                Diversity (max word Jaccard, optional)
+              </label>
+              <input
+                id="rerank-div"
+                type="text"
+                inputMode="decimal"
+                placeholder="empty = off"
+                value={rerankCfg.diversityMaxSimilarity == null ? '' : String(rerankCfg.diversityMaxSimilarity)}
+                onChange={(e) => {
+                  const v = e.target.value.trim();
+                  if (v === '') {
+                    patchReranking({ diversityMaxSimilarity: null });
+                    return;
+                  }
+                  const n = Number(v);
+                  if (!Number.isFinite(n)) return;
+                  patchReranking({ diversityMaxSimilarity: Math.min(1, Math.max(0, n)) });
+                }}
+                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Skip chunks too similar to already-kept text (e.g. 0.85). Applied after ordering.
+              </p>
             </div>
           </div>
 
@@ -691,6 +780,7 @@ export function RetrievalConfigurator({
                       patchRetrieval({
                         hybridSearch: {
                           alpha: Number(e.target.value),
+                          fusion: cfg.hybridSearch?.fusion ?? 'rrf',
                         },
                       })
                     }
@@ -699,6 +789,27 @@ export function RetrievalConfigurator({
                   <p className="mt-1 text-xs text-muted-foreground">
                     Current: <span className="font-mono text-foreground">{(cfg.hybridSearch?.alpha ?? 0.5).toFixed(2)}</span>
                   </p>
+                </div>
+                <div className="mt-4">
+                  <label htmlFor="ret-hybrid-fusion" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Fusion mode
+                  </label>
+                  <select
+                    id="ret-hybrid-fusion"
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    value={cfg.hybridSearch?.fusion ?? 'rrf'}
+                    onChange={(e) =>
+                      patchRetrieval({
+                        hybridSearch: {
+                          alpha: cfg.hybridSearch?.alpha ?? 0.5,
+                          fusion: e.target.value as 'rrf' | 'weighted',
+                        },
+                      })
+                    }
+                  >
+                    <option value="rrf">Reciprocal rank fusion (RRF)</option>
+                    <option value="weighted">Weighted score blend</option>
+                  </select>
                 </div>
               </div>
             ) : null}
@@ -798,23 +909,105 @@ export function RetrievalConfigurator({
             ) : null}
 
             {cfg.strategy === 'mmr' ? (
-              <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
-                <Zap className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
-                <span>
-                  MMR diversity tuning (λ, fetch-k) lives in implementation code; this draft tracks Top-K and optional
-                  score threshold only.
-                </span>
-              </p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="ret-mmr-fetch" className="text-sm font-medium text-foreground">
+                    Fetch-K (candidate pool)
+                  </label>
+                  <input
+                    id="ret-mmr-fetch"
+                    type="number"
+                    min={5}
+                    max={200}
+                    value={cfg.mmrFetchK ?? 20}
+                    onChange={(e) =>
+                      patchRetrieval({
+                        mmrFetchK: Math.min(200, Math.max(5, Number(e.target.value) || 20)),
+                      })
+                    }
+                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">Must be ≥ top-K.</p>
+                </div>
+                <div>
+                  <label htmlFor="ret-mmr-lambda" className="text-sm font-medium text-foreground">
+                    λ relevance vs diversity
+                  </label>
+                  <input
+                    id="ret-mmr-lambda"
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={cfg.mmrLambdaMult ?? 0.5}
+                    onChange={(e) =>
+                      patchRetrieval({
+                        mmrLambdaMult: Number(e.target.value),
+                      })
+                    }
+                    className="mt-2 w-full accent-primary-600"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Current λ: <span className="font-mono text-foreground">{(cfg.mmrLambdaMult ?? 0.5).toFixed(2)}</span>
+                  </p>
+                </div>
+              </div>
             ) : null}
 
             {cfg.strategy === 'ensemble' ? (
-              <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
-                <Layers className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
-                <span>
-                  Ensemble RRF weights and member strategies are configured in application code; schema captures strategy
-                  choice and Top-K for exports.
-                </span>
-              </p>
+              <div className="mt-6 space-y-4">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Member strategies</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Each member runs in parallel; results are fused with RRF. Hybrid requires a sparse corpus at query
+                    time.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {ENSEMBLE_MEMBERS.map((m) => {
+                      const cur = cfg.ensembleStrategies ?? ['similarity', 'hybrid'];
+                      const active = cur.includes(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            const has = cur.includes(m.id);
+                            const next = has ? cur.filter((x) => x !== m.id) : [...cur, m.id];
+                            if (next.length < 1) return;
+                            patchRetrieval({ ensembleStrategies: next });
+                          }}
+                          className={cn(
+                            'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                            active
+                              ? 'border-primary-600 bg-primary-50 text-primary-900 dark:bg-primary-950/40 dark:text-primary-100'
+                              : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50'
+                          )}
+                        >
+                          {m.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="ret-rrf-k" className="text-sm font-medium text-foreground">
+                    RRF smoothing k
+                  </label>
+                  <input
+                    id="ret-rrf-k"
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={cfg.ensembleRrfK ?? 60}
+                    onChange={(e) =>
+                      patchRetrieval({
+                        ensembleRrfK: Math.min(120, Math.max(1, Number(e.target.value) || 60)),
+                      })
+                    }
+                    className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </div>
+              </div>
             ) : null}
           </section>
 

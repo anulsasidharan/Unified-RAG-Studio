@@ -5,10 +5,12 @@ JSON catalogs in data/. Both sides validate against the same domain model —
 model IDs, strategies, and provider names must match the JSON catalog values.
 """
 
+from __future__ import annotations
+
 from enum import StrEnum
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
 
 
@@ -50,6 +52,7 @@ class ChunkingStrategy(StrEnum):
     SENTENCE_BASED = "sentence-based"
     PARAGRAPH_BASED = "paragraph-based"
     CODE_AWARE = "code-aware"
+    TOKEN_AWARE = "token-aware"
 
 
 class VectorStoreProvider(StrEnum):
@@ -97,6 +100,8 @@ class MemoryType(StrEnum):
     CONVERSATION_BUFFER = "conversation-buffer"
     SUMMARY_BUFFER = "summary-buffer"
     VECTOR_MEMORY = "vector-memory"
+    ENTITY_MEMORY = "entity-memory"
+    EPISODIC_MEMORY = "episodic-memory"
 
 
 class OutputFormat(StrEnum):
@@ -142,6 +147,10 @@ class HybridSearchConfig(RAGBaseModel):
     alpha: float = Field(default=0.5, ge=0.0, le=1.0)
     sparse_weight: float | None = None
     dense_weight: float | None = None
+    fusion: Literal["rrf", "weighted"] | None = Field(
+        default=None,
+        description="How dense and sparse rankings are merged at runtime.",
+    )
 
 
 # ─── Stage Configuration Schemas ─────────────────────────────────────────────
@@ -187,6 +196,8 @@ class EmbeddingConfigSchema(RAGBaseModel):
     dimensions: int = Field(ge=64, le=8192)
     batch_size: int | None = Field(default=None, ge=1, le=2048)
     max_tokens: int | None = Field(default=None, ge=1)
+    cache_embeddings: bool = False
+    embedding_version: str | None = Field(default=None, max_length=64)
 
 
 class VectorStoreCloudConfigSchema(RAGBaseModel):
@@ -216,7 +227,7 @@ class ParentChildConfigSchema(RAGBaseModel):
 
 
 class MultiQueryConfigSchema(RAGBaseModel):
-    num_variants: int = Field(default=3, ge=1, le=10)
+    num_variants: int = Field(default=3, ge=2, le=10)
     llm_model: str
 
 
@@ -228,6 +239,26 @@ class RetrievalConfigSchema(RAGBaseModel):
     hybrid_search: HybridSearchConfig | None = None
     parent_child_config: ParentChildConfigSchema | None = None
     multi_query_config: MultiQueryConfigSchema | None = None
+    mmr_fetch_k: int | None = Field(default=None, ge=5, le=200)
+    mmr_lambda_mult: float | None = Field(default=None, ge=0.0, le=1.0)
+    ensemble_strategies: list[str] | None = None
+    ensemble_rrf_k: int | None = Field(default=None, ge=1, le=120)
+
+    @model_validator(mode="after")
+    def _ensemble_and_mmr_defaults(self) -> RetrievalConfigSchema:
+        if self.strategy == RetrievalStrategy.ENSEMBLE:
+            raw = list(self.ensemble_strategies or ())
+            norm: list[str] = []
+            for s in raw:
+                if s == "bm25":
+                    norm.append("hybrid")
+                elif s in ("similarity", "mmr", "hybrid", "multi-query", "parent-child"):
+                    norm.append(s)
+            self.ensemble_strategies = norm or ["similarity", "hybrid"]
+        elif self.strategy == RetrievalStrategy.MMR:
+            if self.mmr_fetch_k is not None and self.mmr_fetch_k < self.top_k:
+                self.mmr_fetch_k = self.top_k
+        return self
 
 
 class RerankingConfigSchema(RAGBaseModel):
@@ -235,6 +266,13 @@ class RerankingConfigSchema(RAGBaseModel):
     model: str | None = Field(default=None, description="Reranker model ID from data/models/rerankers.json")
     top_n: int | None = Field(default=None, ge=1, le=50)
     provider: Literal["cohere", "huggingface", "custom"] | None = None
+    min_relevance_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    diversity_max_similarity: float | None = Field(default=None, ge=0.0, le=1.0)
+
+
+class FewShotMessageSchema(RAGBaseModel):
+    role: Literal["user", "assistant", "system"]
+    content: str = Field(min_length=1, max_length=8000)
 
 
 class GenerationConfigSchema(RAGBaseModel):
@@ -245,10 +283,22 @@ class GenerationConfigSchema(RAGBaseModel):
     top_p: float | None = Field(default=None, ge=0.0, le=1.0)
     system_prompt: str | None = None
     output_format: OutputFormat | None = None
+    few_shot_messages: list[FewShotMessageSchema] | None = None
+    persona: str | None = Field(default=None, max_length=256)
+    citation_grounding: bool = False
 
 
 class RoutingRuleSchema(RAGBaseModel):
-    condition: Literal["keyword", "query-length", "semantic-complexity"]
+    condition: Literal[
+        "keyword",
+        "query-length",
+        "semantic-complexity",
+        "semantic-routing",
+        "cost-aware",
+        "latency-aware",
+        "confidence-routing",
+        "tool-routing",
+    ]
     threshold: float | None = None
     keywords: list[str] | None = None
     target_model: str
@@ -273,6 +323,10 @@ EvaluationMetricName = Literal[
     "context_precision",
     "context_recall",
     "latency",
+    "groundedness",
+    "safety",
+    "human_evaluation",
+    "retrieval_ndcg",
 ]
 
 
@@ -356,6 +410,57 @@ class HumanInTheLoopConfigSchema(RAGBaseModel):
 # ─── Pipeline Stages ──────────────────────────────────────────────────────────
 
 
+class ContextCompressionConfigSchema(RAGBaseModel):
+    """Post-retrieval context shaping before rerank / generation."""
+
+    enabled: bool = False
+    mode: Literal["none", "relevance_filter", "dedupe", "summarize_stub"] = "none"
+    min_score: float | None = Field(default=None, ge=0.0, le=1.0)
+    max_token_budget: int | None = Field(default=None, ge=256, le=32000)
+
+
+class ObservabilityConfigSchema(RAGBaseModel):
+    """Product-facing observability toggles persisted with the pipeline."""
+
+    token_tracking: bool = True
+    latency_monitoring: bool = True
+    retrieval_tracing: bool = False
+    prompt_tracing: bool = False
+
+
+class AdaptivePolicyRuleSchema(RAGBaseModel):
+    """Lightweight if/then policy hints for adaptive RAG (evaluated by orchestration later)."""
+
+    predicate: str = Field(min_length=1, max_length=512)
+    action: str = Field(min_length=1, max_length=512)
+
+
+class AgentToolsConfigSchema(RAGBaseModel):
+    """Agent / tool orchestration flags for export and future runtime."""
+
+    calculator_enabled: bool = False
+    web_search_enabled: bool = False
+    sql_agent_enabled: bool = False
+
+
+class QueryProcessingConfigSchema(RAGBaseModel):
+    """Pre-retrieval query transforms (design-time; deterministic expansion in benchmarks)."""
+
+    enabled: bool = False
+    query_rewrite: bool = False
+    hyde: bool = False
+    multi_query_expansion: bool = False
+    decomposition: bool = False
+    step_back: bool = False
+    intent_classification: bool = False
+    entity_extraction: bool = False
+    keyword_augmentation: bool = False
+    llm_model: str | None = Field(
+        default=None,
+        description="Generation model id for future LLM-backed transforms.",
+    )
+
+
 class PipelineStagesSchema(RAGBaseModel):
     """All ten stages of the RAG pipeline.
 
@@ -368,7 +473,9 @@ class PipelineStagesSchema(RAGBaseModel):
     chunking: ChunkingConfigSchema
     embedding: EmbeddingConfigSchema
     vector_store: VectorStoreConfigSchema
+    query_processing: QueryProcessingConfigSchema | None = None
     retrieval: RetrievalConfigSchema
+    context_compression: ContextCompressionConfigSchema | None = None
     reranking: RerankingConfigSchema | None = None
     generation: GenerationConfigSchema
     routing: RoutingConfigSchema | None = None
@@ -444,6 +551,9 @@ class PipelineConfigurationSchema(RAGBaseModel):
         default=None,
         description="Optional per-stage guardrail policy; omit for built-in defaults.",
     )
+    observability: ObservabilityConfigSchema | None = None
+    adaptive_policies: list[AdaptivePolicyRuleSchema] | None = None
+    agent_tools: AgentToolsConfigSchema | None = None
 
 
 def _rebuild_pipeline_configuration_refs() -> None:

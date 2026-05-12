@@ -5,6 +5,7 @@ import {
   AlignLeft,
   Brain,
   Code,
+  Hash,
   Heading,
   LayoutGrid,
   Scissors,
@@ -32,6 +33,7 @@ const STRATEGY_ICONS: Record<ChunkingStrategy, typeof LayoutGrid> = {
   'sentence-based': TextQuote,
   'paragraph-based': AlignLeft,
   'code-aware': Code,
+  'token-aware': Hash,
 };
 
 function complexityBadgeStyles(level: string): string {

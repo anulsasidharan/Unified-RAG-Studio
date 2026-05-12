@@ -26,6 +26,10 @@ const METRICS: { id: EvaluationMetricName; label: string; hint: string }[] = [
   { id: 'context_precision', label: 'Context precision', hint: 'Retrieved chunks are on-topic' },
   { id: 'context_recall', label: 'Context recall', hint: 'Retrieval covers needed evidence' },
   { id: 'latency', label: 'Latency', hint: 'End-to-end response time' },
+  { id: 'groundedness', label: 'Groundedness', hint: 'Narrative grounding vs retrieval (RAGAS-style)' },
+  { id: 'safety', label: 'Safety', hint: 'Policy / toxicity signals when your harness emits them' },
+  { id: 'human_evaluation', label: 'Human evaluation', hint: 'Requires a labeled review workflow' },
+  { id: 'retrieval_ndcg', label: 'Retrieval NDCG', hint: 'Needs graded relevance labels per query' },
 ];
 
 function toggleMetric(list: EvaluationMetricName[] | undefined, id: EvaluationMetricName): EvaluationMetricName[] {

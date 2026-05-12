@@ -23,6 +23,8 @@ class RerankingRuntimeConfig:
     model: str | None = None
     top_n: int | None = None
     provider: str | None = None  # cohere | huggingface | custom
+    min_relevance_score: float | None = None
+    diversity_max_similarity: float | None = None
 
 
 @dataclass
@@ -39,3 +41,5 @@ class RetrievalRuntimeConfig:
     mmr_fetch_k: int | None = None
     ensemble_strategies: tuple[str, ...] = ("similarity", "mmr")
     multi_query_variants: tuple[str, ...] = field(default_factory=tuple)
+    # RRF k constant for reciprocal rank fusion (hybrid, multi-query, ensemble).
+    rrf_k: int = 60

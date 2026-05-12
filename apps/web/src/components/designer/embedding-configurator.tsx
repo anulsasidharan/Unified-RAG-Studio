@@ -497,6 +497,45 @@ export function EmbeddingConfigurator({
           />
         </div>
 
+        <div className="mt-6 space-y-4 rounded-lg border border-border bg-muted/15 px-3 py-4">
+          <label className="flex cursor-pointer items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={Boolean(cfg.cacheEmbeddings)}
+              onChange={(e) => patchEmbedding({ cacheEmbeddings: e.target.checked })}
+              className="mt-1 rounded border-input"
+            />
+            <span>
+              <span className="font-medium text-foreground">Cache embeddings</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                When enabled, the API embedding layer reuses Redis or in-memory vectors for identical text + model
+                fingerprints.
+              </span>
+            </span>
+          </label>
+          <div>
+            <label htmlFor="emb-version" className="text-sm font-medium text-foreground">
+              Embedding version tag (optional)
+            </label>
+            <input
+              id="emb-version"
+              type="text"
+              maxLength={64}
+              placeholder="e.g. 2026-05-embed-v2"
+              value={cfg.embeddingVersion ?? ''}
+              onChange={(e) =>
+                patchEmbedding({
+                  embeddingVersion: e.target.value.trim() === '' ? undefined : e.target.value.trim(),
+                })
+              }
+              className="mt-1 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Stored on chunk metadata at index time when your worker uses the shared embedding service.
+            </p>
+          </div>
+        </div>
+
         <dl className="mt-6 grid gap-2 text-sm sm:grid-cols-2">
           <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
             <dt className="text-xs uppercase tracking-wide text-muted-foreground">Model id</dt>

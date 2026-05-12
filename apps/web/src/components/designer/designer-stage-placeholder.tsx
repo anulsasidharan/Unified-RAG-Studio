@@ -7,10 +7,13 @@ import { cn } from '@/lib/utils';
 
 import { ChunkingConfigurator } from './chunking-configurator';
 import { CloudProviderSelector } from './cloud-provider-selector';
+import { ContextCompressionConfigurator } from './context-compression-configurator';
 import { DataIngestionConfigurator } from './data-ingestion-configurator';
 import { EmbeddingConfigurator } from './embedding-configurator';
 import { EvaluationConfigurator } from './evaluation-configurator';
 import { MemoryConfigurator } from './memory-configurator';
+import { ObservabilityConfigurator } from './observability-configurator';
+import { QueryProcessingConfigurator } from './query-processing-configurator';
 import { RetrievalConfigurator } from './retrieval-configurator';
 import { GenerationConfigurator } from './generation-configurator';
 import { GuardrailsConfigurator } from './guardrails-configurator';
@@ -31,8 +34,12 @@ function phaseNoteFor(stageId: DesignerStageId): string {
       return 'Pick an embedding model from the catalog, filter by provider and quality, tune batch size — saved on your pipeline draft.';
     case 'vectorstore':
       return 'Pick a vector database from the catalog, name your index/collection, and tune metric, scaling hints, and optional cloud placement — saved on your pipeline draft.';
+    case 'queryTransform':
+      return 'Optional query transforms (rewrite, HyDE, multi-query, etc.) before retrieval — saved on draft.stages.queryProcessing; Autopilot uses deterministic variants in benchmarks.';
     case 'retrieval':
       return 'Choose a retrieval strategy from the catalog, tune top-k, optional score threshold, metadata filters, and reranking — saved on your pipeline draft.';
+    case 'contextCompression':
+      return 'Optional post-retrieval filter or dedupe before reranking — saved on draft.stages.contextCompression; applied in the API retrieval path when enabled.';
     case 'reranking':
       return 'Focused reranking controls (same draft as Retrieval); use the Retrieval stage for full strategy and filters.';
     case 'generation':
@@ -43,6 +50,8 @@ function phaseNoteFor(stageId: DesignerStageId): string {
       return 'Choose memory mode (none, buffer, summary, vector) and session options — saved on your pipeline draft.';
     case 'evaluation':
       return 'Toggle evaluation, pick metrics, test set size, and schedule — saved on your pipeline draft.';
+    case 'observability':
+      return 'Tracing toggles, agent tool flags, and adaptive policy hints — saved on draft.observability, draft.agentTools, and draft.adaptivePolicies for export.';
     case 'guardrails':
       return 'Toggle input, retrieval, and output safety checks — saved on draft.guardrails for export and guarded RAG preview.';
     case 'hitl':
@@ -94,8 +103,12 @@ export function DesignerStagePlaceholder({
         <EmbeddingConfigurator className="mt-8" />
       ) : stageId === 'vectorstore' ? (
         <VectorStoreConfigurator className="mt-8" />
+      ) : stageId === 'queryTransform' ? (
+        <QueryProcessingConfigurator className="mt-8" />
       ) : stageId === 'retrieval' ? (
         <RetrievalConfigurator className="mt-8" variant="full" />
+      ) : stageId === 'contextCompression' ? (
+        <ContextCompressionConfigurator className="mt-8" />
       ) : stageId === 'reranking' ? (
         <RetrievalConfigurator className="mt-8" variant="rerank-focus" />
       ) : stageId === 'generation' ? (
@@ -106,6 +119,8 @@ export function DesignerStagePlaceholder({
         <MemoryConfigurator className="mt-8" />
       ) : stageId === 'evaluation' ? (
         <EvaluationConfigurator className="mt-8" />
+      ) : stageId === 'observability' ? (
+        <ObservabilityConfigurator className="mt-8" />
       ) : stageId === 'guardrails' ? (
         <GuardrailsConfigurator className="mt-8" />
       ) : stageId === 'hitl' ? (

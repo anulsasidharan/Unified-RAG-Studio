@@ -32,6 +32,8 @@ class EmbeddingConfig:
     dimensions: int = 1536
     batch_size: int | None = None   # None = use provider-specific default
     max_tokens: int | None = None   # None = use model's published maximum
+    cache_embeddings: bool = False
+    embedding_version: str | None = None
 
 
 class TextEmbedder(ABC):

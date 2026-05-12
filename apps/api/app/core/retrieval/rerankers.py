@@ -90,3 +90,44 @@ class CohereReranker:
         indices = [int(r["index"]) for r in results if "index" in r]
         logger.info("cohere_rerank_complete", top_n=len(indices))
         return indices
+
+    async def rerank_with_scores(
+        self,
+        query: str,
+        documents: list[str],
+        *,
+        top_n: int,
+    ) -> list[tuple[int, float]]:
+        """Return ``(original_index, relevance_score)`` sorted by Cohere relevance (desc)."""
+        if not documents:
+            return []
+        top_n = min(top_n, len(documents))
+        payload = {
+            "model": cohere_rerank_model_id(self._catalog_model_id),
+            "query": query,
+            "documents": documents,
+            "top_n": top_n,
+        }
+        headers = {
+            "Authorization": f"Bearer {self._api_key}",
+            "Content-Type": "application/json",
+        }
+        url = "https://api.cohere.ai/v1/rerank"
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.post(url, json=payload, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+        results = data.get("results") or []
+        out: list[tuple[int, float]] = []
+        for r in results:
+            if "index" not in r:
+                continue
+            idx = int(r["index"])
+            raw = r.get("relevance_score")
+            try:
+                sc = float(raw) if raw is not None else 0.0
+            except (TypeError, ValueError):
+                sc = 0.0
+            out.append((idx, sc))
+        logger.info("cohere_rerank_scored_complete", top_n=len(out))
+        return out

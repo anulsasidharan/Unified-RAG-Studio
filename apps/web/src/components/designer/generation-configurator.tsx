@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { Bot, Check, Layers, Search } from 'lucide-react';
+import { Bot, Check, Layers, Plus, Search, Trash2 } from 'lucide-react';
 
 import {
   generationConfigFromCatalogEntry,
@@ -13,7 +13,7 @@ import { GenerationConfigSchema } from '@/lib/validators';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 import type { GenerationModel } from '@/types/models';
-import type { GenerationConfig, OutputFormat } from '@/types/pipeline';
+import type { FewShotMessage, GenerationConfig, OutputFormat } from '@/types/pipeline';
 
 const DEFAULT_GEN = createDefaultPipelineConfiguration().stages.generation;
 
@@ -150,6 +150,25 @@ export function GenerationConfigurator({
   const clampedMaxTokens = Math.min(Math.max(64, maxTokens), maxOutCap);
 
   const useTopP = cfg.topP !== undefined && cfg.topP !== null;
+
+  const fewShots = cfg.fewShotMessages ?? [];
+
+  const addFewShot = () => {
+    patchGeneration({
+      fewShotMessages: [...fewShots, { role: 'user', content: 'Example user turn…' }],
+    });
+  };
+
+  const updateFewShot = (index: number, patch: Partial<FewShotMessage>) => {
+    patchGeneration({
+      fewShotMessages: fewShots.map((m, i) => (i === index ? { ...m, ...patch } : m)),
+    });
+  };
+
+  const removeFewShot = (index: number) => {
+    const next = fewShots.filter((_, i) => i !== index);
+    patchGeneration({ fewShotMessages: next.length ? next : undefined });
+  };
 
   return (
     <div className={cn('space-y-8', className)}>
@@ -553,6 +572,107 @@ export function GenerationConfigurator({
             <dd className="mt-1 text-foreground">{PROVIDER_LABEL[cfg.provider] ?? cfg.provider}</dd>
           </div>
         </dl>
+      </section>
+
+      <section
+        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        aria-labelledby="gen-prompt-heading"
+      >
+        <h2 id="gen-prompt-heading" className="text-lg font-semibold text-foreground">
+          Prompt engineering
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Persona, optional few-shot turns, and citation grounding are passed through to{' '}
+          <strong className="font-medium text-foreground">GenerationService</strong> on guarded RAG and exports.
+        </p>
+
+        <div className="mt-6 space-y-4">
+          <div>
+            <label htmlFor="gen-persona" className="text-sm font-medium text-foreground">
+              Persona (optional)
+            </label>
+            <input
+              id="gen-persona"
+              type="text"
+              maxLength={256}
+              placeholder="e.g. a concise support agent for ACME SaaS"
+              value={cfg.persona ?? ''}
+              onChange={(e) =>
+                patchGeneration({
+                  persona: e.target.value.trim() === '' ? undefined : e.target.value,
+                })
+              }
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+
+          <label className="flex cursor-pointer items-start gap-3 text-sm">
+            <input
+              type="checkbox"
+              checked={Boolean(cfg.citationGrounding)}
+              onChange={(e) => patchGeneration({ citationGrounding: e.target.checked })}
+              className="mt-1 rounded border-input"
+            />
+            <span>
+              <span className="font-medium text-foreground">Citation grounding</span>
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Adds instructions to ground answers in retrieved context (best-effort; depends on model compliance).
+              </span>
+            </span>
+          </label>
+
+          <div>
+            <div className="flex flex-wrap items-end justify-between gap-2">
+              <h3 className="text-sm font-semibold text-foreground">Few-shot examples</h3>
+              <button
+                type="button"
+                onClick={addFewShot}
+                disabled={fewShots.length >= 24}
+                className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium shadow-sm hover:bg-accent disabled:opacity-50"
+              >
+                <Plus className="h-3.5 w-3.5" aria-hidden />
+                Add turn
+              </button>
+            </div>
+            {fewShots.length === 0 ? (
+              <p className="mt-2 text-xs text-muted-foreground">No few-shot messages — optional structured priming.</p>
+            ) : (
+              <ul className="mt-3 space-y-3">
+                {fewShots.map((shot, idx) => (
+                  <li key={`fs-${idx}-${shot.role}`} className="rounded-lg border border-border bg-muted/15 p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <select
+                        className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                        value={shot.role}
+                        onChange={(e) =>
+                          updateFewShot(idx, { role: e.target.value as FewShotMessage['role'] })
+                        }
+                      >
+                        <option value="user">user</option>
+                        <option value="assistant">assistant</option>
+                        <option value="system">system</option>
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => removeFewShot(idx)}
+                        className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:underline"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                        Remove
+                      </button>
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={shot.content}
+                      onChange={(e) => updateFewShot(idx, { content: e.target.value })}
+                      className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
       </section>
 
       {!validation.success ? (

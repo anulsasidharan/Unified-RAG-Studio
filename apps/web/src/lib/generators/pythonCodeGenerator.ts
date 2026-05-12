@@ -145,7 +145,49 @@ function buildHumanInTheLoopBlock(stages: PipelineStages): string[] {
   ];
 }
 
-function buildConfig(stages: PipelineStages, cloudProvider: string): string {
+function buildPipelineExtras(config: PipelineConfiguration): string[] {
+  const out: string[] = [];
+  const cc = config.stages.contextCompression;
+  if (cc?.enabled && cc.mode !== 'none') {
+    out.push(
+      '',
+      '# ─── Context compression (post-retrieval) ─────────────────────────────────',
+      `CONTEXT_COMPRESSION = ${JSON.stringify({
+        enabled: cc.enabled,
+        mode: cc.mode,
+        minScore: cc.minScore ?? null,
+        maxTokenBudget: cc.maxTokenBudget ?? null,
+      })}`
+    );
+  }
+  if (config.observability) {
+    out.push('', '# ─── Observability ───────────────────────────────────────────────────────', `OBSERVABILITY = ${JSON.stringify(config.observability)}`);
+  }
+  if (config.agentTools) {
+    out.push('', '# ─── Agent tools ───────────────────────────────────────────────────────────', `AGENT_TOOLS = ${JSON.stringify(config.agentTools)}`);
+  }
+  if (config.adaptivePolicies?.length) {
+    out.push(
+      '',
+      '# ─── Adaptive policies ─────────────────────────────────────────────────────',
+      `ADAPTIVE_POLICIES = ${JSON.stringify(config.adaptivePolicies)}`
+    );
+  }
+  const fs = config.stages.generation.fewShotMessages;
+  if (fs?.length) {
+    out.push('', '# ─── Few-shot messages ───────────────────────────────────────────────────', `FEW_SHOT_MESSAGES = ${JSON.stringify(fs)}`);
+  }
+  if (config.stages.generation.persona?.trim()) {
+    out.push('', `PERSONA_HINT = ${JSON.stringify(config.stages.generation.persona)}`);
+  }
+  if (config.stages.generation.citationGrounding) {
+    out.push('', 'CITATION_GROUNDING = True');
+  }
+  return out;
+}
+
+function buildConfig(config: PipelineConfiguration): string {
+  const { stages, cloudProvider } = config;
   const embClass = EMBEDDING_CLASS[stages.embedding.provider] ?? 'CustomEmbeddings';
   const llmClass = LLM_CLASS[stages.generation.provider] ?? 'CustomLLM';
 
@@ -175,6 +217,7 @@ function buildConfig(stages: PipelineStages, cloudProvider: string): string {
     '',
     ...buildTextSplitter(stages),
     ...buildHumanInTheLoopBlock(stages),
+    ...buildPipelineExtras(config),
   ];
 
   return lines.join('\n');
@@ -260,6 +303,15 @@ function buildTextSplitter(stages: PipelineStages): string[] {
         'text_splitter = SemanticChunker(',
         '    embeddings,',
         '    breakpoint_threshold_type="percentile",',
+        ')',
+      ];
+    case 'token-aware':
+      return [
+        '# Token-aware: align with your embedding tokenizer (tiktoken / provider SDK) in production.',
+        'text_splitter = RecursiveCharacterTextSplitter(',
+        `    chunk_size=${chunkSize},`,
+        `    chunk_overlap=${chunkOverlap},`,
+        separators ? `    separators=${JSON.stringify(separators)},` : '    separators=["\\n\\n", "\\n", " ", ""],',
         ')',
       ];
     default:
@@ -348,17 +400,21 @@ function buildRetriever(stages: PipelineStages): string {
   ];
 
   switch (retrieval.strategy) {
-    case 'mmr':
+    case 'mmr': {
+      const fetchK = retrieval.mmrFetchK ?? Math.max(retrieval.topK * 4, retrieval.topK);
+      const lam = retrieval.mmrLambdaMult ?? 0.5;
       lines.push(
         'base_retriever = vector_store.as_retriever(',
         '    search_type="mmr",',
-        `    search_kwargs={"k": ${retrieval.topK}, "fetch_k": ${retrieval.topK * 4}},`,
+        `    search_kwargs={"k": ${retrieval.topK}, "fetch_k": ${fetchK}, "lambda_mult": ${lam}},`,
         ')'
       );
       break;
-    case 'hybrid':
+    }
+    case 'hybrid': {
+      const fusion = retrieval.hybridSearch?.fusion ?? 'rrf';
       lines.push(
-        '# Hybrid dense+sparse retrieval',
+        `# Hybrid dense+sparse retrieval (fusion=${fusion})`,
         'base_retriever = vector_store.as_retriever(',
         '    search_type="similarity",',
         `    search_kwargs={"k": ${retrieval.topK}},`,
@@ -366,9 +422,27 @@ function buildRetriever(stages: PipelineStages): string {
         '# TODO: combine with BM25Retriever using EnsembleRetriever:',
         '# from langchain.retrievers import EnsembleRetriever, BM25Retriever',
         '# bm25 = BM25Retriever.from_documents(docs, k=TOP_K)',
+        fusion === 'weighted'
+          ? `# Weighted blend α=${retrieval.hybridSearch?.alpha ?? 0.5} (dense vs sparse)`
+          : '# RRF merge recommended when both rankings are available',
         `# retriever = EnsembleRetriever(retrievers=[bm25, base_retriever], weights=[${1 - (retrieval.hybridSearch?.alpha ?? 0.5)}, ${retrieval.hybridSearch?.alpha ?? 0.5}])`
       );
       break;
+    }
+    case 'ensemble': {
+      const members = (retrieval.ensembleStrategies ?? ['similarity', 'hybrid']).join(', ');
+      const rrfK = retrieval.ensembleRrfK ?? 60;
+      lines.push(
+        '# Ensemble retrieval — run sub-retrievers then RRF fuse',
+        `# members=[${members}], rrf_k=${rrfK}`,
+        'base_retriever = vector_store.as_retriever(',
+        '    search_type="similarity",',
+        `    search_kwargs={"k": ${retrieval.topK}},`,
+        ')',
+        '# TODO: instantiate one retriever per member and merge with reciprocal_rank_fusion',
+      );
+      break;
+    }
     case 'multi-query':
       lines.push(
         'base_retriever = MultiQueryRetriever.from_llm(',
@@ -391,6 +465,12 @@ function buildRetriever(stages: PipelineStages): string {
   if (reranking?.enabled) {
     lines.push('');
     lines.push('# Reranking with contextual compression');
+    if (reranking.minRelevanceScore != null) {
+      lines.push(`# Post-filter: min_relevance_score=${reranking.minRelevanceScore} (Cohere scores)`);
+    }
+    if (reranking.diversityMaxSimilarity != null) {
+      lines.push(`# Near-duplicate skip: diversity_max_similarity=${reranking.diversityMaxSimilarity}`);
+    }
     if (reranking.provider === 'cohere') {
       lines.push(`compressor = CohereRerank(top_n=${reranking.topN ?? 5})`);
     } else {
@@ -514,7 +594,7 @@ function buildIndexingSection(stages: PipelineStages): string {
  * directly after installing the listed dependencies.
  */
 export function generatePythonCode(config: PipelineConfiguration): string {
-  const { stages, cloudProvider } = config;
+  const { stages } = config;
 
   const sections = [
     buildHeader(config),
@@ -522,7 +602,7 @@ export function generatePythonCode(config: PipelineConfiguration): string {
     buildImports(stages),
     '',
     '',
-    buildConfig(stages, cloudProvider),
+    buildConfig(config),
     '',
     '',
     buildVectorStore(stages),

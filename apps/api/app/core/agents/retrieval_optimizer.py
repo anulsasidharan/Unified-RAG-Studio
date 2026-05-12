@@ -21,6 +21,7 @@ import structlog
 
 from app.core.agents.chunking_optimizer import _synthetic_corpus_from_summary
 from app.core.chunking import ChunkingConfig, ChunkingService
+from app.core.query_processing import expand_retrieval_queries
 from app.core.retrieval.bm25 import BM25Index, tokenize
 from app.core.retrieval.fusion import mmr_order, reciprocal_rank_fusion_keys, weighted_dense_sparse
 
@@ -113,12 +114,13 @@ def _chunk_texts(
 def _build_eval_queries(
     analyze_payload: dict[str, Any],
     requirements: dict[str, Any],
+    pipeline_config: dict[str, Any] | None = None,
 ) -> list[str]:
     raw = requirements.get("retrieval_eval_queries")
     if isinstance(raw, list) and raw:
-        out = [str(q).strip() for q in raw if str(q).strip()]
-        if out:
-            return out[:16]
+        base = [str(q).strip() for q in raw if str(q).strip()]
+        if base:
+            return _apply_query_processing(base[:16], pipeline_config)
 
     summary = analyze_payload.get("corpus_summary") or {}
     if not isinstance(summary, dict):
@@ -126,12 +128,36 @@ def _build_eval_queries(
     langs = summary.get("languages") or []
     lang_hint = langs[0] if isinstance(langs, list) and langs else "en"
 
-    return [
+    base = [
         "What methodology was used and what are the main findings?",
         "Summarize implementation details and technical trade-offs.",
         "Which results or metrics are highlighted in the document?",
         f"What is the primary language or audience context ({lang_hint})?",
     ]
+    return _apply_query_processing(base, pipeline_config)
+
+
+def _apply_query_processing(queries: list[str], pipeline_config: dict[str, Any] | None) -> list[str]:
+    stages = (pipeline_config or {}).get("stages") if isinstance(pipeline_config, dict) else None
+    qp = None
+    if isinstance(stages, dict):
+        qp = stages.get("queryProcessing") or stages.get("query_processing")
+    if not isinstance(qp, dict) or not qp.get("enabled"):
+        return queries[:16]
+    expanded: list[str] = []
+    for q in queries:
+        expanded.extend(expand_retrieval_queries(q, qp))
+    seen: set[str] = set()
+    out: list[str] = []
+    for item in expanded:
+        k = item.casefold()
+        if k in seen:
+            continue
+        seen.add(k)
+        out.append(item)
+        if len(out) >= 16:
+            break
+    return out
 
 
 def _fingerprint(c: dict[str, Any]) -> tuple[Any, ...]:
@@ -505,7 +531,7 @@ def run_retrieval_optimizer(
         # Single-chunk corpus still supports relative latency / strategy comparisons.
         chunks = [chunks[0], chunks[0] + "\n\n(autopilot retrieval bench duplicate for rank stability.)"]
 
-    queries = _build_eval_queries(analyze_payload, requirements)
+    queries = _build_eval_queries(analyze_payload, requirements, pipeline_config)
     tokenized = [tokenize(t) for t in chunks]
 
     candidates = build_retrieval_candidates(
