@@ -1,7 +1,12 @@
 import catalogJson from '../../../../data/retrieval-strategies.json';
 
 import type { RetrievalStrategyMeta } from '@/types/models';
-import type { HybridSearchConfig, RetrievalConfig, RetrievalStrategy } from '@/types/pipeline';
+import type {
+  EnsembleMemberStrategy,
+  HybridSearchConfig,
+  RetrievalConfig,
+  RetrievalStrategy,
+} from '@/types/pipeline';
 
 export type RetrievalStrategiesCatalogFile = {
   version: string;
@@ -65,10 +70,46 @@ export function retrievalDefaultsFromCatalog(
       typeof d.alpha === 'number' && Number.isFinite(d.alpha)
         ? Math.min(1, Math.max(0, d.alpha))
         : 0.5;
-    const hybridSearch: HybridSearchConfig = { alpha };
+    const hybridSearch: HybridSearchConfig = { alpha, fusion: 'rrf' };
     out.hybridSearch = hybridSearch;
   } else {
     out.hybridSearch = undefined;
+  }
+
+  if (strategy === 'mmr') {
+    const rawFetch =
+      typeof d.fetchK === 'number' && Number.isFinite(d.fetchK) ? Math.round(d.fetchK) : 20;
+    const fetchK = Math.min(200, Math.max(5, rawFetch));
+    const rawLambda =
+      typeof d.lambdaMult === 'number' && Number.isFinite(d.lambdaMult) ? Number(d.lambdaMult) : 0.5;
+    const lambdaMult = Math.min(1, Math.max(0, rawLambda));
+    out.mmrFetchK = fetchK;
+    out.mmrLambdaMult = lambdaMult;
+  } else {
+    out.mmrFetchK = undefined;
+    out.mmrLambdaMult = undefined;
+  }
+
+  if (strategy === 'ensemble') {
+    const rawList = Array.isArray(d.strategies) ? d.strategies : ['similarity', 'hybrid'];
+    const allowed = new Set<EnsembleMemberStrategy>([
+      'similarity',
+      'mmr',
+      'hybrid',
+      'multi-query',
+      'parent-child',
+    ]);
+    const ensembleStrategies = rawList
+      .map((x) => (String(x) === 'bm25' ? 'hybrid' : String(x)))
+      .filter((x): x is EnsembleMemberStrategy => allowed.has(x as EnsembleMemberStrategy)) as EnsembleMemberStrategy[];
+    out.ensembleStrategies =
+      ensembleStrategies.length > 0 ? ensembleStrategies : ['similarity', 'hybrid'];
+    const rawRrf =
+      typeof d.rrfK === 'number' && Number.isFinite(d.rrfK) ? Math.round(d.rrfK as number) : 60;
+    out.ensembleRrfK = Math.min(120, Math.max(1, rawRrf));
+  } else {
+    out.ensembleStrategies = undefined;
+    out.ensembleRrfK = undefined;
   }
 
   if (strategy === 'parent-child') {

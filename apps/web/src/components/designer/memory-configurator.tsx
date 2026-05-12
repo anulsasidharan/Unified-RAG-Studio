@@ -37,6 +37,16 @@ const MEMORY_OPTIONS: { id: MemoryType; title: string; description: string }[] =
     title: 'Vector memory',
     description: 'Store and retrieve prior exchanges via embeddings (higher cost).',
   },
+  {
+    id: 'entity-memory',
+    title: 'Entity memory',
+    description: 'Track entities (people, products, accounts) across turns for grounded follow-ups.',
+  },
+  {
+    id: 'episodic-memory',
+    title: 'Episodic memory',
+    description: 'Recall past sessions or events as structured episodes when supported by your runtime.',
+  },
 ];
 
 export function MemoryConfigurator({
@@ -113,7 +123,10 @@ export function MemoryConfigurator({
           <div className="mt-8 space-y-4 rounded-lg border border-neutral-200 bg-muted/15 p-4 dark:border-neutral-700">
             <h3 className="text-sm font-semibold text-foreground">Parameters</h3>
 
-            {(cfg.type === 'conversation-buffer' || cfg.type === 'summary-buffer') && (
+            {(cfg.type === 'conversation-buffer' ||
+              cfg.type === 'summary-buffer' ||
+              cfg.type === 'entity-memory' ||
+              cfg.type === 'episodic-memory') && (
               <div>
                 <label htmlFor="memory-window" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Window size (messages)
@@ -130,7 +143,10 @@ export function MemoryConfigurator({
               </div>
             )}
 
-            {(cfg.type === 'summary-buffer' || cfg.type === 'vector-memory') && (
+            {(cfg.type === 'summary-buffer' ||
+              cfg.type === 'vector-memory' ||
+              cfg.type === 'entity-memory' ||
+              cfg.type === 'episodic-memory') && (
               <div>
                 <label htmlFor="memory-max-tokens" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Max memory tokens (optional cap)

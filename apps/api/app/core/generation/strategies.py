@@ -16,6 +16,9 @@ class GenerationRuntimeConfig:
     top_p: float | None = None
     system_prompt: str | None = None
     output_format: str | None = None  # text | json | markdown (matches OutputFormat)
+    few_shots: tuple[tuple[str, str], ...] = ()
+    persona: str | None = None
+    citation_grounding: bool = False
 
 
 @dataclass

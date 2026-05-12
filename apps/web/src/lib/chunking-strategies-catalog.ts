@@ -19,6 +19,7 @@ const STRATEGY_IDS = [
   'sentence-based',
   'paragraph-based',
   'code-aware',
+  'token-aware',
 ] as const satisfies readonly ChunkingStrategy[];
 
 export function getChunkingStrategiesCatalog(): ChunkingStrategiesCatalogFile {

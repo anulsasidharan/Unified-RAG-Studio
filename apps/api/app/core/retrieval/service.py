@@ -19,6 +19,8 @@ from app.core.vectorstore import (
 
 from .bm25 import BM25Index, tokenize
 from .fusion import mmr_order, reciprocal_rank_fusion_keys, weighted_dense_sparse
+from app.core.context_compression import ContextCompressionRuntimeConfig, apply_context_compression
+
 from .rerankers import CohereReranker, PassthroughReranker
 from .strategies import RerankingRuntimeConfig, RetrievalRuntimeConfig
 
@@ -27,6 +29,39 @@ logger = structlog.get_logger(__name__)
 
 def _doc_key(doc: Document) -> str:
     return doc.page_content.strip()
+
+
+def _word_jaccard(a: str, b: str, *, max_tokens: int = 120) -> float:
+    """Rough lexical overlap in [0, 1] for near-duplicate detection."""
+    ta = set((a or "").lower().split()[:max_tokens])
+    tb = set((b or "").lower().split()[:max_tokens])
+    if not ta and not tb:
+        return 1.0
+    if not ta or not tb:
+        return 0.0
+    inter = len(ta & tb)
+    union = len(ta | tb)
+    return inter / union if union else 0.0
+
+
+def _diversify_scored_order(
+    scored: list[ScoredDoc],
+    order: list[int],
+    *,
+    max_similarity: float,
+) -> list[int]:
+    """Keep rerank order but skip items too similar to already-kept documents."""
+    kept_texts: list[str] = []
+    out: list[int] = []
+    for idx in order:
+        if not (0 <= idx < len(scored)):
+            continue
+        text = (scored[idx].document.page_content or "")[:2000]
+        if any(_word_jaccard(text, prev) >= max_similarity for prev in kept_texts):
+            continue
+        kept_texts.append(text)
+        out.append(idx)
+    return out if out else order
 
 
 def _parent_child_uplift(results: list[ScoredDoc]) -> list[ScoredDoc]:
@@ -157,7 +192,7 @@ class RetrievalService:
         dense_keys = [_doc_key(h.document) for h in dense_hits]
         bm25_order = bm25.top_indices(query_text, k=fetch_n)
         bm25_keys = [_doc_key(sparse_corpus[i]) for i in bm25_order]
-        fused = reciprocal_rank_fusion_keys([dense_keys, bm25_keys])
+        fused = reciprocal_rank_fusion_keys([dense_keys, bm25_keys], k=cfg.rrf_k)
         dense_map = {_doc_key(h.document): h for h in dense_hits}
         corpus_map = {_doc_key(d): d for d in sparse_corpus}
         out: list[ScoredDoc] = []
@@ -187,7 +222,7 @@ class RetrievalService:
             )
             all_hits.append(hits)
         rankings = [[_doc_key(h.document) for h in hits] for hits in all_hits]
-        fused = reciprocal_rank_fusion_keys(rankings)
+        fused = reciprocal_rank_fusion_keys(rankings, k=cfg.rrf_k)
         doc_lookup: dict[str, Document] = {}
         for hits in all_hits:
             for h in hits:
@@ -230,6 +265,7 @@ class RetrievalService:
                 mmr_fetch_k=cfg.mmr_fetch_k,
                 ensemble_strategies=cfg.ensemble_strategies,
                 multi_query_variants=cfg.multi_query_variants,
+                rrf_k=cfg.rrf_k,
             )
             part = await self._run_strategy(
                 query_text,
@@ -246,7 +282,7 @@ class RetrievalService:
             rankings_keys.append([_doc_key(h.document) for h in part])
         if not rankings_keys:
             return await self._similarity(query_vector, provider, vs_config, cfg)
-        fused = reciprocal_rank_fusion_keys(rankings_keys)
+        fused = reciprocal_rank_fusion_keys(rankings_keys, k=cfg.rrf_k)
         out: list[ScoredDoc] = []
         for key, sc in fused[: cfg.top_k]:
             doc = doc_lookup.get(key)
@@ -318,15 +354,28 @@ class RetrievalService:
         prov = (rerank.provider or "").lower()
         model_id = rerank.model or ""
         use_cohere = prov == "cohere" or "cohere" in model_id.lower()
+        min_score = rerank.min_relevance_score
+        div_max = rerank.diversity_max_similarity
+
         if use_cohere:
             try:
                 rr = CohereReranker(catalog_model_id=model_id or "cohere-rerank-v3")
-                order = await rr.rerank(query_text, texts, top_n=top_n)
+                if min_score is not None:
+                    ranked = await rr.rerank_with_scores(query_text, texts, top_n=top_n)
+                    order = [i for i, sc in ranked if sc >= min_score]
+                    if not order:
+                        order = [i for i, _ in ranked[: max(1, min(3, len(ranked)))]]
+                else:
+                    order = await rr.rerank(query_text, texts, top_n=top_n)
             except Exception as exc:  # noqa: BLE001 — degrade gracefully
                 logger.warning("cohere_rerank_failed", error=str(exc))
                 order = list(range(min(top_n, len(scored))))
         else:
             order = await PassthroughReranker().rerank(query_text, texts, top_n=top_n)
+
+        if div_max is not None and 0.0 <= div_max < 1.0:
+            order = _diversify_scored_order(scored, order, max_similarity=div_max)
+
         return [scored[i] for i in order if 0 <= i < len(scored)]
 
     async def retrieve(
@@ -341,6 +390,7 @@ class RetrievalService:
         embedding_config: EmbeddingConfig | None = None,
         multi_query_vectors: list[list[float]] | None = None,
         rerank: RerankingRuntimeConfig | None = None,
+        context_compression: ContextCompressionRuntimeConfig | None = None,
     ) -> list[ScoredDoc]:
         """Run retrieval for ``cfg.strategy`` and optional reranking.
 
@@ -376,10 +426,12 @@ class RetrievalService:
                 variant_vectors=variant_vecs,
             )
 
+        compressed = apply_context_compression(base, context_compression)
+
         logger.info(
             "retrieval_complete",
             strategy=strat,
-            hits=len(base),
+            hits=len(compressed),
             rerank=bool(rerank and rerank.enabled),
         )
-        return await self._apply_rerank(query_text, base, rerank)
+        return await self._apply_rerank(query_text, compressed, rerank)

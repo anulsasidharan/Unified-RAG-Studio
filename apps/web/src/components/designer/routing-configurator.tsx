@@ -25,6 +25,11 @@ const CONDITION_LABEL: Record<RoutingRule['condition'], string> = {
   keyword: 'Keyword match',
   'query-length': 'Query length',
   'semantic-complexity': 'Semantic complexity',
+  'semantic-routing': 'Semantic routing',
+  'cost-aware': 'Cost-aware',
+  'latency-aware': 'Latency-aware',
+  'confidence-routing': 'Confidence routing',
+  'tool-routing': 'Tool routing',
 };
 
 export function RoutingConfigurator({
@@ -185,9 +190,12 @@ export function RoutingConfigurator({
                             onChange={(e) =>
                               updateRule(idx, {
                                 condition: e.target.value as RoutingRule['condition'],
-                                keywords: e.target.value === 'keyword' ? rule.keywords ?? [] : undefined,
+                                keywords:
+                                  e.target.value === 'keyword' || e.target.value === 'tool-routing'
+                                    ? rule.keywords ?? []
+                                    : undefined,
                                 threshold:
-                                  e.target.value !== 'keyword'
+                                  e.target.value !== 'keyword' && e.target.value !== 'tool-routing'
                                     ? rule.threshold ?? 128
                                     : undefined,
                               })
@@ -201,7 +209,7 @@ export function RoutingConfigurator({
                           </select>
                         </div>
 
-                        {rule.condition === 'keyword' ? (
+                        {rule.condition === 'keyword' || rule.condition === 'tool-routing' ? (
                           <div className="sm:col-span-2">
                             <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                               Keywords (comma-separated)
@@ -241,7 +249,13 @@ export function RoutingConfigurator({
                             <p className="mt-1 text-xs text-muted-foreground">
                               {rule.condition === 'query-length'
                                 ? 'Character or token count hint for routing (pipeline-specific).'
-                                : 'Score or heuristic threshold for complexity routing.'}
+                                : rule.condition === 'latency-aware'
+                                  ? 'Route when query length is below this character budget (shorter = faster path).'
+                                  : rule.condition === 'cost-aware'
+                                    ? 'Route when word count is below this threshold (shorter = cheaper path).'
+                                    : rule.condition === 'confidence-routing'
+                                      ? 'Route when retriever max score is below this threshold (requires runtime scores).'
+                                      : 'Score or heuristic threshold for complexity-style routing.'}
                             </p>
                           </div>
                         )}

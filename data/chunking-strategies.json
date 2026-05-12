@@ -242,6 +242,36 @@
         "useCases": ["code-assistant", "developer-tools", "api-docs"],
         "notRecommendedFor": ["plain-text", "pdfs", "conversational-content"]
       }
+    },
+    {
+      "id": "token-aware",
+      "name": "Token-Aware",
+      "description": "Splits using the same tokenizer the embedding model uses (or a compatible tiktoken profile) so chunks respect real token budgets instead of raw character counts.",
+      "bestFor": [
+        "Models with strict context windows",
+        "Cost-sensitive embedding at scale",
+        "Multilingual corpora where character counts mislead"
+      ],
+      "pros": [
+        "Chunk sizes align with provider token limits",
+        "More predictable embedding batch sizes",
+        "Fewer accidental over-length failures"
+      ],
+      "cons": [
+        "Requires tokenizer metadata or provider SDK",
+        "Slightly higher CPU than pure character splitters",
+        "Export runtimes must supply a matching tokenizer"
+      ],
+      "implementationComplexity": "medium",
+      "defaultConfig": {
+        "chunkSize": 512,
+        "chunkOverlap": 64
+      },
+      "recommendedFor": {
+        "documentTypes": ["txt", "md", "html", "pdf-text"],
+        "useCases": ["production-rag", "cost-optimization"],
+        "notRecommendedFor": ["binary-files", "scanned-pdfs"]
+      }
     }
   ]
 }

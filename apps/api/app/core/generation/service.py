@@ -37,13 +37,31 @@ def _messages_for_rag(
     system_text: str,
     user_text: str,
     conversation: list[tuple[str, str]] | None,
+    few_shots: Sequence[tuple[str, str]] | None = None,
 ) -> list[BaseMessage]:
     msgs: list[BaseMessage] = [SystemMessage(content=system_text)]
+    for role, content in few_shots or ():
+        r = (role or "").lower()
+        if r == "assistant":
+            msgs.append(AIMessage(content=content))
+        elif r == "system":
+            msgs.append(SystemMessage(content=content))
+        else:
+            msgs.append(HumanMessage(content=content))
     for user_turn, assistant_turn in conversation or []:
         msgs.append(HumanMessage(content=user_turn))
         msgs.append(AIMessage(content=assistant_turn))
     msgs.append(HumanMessage(content=user_text))
     return msgs
+
+
+def _compose_system_prompt(cfg: GenerationRuntimeConfig) -> str:
+    system = (cfg.system_prompt or "").strip() or DEFAULT_RAG_SYSTEM_PROMPT
+    if (cfg.persona or "").strip():
+        system = f"You are {(cfg.persona or '').strip()}.\n\n" + system
+    if cfg.citation_grounding:
+        system += "\n\nGround answers in the provided context and cite supporting passages when you rely on them."
+    return system
 
 
 def _result_from_ai_message(
@@ -93,7 +111,7 @@ class GenerationService:
         """Single completion: system + optional prior turns + RAG user message."""
         docs = _normalize_context(context)
         model = create_chat_model(cfg, self._settings)
-        system = (cfg.system_prompt or "").strip() or DEFAULT_RAG_SYSTEM_PROMPT
+        system = _compose_system_prompt(cfg)
         user = build_rag_user_message(
             query,
             docs,
@@ -103,6 +121,7 @@ class GenerationService:
             system_text=system,
             user_text=user,
             conversation=conversation,
+            few_shots=cfg.few_shots,
         )
         resp = await model.ainvoke(messages)
         if not isinstance(resp, AIMessage):
@@ -127,7 +146,7 @@ class GenerationService:
         """Token/chunk stream for UIs that support streaming (optional)."""
         docs = _normalize_context(context)
         model = create_chat_model(cfg, self._settings)
-        system = (cfg.system_prompt or "").strip() or DEFAULT_RAG_SYSTEM_PROMPT
+        system = _compose_system_prompt(cfg)
         user = build_rag_user_message(
             query,
             docs,
@@ -137,6 +156,7 @@ class GenerationService:
             system_text=system,
             user_text=user,
             conversation=conversation,
+            few_shots=cfg.few_shots,
         )
         async for chunk in model.astream(messages):
             content = chunk.content

@@ -13,7 +13,14 @@ import { getVectorStoreMeta } from '@/lib/vector-stores-catalog';
 import { hitlNavigatorHint } from '@/lib/hitl-summary';
 import { guardrailsNavigatorHint } from '@/lib/guardrails-summary';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { ChunkingStrategy, DataIngestionConfig, RetrievalStrategy } from '@/types/pipeline';
+import type {
+  ChunkingStrategy,
+  ContextCompressionConfig,
+  DataIngestionConfig,
+  ObservabilityConfig,
+  QueryProcessingConfig,
+  RetrievalStrategy,
+} from '@/types/pipeline';
 
 function ingestionSourceHint(source?: DataIngestionConfig['sourceType']): string {
   if (!source) return '';
@@ -40,6 +47,7 @@ function chunkingHint(strategy?: ChunkingStrategy, chunkSize?: number, overlap?:
     'sentence-based': 'Sentences',
     'paragraph-based': 'Paragraphs',
     'code-aware': 'Code',
+    'token-aware': 'Token-aware',
   };
   return `${short[strategy] ?? strategy} · ${chunkSize}/${o}`;
 }
@@ -70,6 +78,32 @@ function retrievalHint(strategy?: RetrievalStrategy, topK?: number): string {
   return `${short} · top-${k}`;
 }
 
+function queryTransformHint(q?: QueryProcessingConfig): string {
+  if (!q?.enabled) return 'Off';
+  const bits = [
+    q.queryRewrite,
+    q.hyde,
+    q.multiQueryExpansion,
+    q.decomposition,
+    q.stepBack,
+    q.intentClassification,
+    q.entityExtraction,
+    q.keywordAugmentation,
+  ].filter(Boolean).length;
+  return bits ? `${bits} transform(s)` : 'On';
+}
+
+function contextCompressionHint(c?: ContextCompressionConfig): string {
+  if (!c?.enabled || c.mode === 'none') return 'Off';
+  return c.mode;
+}
+
+function observabilityHint(o?: ObservabilityConfig | null): string {
+  if (!o) return 'Defaults';
+  const on = [o.retrievalTracing, o.promptTracing].filter(Boolean).length;
+  return on ? `${on} trace on` : 'Standard';
+}
+
 function rerankingHint(enabled?: boolean, model?: string): string {
   if (!enabled) return 'Off';
   const m = model?.trim();
@@ -98,6 +132,8 @@ const MEMORY_SHORT: Record<string, string> = {
   'conversation-buffer': 'Buffer',
   'summary-buffer': 'Summary',
   'vector-memory': 'Vector',
+  'entity-memory': 'Entity',
+  'episodic-memory': 'Episodic',
 };
 
 function memoryHint(type?: string): string {
@@ -218,9 +254,17 @@ export function StageNavigator() {
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {vectorStoreHint(draft.stages.vectorStore?.provider, draft.stages.vectorStore?.indexName)}
                     </span>
+                  ) : stage.id === 'queryTransform' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {queryTransformHint(draft.stages.queryProcessing)}
+                    </span>
                   ) : stage.id === 'retrieval' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {retrievalHint(draft.stages.retrieval?.strategy, draft.stages.retrieval?.topK)}
+                    </span>
+                  ) : stage.id === 'contextCompression' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {contextCompressionHint(draft.stages.contextCompression)}
                     </span>
                   ) : stage.id === 'reranking' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -245,6 +289,10 @@ export function StageNavigator() {
                   ) : stage.id === 'evaluation' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {evaluationHint(draft.stages.evaluation?.enabled, draft.stages.evaluation?.metrics?.length)}
+                    </span>
+                  ) : stage.id === 'observability' ? (
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {observabilityHint(draft.observability ?? undefined)}
                     </span>
                   ) : stage.id === 'guardrails' ? (
                     <span className="mt-0.5 block text-xs text-muted-foreground">

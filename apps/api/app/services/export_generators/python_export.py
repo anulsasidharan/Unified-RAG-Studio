@@ -140,7 +140,7 @@ def generate_python_code(config: PipelineConfigurationSchema) -> str:
         _build_imports(stages),
         "",
         "",
-        _build_config(stages, cp),
+        _build_config(config),
         "",
         "",
         _build_vector_store(stages),
@@ -244,7 +244,80 @@ def _build_imports(stages: PipelineStagesSchema) -> str:
     return "\n".join(lines)
 
 
-def _build_config(stages: PipelineStagesSchema, cloud_provider: str) -> str:
+def _build_pipeline_extras(config: PipelineConfigurationSchema) -> list[str]:
+    """Emit designer-only blocks (compression, observability, prompt hints) for operators."""
+    lines: list[str] = []
+    stages = config.stages
+    cc = stages.context_compression
+    if cc is not None and cc.enabled and cc.mode and str(cc.mode) != "none":
+        lines.extend(
+            [
+                "",
+                "# ─── Context compression (post-retrieval) ───────────────────────────",
+                "CONTEXT_COMPRESSION = "
+                + pformat(
+                    {
+                        "enabled": cc.enabled,
+                        "mode": cc.mode,
+                        "min_score": cc.min_score,
+                        "max_token_budget": cc.max_token_budget,
+                    },
+                    width=88,
+                    sort_dicts=False,
+                ),
+            ]
+        )
+    obs = config.observability
+    if obs is not None:
+        lines.extend(
+            [
+                "",
+                "# ─── Observability flags ──────────────────────────────────────────────",
+                "OBSERVABILITY = " + pformat(obs.model_dump(), width=88, sort_dicts=False),
+            ]
+        )
+    at = config.agent_tools
+    if at is not None:
+        lines.extend(
+            [
+                "",
+                "# ─── Agent / tool flags ───────────────────────────────────────────────",
+                "AGENT_TOOLS = " + pformat(at.model_dump(), width=88, sort_dicts=False),
+            ]
+        )
+    ap = config.adaptive_policies
+    if ap:
+        lines.extend(
+            [
+                "",
+                "# ─── Adaptive policies (Designer hints) ───────────────────────────────",
+                "ADAPTIVE_POLICIES = " + pformat([r.model_dump() for r in ap], width=88, sort_dicts=False),
+            ]
+        )
+    gen = stages.generation
+    if gen.few_shot_messages:
+        lines.extend(
+            [
+                "",
+                "# ─── Few-shot examples (prompt engineering) ──────────────────────────",
+                "FEW_SHOT_MESSAGES = "
+                + pformat(
+                    [{"role": m.role, "content": m.content} for m in gen.few_shot_messages],
+                    width=88,
+                    sort_dicts=False,
+                ),
+            ]
+        )
+    if gen.persona:
+        lines.extend(["", f"PERSONA_HINT = {json.dumps(gen.persona)}"])
+    if gen.citation_grounding:
+        lines.extend(["", "CITATION_GROUNDING = True"])
+    return lines
+
+
+def _build_config(config: PipelineConfigurationSchema) -> str:
+    stages = config.stages
+    cloud_provider = _ev(config.cloud_provider)
     emb = stages.embedding
     gen = stages.generation
     ch = stages.chunking
@@ -282,6 +355,7 @@ def _build_config(stages: PipelineStagesSchema, cloud_provider: str) -> str:
         "",
         *_build_text_splitter(stages),
         *_human_in_the_loop_block(stages),
+        *_build_pipeline_extras(config),
     ]
     return "\n".join(lines)
 

@@ -10,6 +10,7 @@ Typical usage::
         RetrievalRuntimeConfig,
         RetrievalService,
         RerankingRuntimeConfig,
+        reranking_runtime_from_pipeline,
         retrieval_runtime_from_pipeline,
     )
     from app.core.vectorstore import VectorStoreRuntimeConfig, VectorStoreService
@@ -28,7 +29,7 @@ Typical usage::
     )
 """
 
-from .pipeline_bridge import retrieval_runtime_from_pipeline
+from .pipeline_bridge import reranking_runtime_from_pipeline, retrieval_runtime_from_pipeline
 from .service import RetrievalService
 from .strategies import RerankingRuntimeConfig, RetrievalRuntimeConfig
 
@@ -37,4 +38,5 @@ __all__ = [
     "RetrievalRuntimeConfig",
     "RerankingRuntimeConfig",
     "retrieval_runtime_from_pipeline",
+    "reranking_runtime_from_pipeline",
 ]

@@ -1,6 +1,11 @@
+import { designerStageIndex, type DesignerStageId } from '@/lib/constants';
 import { hitlHighlightBullet, hitlPlacementMermaidSubtitle } from '@/lib/hitl-summary';
 import { guardrailPolicyMermaidSubtitle, guardrailsHighlightBullet } from '@/lib/guardrails-summary';
 import type { GuardrailsConfig, PipelineStages } from '@/types/pipeline';
+
+function stageReached(maxVisitedStageIndex: number, id: DesignerStageId): boolean {
+  return maxVisitedStageIndex >= designerStageIndex(id);
+}
 
 const PROVIDER_LABEL: Record<string, string> = {
   aws: 'AWS',
@@ -46,29 +51,31 @@ export function generateMermaidDiagram(
   const hitlSub = q(hitlPlacementMermaidSubtitle(hitl));
 
   const v = {
-    idx: maxVisitedStageIndex >= 0,
-    ingestion: maxVisitedStageIndex >= 1,
-    chunking: maxVisitedStageIndex >= 2,
-    embedding: maxVisitedStageIndex >= 3,
-    vectorstore: maxVisitedStageIndex >= 4,
-    /** QUERY + RET visible */
-    query: maxVisitedStageIndex >= 5,
-    /** Rerank node (between RET and GEN) only after generation stage is in play */
-    rerank: maxVisitedStageIndex >= 7 && Boolean(stages.reranking?.enabled),
-    generation: maxVisitedStageIndex >= 7,
-    routing: maxVisitedStageIndex >= 8 && Boolean(stages.routing?.enabled),
+    idx: stageReached(maxVisitedStageIndex, 'cloud'),
+    ingestion: stageReached(maxVisitedStageIndex, 'ingestion'),
+    chunking: stageReached(maxVisitedStageIndex, 'chunking'),
+    embedding: stageReached(maxVisitedStageIndex, 'embedding'),
+    vectorstore: stageReached(maxVisitedStageIndex, 'vectorstore'),
+    query: stageReached(maxVisitedStageIndex, 'queryTransform'),
+    queryProcessing:
+      stageReached(maxVisitedStageIndex, 'queryTransform') && Boolean(stages.queryProcessing?.enabled),
+    contextCompression:
+      stageReached(maxVisitedStageIndex, 'contextCompression') &&
+      Boolean(stages.contextCompression?.enabled && stages.contextCompression.mode !== 'none'),
+    /** Rerank node appears once the user has reached Generation in the designer (progressive reveal). */
+    rerank: stageReached(maxVisitedStageIndex, 'generation') && Boolean(stages.reranking?.enabled),
+    generation: stageReached(maxVisitedStageIndex, 'generation'),
+    routing: stageReached(maxVisitedStageIndex, 'routing') && Boolean(stages.routing?.enabled),
     memory:
-      maxVisitedStageIndex >= 9 &&
+      stageReached(maxVisitedStageIndex, 'memory') &&
       Boolean(stages.memory && stages.memory.type !== 'none'),
-    evaluation: maxVisitedStageIndex >= 10 && Boolean(stages.evaluation?.enabled),
-    /** Designer stage “Guardrails” — policy checks on query path (matches stage index 11). */
-    guardrails: maxVisitedStageIndex >= 11,
-    /** Designer stage “Human in the Loop” (matches stage index 12). */
-    hitl: maxVisitedStageIndex >= 12 && hitlOn,
-    hitlPreIng: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.preIngestionValidation),
-    hitlRetrieval: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.retrievalTime),
-    hitlGeneration: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.generationTime),
-    hitlFeedback: maxVisitedStageIndex >= 12 && hitlOn && Boolean(hitl?.placement.postResponseFeedback),
+    evaluation: stageReached(maxVisitedStageIndex, 'evaluation') && Boolean(stages.evaluation?.enabled),
+    guardrails: stageReached(maxVisitedStageIndex, 'guardrails'),
+    hitl: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn,
+    hitlPreIng: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.preIngestionValidation),
+    hitlRetrieval: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.retrievalTime),
+    hitlGeneration: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.generationTime),
+    hitlFeedback: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.postResponseFeedback),
   };
 
   lines.push('flowchart LR');
@@ -162,6 +169,22 @@ export function generateMermaidDiagram(
     lines.push('    QUERY[/"🔍 User Query"/]');
 
     let queryToRetTail = 'QUERY';
+    if (v.queryProcessing && stages.queryProcessing) {
+      const qp = stages.queryProcessing;
+      const bits: string[] = [];
+      if (qp.queryRewrite) bits.push('rewrite');
+      if (qp.hyde) bits.push('HyDE');
+      if (qp.multiQueryExpansion) bits.push('multi-q');
+      if (qp.decomposition) bits.push('split');
+      if (qp.stepBack) bits.push('step-back');
+      if (qp.intentClassification) bits.push('intent');
+      if (qp.entityExtraction) bits.push('entities');
+      if (qp.keywordAugmentation) bits.push('keywords');
+      const sub = bits.length ? bits.slice(0, 4).join(', ') : 'on';
+      lines.push(`    QP["🧩 Query transforms\\n${q(sub)}"]`);
+      lines.push('    QUERY --> QP');
+      queryToRetTail = 'QP';
+    }
     if (v.memory && stages.memory) {
       const memLabel = `💾 Memory\\n${q(stages.memory.type)}`;
       lines.push(`    MEM[("${memLabel}")]`);
@@ -181,9 +204,15 @@ export function generateMermaidDiagram(
     lines.push(`    ${queryToRetTail} --> RET`);
 
     let tailAfterRet = 'RET';
+    if (v.contextCompression && stages.contextCompression) {
+      const m = stages.contextCompression.mode;
+      lines.push(`    CCMP["📉 Context compression\\n${q(m)}"]`);
+      lines.push(`    ${tailAfterRet} --> CCMP`);
+      tailAfterRet = 'CCMP';
+    }
     if (v.hitlRetrieval) {
       lines.push(`    HITLRET["👤 Retrieval gate\\n${hitlSub}"]`);
-      lines.push('    RET --> HITLRET');
+      lines.push(`    ${tailAfterRet} --> HITLRET`);
       tailAfterRet = 'HITLRET';
     }
 
@@ -248,19 +277,26 @@ export function generatePipelineSummary(
   stages: PipelineStages,
   maxVisitedStageIndex: number = FULL_DIAGRAM
 ): string {
-  if (maxVisitedStageIndex < 2) {
+  if (!stageReached(maxVisitedStageIndex, 'chunking')) {
     return 'Configure chunking and later stages to see a pipeline summary here.';
   }
 
   const parts: string[] = [];
-  if (maxVisitedStageIndex >= 2) parts.push(stages.chunking.strategy);
-  if (maxVisitedStageIndex >= 3) parts.push(`${stages.embedding.model}`);
-  if (maxVisitedStageIndex >= 4) parts.push(stages.vectorStore.provider);
-  if (maxVisitedStageIndex >= 5) parts.push(stages.retrieval.strategy);
-  if (maxVisitedStageIndex >= 7 && stages.reranking?.enabled && stages.reranking.model) {
+  if (stageReached(maxVisitedStageIndex, 'chunking')) parts.push(stages.chunking.strategy);
+  if (stageReached(maxVisitedStageIndex, 'embedding')) parts.push(`${stages.embedding.model}`);
+  if (stageReached(maxVisitedStageIndex, 'vectorstore')) parts.push(stages.vectorStore.provider);
+  if (stageReached(maxVisitedStageIndex, 'queryTransform') && stages.queryProcessing?.enabled) {
+    parts.push('query-transforms');
+  }
+  if (stageReached(maxVisitedStageIndex, 'retrieval')) parts.push(stages.retrieval.strategy);
+  if (
+    stageReached(maxVisitedStageIndex, 'generation') &&
+    stages.reranking?.enabled &&
+    stages.reranking.model
+  ) {
     parts.push(stages.reranking.model);
   }
-  if (maxVisitedStageIndex >= 7) parts.push(stages.generation.model);
+  if (stageReached(maxVisitedStageIndex, 'generation')) parts.push(stages.generation.model);
   return parts.join(' → ');
 }
 
@@ -280,57 +316,68 @@ export function generatePipelineHighlights(
     return ['Navigate the stages — details unlock as you go.'];
   }
 
-  if (maxVisitedStageIndex >= 0) lines.push(`Cloud: ${cloud}`);
+  if (stageReached(maxVisitedStageIndex, 'cloud')) lines.push(`Cloud: ${cloud}`);
 
-  if (maxVisitedStageIndex >= 1 && stages.dataIngestion) {
+  if (stageReached(maxVisitedStageIndex, 'ingestion') && stages.dataIngestion) {
     lines.push(`Ingestion: ${stages.dataIngestion.sourceType}`);
   }
 
-  if (maxVisitedStageIndex >= 2) {
+  if (stageReached(maxVisitedStageIndex, 'chunking')) {
     lines.push(
       `Chunking: ${stages.chunking.strategy} · ${stages.chunking.chunkSize} tok / ${stages.chunking.chunkOverlap} overlap`
     );
   }
-  if (maxVisitedStageIndex >= 3) {
+  if (stageReached(maxVisitedStageIndex, 'embedding')) {
     lines.push(`Embedding: ${stages.embedding.model} · ${stages.embedding.dimensions}d`);
   }
-  if (maxVisitedStageIndex >= 4) {
+  if (stageReached(maxVisitedStageIndex, 'vectorstore')) {
     lines.push(`Vector store: ${stages.vectorStore.provider} · ${stages.vectorStore.indexName}`);
   }
-  if (maxVisitedStageIndex >= 5) {
+  if (stageReached(maxVisitedStageIndex, 'queryTransform') && stages.queryProcessing?.enabled) {
+    lines.push('Query processing: on');
+  }
+  if (stageReached(maxVisitedStageIndex, 'retrieval')) {
     lines.push(`Retrieval: ${stages.retrieval.strategy} · top-${stages.retrieval.topK}`);
   }
-  if (maxVisitedStageIndex >= 6) {
+  if (stageReached(maxVisitedStageIndex, 'contextCompression')) {
+    const cc = stages.contextCompression;
+    lines.push(
+      cc?.enabled && cc.mode !== 'none'
+        ? `Context compression: ${cc.mode}`
+        : 'Context compression: off'
+    );
+  }
+  if (stageReached(maxVisitedStageIndex, 'reranking')) {
     lines.push(
       stages.reranking?.enabled
         ? `Reranking: on${stages.reranking.model ? ` · ${stages.reranking.model}` : ''}`
         : 'Reranking: off'
     );
   }
-  if (maxVisitedStageIndex >= 7) {
+  if (stageReached(maxVisitedStageIndex, 'generation')) {
     lines.push(`Generation: ${stages.generation.model} · T=${stages.generation.temperature}`);
   }
-  if (maxVisitedStageIndex >= 8) {
+  if (stageReached(maxVisitedStageIndex, 'routing')) {
     lines.push(
       stages.routing?.enabled
         ? `Routing: on · ${stages.routing.rules?.length ?? 0} rule(s)`
         : 'Routing: off'
     );
   }
-  if (maxVisitedStageIndex >= 9) {
+  if (stageReached(maxVisitedStageIndex, 'memory')) {
     lines.push(stages.memory ? `Memory: ${stages.memory.type}` : 'Memory: none');
   }
-  if (maxVisitedStageIndex >= 10) {
+  if (stageReached(maxVisitedStageIndex, 'evaluation')) {
     lines.push(
       stages.evaluation?.enabled
         ? `Evaluation: on · ${stages.evaluation.metrics?.length ?? 0} metric(s)`
         : 'Evaluation: off'
     );
   }
-  if (maxVisitedStageIndex >= 11) {
+  if (stageReached(maxVisitedStageIndex, 'guardrails')) {
     lines.push(guardrailsHighlightBullet(guardrails));
   }
-  if (maxVisitedStageIndex >= 12) {
+  if (stageReached(maxVisitedStageIndex, 'hitl')) {
     lines.push(hitlHighlightBullet(stages.humanInTheLoop));
   }
 

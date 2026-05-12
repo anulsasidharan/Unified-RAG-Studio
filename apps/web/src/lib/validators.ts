@@ -12,6 +12,7 @@ export const ChunkingStrategySchema = z.enum([
   'sentence-based',
   'paragraph-based',
   'code-aware',
+  'token-aware',
 ]);
 
 export const VectorStoreProviderSchema = z.enum([
@@ -33,6 +34,14 @@ export const RetrievalStrategySchema = z.enum([
   'parent-child',
   'multi-query',
   'ensemble',
+]);
+
+export const EnsembleMemberStrategySchema = z.enum([
+  'similarity',
+  'mmr',
+  'hybrid',
+  'multi-query',
+  'parent-child',
 ]);
 
 export const EmbeddingProviderSchema = z.enum([
@@ -59,6 +68,8 @@ export const MemoryTypeSchema = z.enum([
   'conversation-buffer',
   'summary-buffer',
   'vector-memory',
+  'entity-memory',
+  'episodic-memory',
 ]);
 
 export const FilterOperatorSchema = z.enum([
@@ -83,6 +94,10 @@ export const EvaluationMetricNameSchema = z.enum([
   'context_precision',
   'context_recall',
   'latency',
+  'groundedness',
+  'safety',
+  'human_evaluation',
+  'retrieval_ndcg',
 ]);
 
 // ─── Sub-Structure Schemas ────────────────────────────────────────────────────
@@ -93,10 +108,13 @@ export const MetadataFilterSchema = z.object({
   value: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]),
 });
 
+export const HybridFusionModeSchema = z.enum(['rrf', 'weighted']);
+
 export const HybridSearchConfigSchema = z.object({
   alpha: z.number().min(0).max(1),
   sparseWeight: z.number().optional(),
   denseWeight: z.number().optional(),
+  fusion: HybridFusionModeSchema.optional(),
 });
 
 // ─── Stage Configuration Schemas ─────────────────────────────────────────────
@@ -141,6 +159,51 @@ export const EmbeddingConfigSchema = z.object({
   dimensions: z.number().int().min(1).max(8192),
   batchSize: z.number().int().min(1).max(2048).optional(),
   maxTokens: z.number().int().min(1).optional(),
+  cacheEmbeddings: z.boolean().optional(),
+  embeddingVersion: z.string().max(64).optional(),
+});
+
+export const QueryProcessingConfigSchema = z.object({
+  enabled: z.boolean(),
+  queryRewrite: z.boolean(),
+  hyde: z.boolean(),
+  multiQueryExpansion: z.boolean(),
+  decomposition: z.boolean(),
+  stepBack: z.boolean(),
+  intentClassification: z.boolean(),
+  entityExtraction: z.boolean(),
+  keywordAugmentation: z.boolean(),
+  llmModel: z.string().optional(),
+});
+
+export const ContextCompressionConfigSchema = z.object({
+  enabled: z.boolean(),
+  mode: z.enum(['none', 'relevance_filter', 'dedupe', 'summarize_stub']),
+  minScore: z.number().min(0).max(1).nullable().optional(),
+  maxTokenBudget: z.number().int().min(256).max(32000).nullable().optional(),
+});
+
+export const ObservabilityConfigSchema = z.object({
+  tokenTracking: z.boolean(),
+  latencyMonitoring: z.boolean(),
+  retrievalTracing: z.boolean(),
+  promptTracing: z.boolean(),
+});
+
+export const AdaptivePolicyRuleSchema = z.object({
+  predicate: z.string().min(1).max(512),
+  action: z.string().min(1).max(512),
+});
+
+export const AgentToolsConfigSchema = z.object({
+  calculatorEnabled: z.boolean(),
+  webSearchEnabled: z.boolean(),
+  sqlAgentEnabled: z.boolean(),
+});
+
+export const FewShotMessageSchema = z.object({
+  role: z.enum(['user', 'assistant', 'system']),
+  content: z.string().min(1).max(8000),
 });
 
 export const VectorStoreConfigSchema = z.object({
@@ -183,6 +246,10 @@ export const RetrievalConfigSchema = z
         llmModel: z.string().min(1),
       })
       .optional(),
+    mmrFetchK: z.number().int().min(5).max(200).nullable().optional(),
+    mmrLambdaMult: z.number().min(0).max(1).optional(),
+    ensembleStrategies: z.array(EnsembleMemberStrategySchema).min(1).max(6).optional(),
+    ensembleRrfK: z.number().int().min(1).max(120).optional(),
   })
   .refine(
     (data) => {
@@ -190,6 +257,15 @@ export const RetrievalConfigSchema = z
       return true;
     },
     { message: 'Hybrid search config is required when using hybrid strategy', path: ['hybridSearch'] }
+  )
+  .refine(
+    (data) => {
+      if (data.strategy === 'mmr' && data.mmrFetchK != null && data.mmrFetchK < data.topK) {
+        return false;
+      }
+      return true;
+    },
+    { message: 'MMR fetch pool must be at least topK', path: ['mmrFetchK'] }
   );
 
 export const RerankingConfigSchema = z.object({
@@ -197,6 +273,8 @@ export const RerankingConfigSchema = z.object({
   model: z.string().optional(),
   topN: z.number().int().min(1).max(100).optional(),
   provider: z.enum(['cohere', 'huggingface', 'custom']).optional(),
+  minRelevanceScore: z.number().min(0).max(1).nullable().optional(),
+  diversityMaxSimilarity: z.number().min(0).max(1).nullable().optional(),
 });
 
 export const GenerationConfigSchema = z.object({
@@ -207,10 +285,22 @@ export const GenerationConfigSchema = z.object({
   topP: z.number().min(0).max(1).optional(),
   systemPrompt: z.string().max(10000).optional(),
   outputFormat: OutputFormatSchema.optional(),
+  fewShotMessages: z.array(FewShotMessageSchema).max(24).optional(),
+  persona: z.string().max(256).optional(),
+  citationGrounding: z.boolean().optional(),
 });
 
 export const RoutingRuleSchema = z.object({
-  condition: z.enum(['keyword', 'query-length', 'semantic-complexity']),
+  condition: z.enum([
+    'keyword',
+    'query-length',
+    'semantic-complexity',
+    'semantic-routing',
+    'cost-aware',
+    'latency-aware',
+    'confidence-routing',
+    'tool-routing',
+  ]),
   threshold: z.number().optional(),
   keywords: z.array(z.string()).optional(),
   targetModel: z.string().min(1),
@@ -302,7 +392,9 @@ export const PipelineStagesSchema = z.object({
   chunking: ChunkingConfigSchema,
   embedding: EmbeddingConfigSchema,
   vectorStore: VectorStoreConfigSchema,
+  queryProcessing: QueryProcessingConfigSchema.optional(),
   retrieval: RetrievalConfigSchema,
+  contextCompression: ContextCompressionConfigSchema.optional(),
   reranking: RerankingConfigSchema.optional(),
   generation: GenerationConfigSchema,
   routing: RoutingConfigSchema.optional(),
@@ -327,6 +419,9 @@ export const PipelineConfigurationSchema = z.object({
   cloudProvider: CloudProviderSchema,
   stages: PipelineStagesSchema,
   metadata: PipelineMetadataSchema,
+  observability: ObservabilityConfigSchema.nullable().optional(),
+  adaptivePolicies: z.array(AdaptivePolicyRuleSchema).max(32).optional(),
+  agentTools: AgentToolsConfigSchema.optional(),
 });
 
 // ─── Build Requirements Schema ───────────────────────────────────────────────
