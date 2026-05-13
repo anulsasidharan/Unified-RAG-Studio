@@ -226,10 +226,6 @@ export function PipelineVisualizer({
     [clampZoom]
   );
 
-  /** String fingerprint so nested draft edits always invalidate (same topology can still produce new labels). */
-  const stagesFingerprint = useMemo(() => JSON.stringify(draft.stages), [draft.stages]);
-  const guardrailsFingerprint = useMemo(() => JSON.stringify(draft.guardrails ?? null), [draft.guardrails]);
-
   const definition = useMemo(
     () =>
       generateMermaidDiagram(
@@ -238,7 +234,7 @@ export function PipelineVisualizer({
         diagramMaxVisitedStageIndex,
         draft.guardrails
       ),
-    [stagesFingerprint, guardrailsFingerprint, draft.cloudProvider, diagramMaxVisitedStageIndex, draft.guardrails]
+    [draft.stages, draft.cloudProvider, diagramMaxVisitedStageIndex, draft.guardrails]
   );
 
   const oneLine = useMemo(
