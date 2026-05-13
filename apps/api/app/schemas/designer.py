@@ -10,8 +10,8 @@ These schemas handle the request/response shapes for:
   POST /api/designer/cost     — calculate cost estimate
 """
 
-import uuid
 from typing import Any, Literal
+import uuid
 
 from langchain_core.documents import Document
 from pydantic import Field
@@ -21,7 +21,6 @@ from app.schemas.pipeline import (
     PipelineConfigurationSchema,
     RAGBaseModel,
 )
-
 
 # ─── Config Endpoints ─────────────────────────────────────────────────────────
 

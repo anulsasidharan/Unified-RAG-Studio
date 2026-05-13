@@ -8,11 +8,13 @@ model IDs, strategies, and provider names must match the JSON catalog values.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Literal, Optional
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from app.schemas.guardrails import GuardrailsConfigSchema
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 from pydantic.alias_generators import to_camel
-
 
 # ─── Base Model ───────────────────────────────────────────────────────────────
 
@@ -22,9 +24,9 @@ class RAGBaseModel(BaseModel):
 
     model_config = ConfigDict(
         alias_generator=to_camel,
-        populate_by_name=True,   # accept snake_case in Python code
-        use_enum_values=True,    # serialise enums as their string values
-        from_attributes=True,    # ORM → schema conversion via model_validate(orm_obj)
+        populate_by_name=True,  # accept snake_case in Python code
+        use_enum_values=True,  # serialise enums as their string values
+        from_attributes=True,  # ORM → schema conversion via model_validate(orm_obj)
     )
 
 
@@ -52,7 +54,7 @@ class ChunkingStrategy(StrEnum):
     SENTENCE_BASED = "sentence-based"
     PARAGRAPH_BASED = "paragraph-based"
     CODE_AWARE = "code-aware"
-    TOKEN_AWARE = "token-aware"
+    TOKEN_AWARE = "token-aware"  # noqa: S105
 
 
 class VectorStoreProvider(StrEnum):
@@ -178,17 +180,13 @@ class DataIngestionSourceSlotSchema(RAGBaseModel):
 
 
 class DataIngestionConfigSchema(RAGBaseModel):
-    source_type: Literal[
-        "file-upload", "s3", "gcs", "azure-blob", "url", "database", "api"
-    ]
+    source_type: Literal["file-upload", "s3", "gcs", "azure-blob", "url", "database", "api"]
     sources: list[DataIngestionSourceSlotSchema] | None = None
     file_types: list[str] = Field(default_factory=list)
     preprocessing: DataIngestionPreprocessingSchema = Field(
         default_factory=DataIngestionPreprocessingSchema
     )
-    metadata: DataIngestionMetadataSchema = Field(
-        default_factory=DataIngestionMetadataSchema
-    )
+    metadata: DataIngestionMetadataSchema = Field(default_factory=DataIngestionMetadataSchema)
     connection_config: dict[str, object] | None = None
 
     @model_validator(mode="after")
@@ -282,7 +280,9 @@ class RetrievalConfigSchema(RAGBaseModel):
 
 class RerankingConfigSchema(RAGBaseModel):
     enabled: bool = False
-    model: str | None = Field(default=None, description="Reranker model ID from data/models/rerankers.json")
+    model: str | None = Field(
+        default=None, description="Reranker model ID from data/models/rerankers.json"
+    )
     top_n: int | None = Field(default=None, ge=1, le=50)
     provider: Literal["cohere", "huggingface", "custom"] | None = None
     min_relevance_score: float | None = Field(default=None, ge=0.0, le=1.0)
@@ -566,7 +566,7 @@ class PipelineConfigurationSchema(RAGBaseModel):
     metadata: PipelineMetadataSchema
     estimated_cost: CostEstimateSchema | None = None
     estimated_performance: PerformanceEstimateSchema | None = None
-    guardrails: Optional["GuardrailsConfigSchema"] = Field(
+    guardrails: GuardrailsConfigSchema | None = Field(
         default=None,
         description="Optional per-stage guardrail policy; omit for built-in defaults.",
     )

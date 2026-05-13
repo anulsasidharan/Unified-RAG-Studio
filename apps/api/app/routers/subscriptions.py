@@ -107,8 +107,10 @@ async def upgrade_subscription(
             if plan is None:
                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Plan not found")
             plan_name = plan.name.lower()
-        except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid plan ID")
+        except ValueError as err:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid plan ID"
+            ) from err  # noqa: E501
 
     user = await session.get(User, principal.user_id)
     if user is None:

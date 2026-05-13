@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import AsyncIterator
+import json
 from unittest.mock import MagicMock
 
 import httpx

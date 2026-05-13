@@ -2,18 +2,22 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import hashlib
 import time
-import uuid
-from datetime import UTC, datetime, timedelta
-
 from typing import Annotated
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 
 from app.config import Settings, get_settings
-from app.core.security.auth import AuthPrincipal, create_access_token, hash_password, verify_password
+from app.core.security.auth import (
+    AuthPrincipal,
+    create_access_token,
+    hash_password,
+    verify_password,
+)
 from app.dependencies import CurrentPrincipal, DbSession, RedisClient
 from app.models.auth_tokens import EmailVerificationToken, PasswordResetToken
 from app.models.user import User
@@ -47,7 +51,11 @@ def _require_verified_login(user: User) -> None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not verified")
 
 
-@router.post("/register", response_model=RegisterResponse, summary="Create a new user + send verification token")
+@router.post(
+    "/register",
+    response_model=RegisterResponse,
+    summary="Create a new user + send verification token",
+)
 async def register(
     body: RegisterRequest,
     session: DbSession,
@@ -99,7 +107,9 @@ async def register(
     return resp
 
 
-@router.post("/verify-email", response_model=VerifyEmailResponse, summary="Verify email using token")
+@router.post(
+    "/verify-email", response_model=VerifyEmailResponse, summary="Verify email using token"
+)
 async def verify_email(
     body: VerifyEmailRequest,
     session: DbSession,
@@ -117,7 +127,9 @@ async def verify_email(
         )
     ).scalar_one_or_none()
     if tok is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
+        )
 
     user = await session.get(User, tok.user_id)
     if user is None:
@@ -145,7 +157,9 @@ async def login(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
 
     if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Account is deactivated"
+        )
 
     _require_verified_login(user)
 
@@ -183,7 +197,9 @@ async def login(
     )
 
 
-@router.post("/logout", response_model=LogoutResponse, summary="Revoke current access token (best-effort)")
+@router.post(
+    "/logout", response_model=LogoutResponse, summary="Revoke current access token (best-effort)"
+)
 async def logout(
     principal: CurrentPrincipal,
     session: DbSession,
@@ -277,7 +293,9 @@ async def password_reset_confirm(
         )
     ).scalar_one_or_none()
     if tok is None:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired token"
+        )
 
     user = await session.get(User, tok.user_id)
     if user is None:
@@ -288,4 +306,3 @@ async def password_reset_confirm(
     await session.commit()
 
     return PasswordResetResponse(message="Password updated. You can now log in.")
-

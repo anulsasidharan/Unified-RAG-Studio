@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.config import get_settings
 from app.schemas.pipeline import PipelineConfigurationSchema

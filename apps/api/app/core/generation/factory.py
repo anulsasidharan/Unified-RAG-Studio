@@ -56,7 +56,7 @@ def _common_kwargs(cfg: GenerationRuntimeConfig) -> dict:
 
 def _openai_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     openai_mod = importlib.import_module("langchain_openai")
-    ChatOpenAI = getattr(openai_mod, "ChatOpenAI")
+    ChatOpenAI = openai_mod.ChatOpenAI  # noqa: N806
 
     kw = _common_kwargs(cfg)
     kw["api_key"] = settings.openai_api_key or None
@@ -68,7 +68,7 @@ def _openai_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
 
 def _anthropic_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     anthropic_mod = importlib.import_module("langchain_anthropic")
-    ChatAnthropic = getattr(anthropic_mod, "ChatAnthropic")
+    ChatAnthropic = anthropic_mod.ChatAnthropic  # noqa: N806
 
     kw = _common_kwargs(cfg)
     kw["api_key"] = settings.anthropic_api_key or None
@@ -78,7 +78,7 @@ def _anthropic_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseCha
 
 def _google_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     genai_mod = importlib.import_module("langchain_google_genai")
-    ChatGoogleGenerativeAI = getattr(genai_mod, "ChatGoogleGenerativeAI")
+    ChatGoogleGenerativeAI = genai_mod.ChatGoogleGenerativeAI  # noqa: N806
 
     kw: dict = {
         "model": cfg.model,
@@ -95,7 +95,7 @@ def _google_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
 def _cohere_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     try:
         lcm = importlib.import_module("langchain_community.chat_models")
-        ChatCohere = getattr(lcm, "ChatCohere")
+        ChatCohere = lcm.ChatCohere  # noqa: N806
     except (ImportError, AttributeError) as exc:  # pragma: no cover — env guard
         raise ValueError(
             "Cohere chat requires langchain-community. Install apps/api requirements."
@@ -109,7 +109,7 @@ def _cohere_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
 
 def _mistral_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     openai_mod = importlib.import_module("langchain_openai")
-    ChatOpenAI = getattr(openai_mod, "ChatOpenAI")
+    ChatOpenAI = openai_mod.ChatOpenAI  # noqa: N806
 
     if not settings.mistral_api_key:
         logger.warning("mistral_api_key_missing", model=cfg.model)
@@ -122,7 +122,7 @@ def _mistral_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatM
 
 def _openai_compatible_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
     openai_mod = importlib.import_module("langchain_openai")
-    ChatOpenAI = getattr(openai_mod, "ChatOpenAI")
+    ChatOpenAI = openai_mod.ChatOpenAI  # noqa: N806
 
     if not settings.openai_compatible_base_url or not settings.openai_compatible_api_key:
         raise ValueError(

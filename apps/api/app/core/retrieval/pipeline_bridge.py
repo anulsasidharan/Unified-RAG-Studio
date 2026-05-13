@@ -56,7 +56,9 @@ def retrieval_runtime_from_pipeline(cfg: RetrievalConfigSchema) -> RetrievalRunt
     )
 
 
-def reranking_runtime_from_pipeline(r: RerankingConfigSchema | None) -> RerankingRuntimeConfig | None:
+def reranking_runtime_from_pipeline(
+    r: RerankingConfigSchema | None,
+) -> RerankingRuntimeConfig | None:
     """Convert optional reranking stage schema to runtime config (``None`` when disabled)."""
     if r is None or not r.enabled:
         return None

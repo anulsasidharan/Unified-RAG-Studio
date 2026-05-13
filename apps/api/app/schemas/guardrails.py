@@ -45,5 +45,7 @@ class GuardrailsConfigSchema(RAGBaseModel):
     """Top-level guardrails policy (stages default to enabled)."""
 
     input: InputStageGuardrailsSchema = Field(default_factory=InputStageGuardrailsSchema)
-    retrieval: RetrievalStageGuardrailsSchema = Field(default_factory=RetrievalStageGuardrailsSchema)
+    retrieval: RetrievalStageGuardrailsSchema = Field(
+        default_factory=RetrievalStageGuardrailsSchema
+    )
     output: OutputStageGuardrailsSchema = Field(default_factory=OutputStageGuardrailsSchema)

@@ -60,18 +60,14 @@ def remove_headers_footers(text: str, *, min_occurrences: int = 3) -> str:
             if len(line) > 5:
                 line_counts[line] = line_counts.get(line, 0) + 1
 
-    repeated = {
-        line for line, count in line_counts.items() if count >= min_occurrences
-    }
+    repeated = {line for line, count in line_counts.items() if count >= min_occurrences}
 
     if not repeated:
         return text
 
     cleaned: list[str] = []
     for page in pages:
-        filtered = [
-            line for line in page.splitlines() if line.strip() not in repeated
-        ]
+        filtered = [line for line in page.splitlines() if line.strip() not in repeated]
         cleaned.append("\n".join(filtered))
 
     logger.debug("headers_footers_removed", patterns=len(repeated))

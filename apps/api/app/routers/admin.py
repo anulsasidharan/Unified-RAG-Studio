@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 import math
 import uuid as uuid_lib
-from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.responses import Response
@@ -97,9 +97,7 @@ async def create_user(
     session: DbSession,
 ) -> AdminUserResponse:
     email = body.email.lower().strip()
-    existing = (
-        await session.execute(select(User).where(User.email == email))
-    ).scalar_one_or_none()
+    existing = (await session.execute(select(User).where(User.email == email))).scalar_one_or_none()
     if existing is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
@@ -133,8 +131,10 @@ async def update_user(
 ) -> AdminUserResponse:
     try:
         uid = uuid_lib.UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID"
+        ) from err  # noqa: E501
 
     user = await session.get(User, uid)
     if user is None:
@@ -159,7 +159,12 @@ async def update_user(
     return _user_to_admin_response(user)
 
 
-@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None, summary="Delete user")
+@router.delete(
+    "/users/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+    summary="Delete user",
+)
 async def delete_user(
     user_id: str,
     _: AdminPrincipal,
@@ -167,8 +172,10 @@ async def delete_user(
 ) -> Response:
     try:
         uid = uuid_lib.UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID"
+        ) from err  # noqa: E501
 
     user = await session.get(User, uid)
     if user is None:
@@ -192,8 +199,10 @@ async def get_user_activity(
 ) -> UserActivityResponse:
     try:
         uid = uuid_lib.UUID(user_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID"
+        ) from err  # noqa: E501
 
     result = await session.execute(
         select(UserActivityLog)
@@ -203,9 +212,7 @@ async def get_user_activity(
     )
     logs = result.scalars().all()
 
-    total_result = await session.execute(
-        select(func.count()).where(UserActivityLog.user_id == uid)
-    )
+    total_result = await session.execute(select(func.count()).where(UserActivityLog.user_id == uid))
     total = total_result.scalar() or 0
 
     return UserActivityResponse(
@@ -242,14 +249,10 @@ async def get_analytics(_: AdminPrincipal, session: DbSession) -> AnalyticsRespo
     ).scalar() or 0
 
     new_registrations_30d = (
-        await session.execute(
-            select(func.count(User.id)).where(User.created_at >= thirty_days_ago)
-        )
+        await session.execute(select(func.count(User.id)).where(User.created_at >= thirty_days_ago))
     ).scalar() or 0
 
-    role_rows = await session.execute(
-        select(User.role, func.count(User.id)).group_by(User.role)
-    )
+    role_rows = await session.execute(select(User.role, func.count(User.id)).group_by(User.role))
     role_distribution = {row[0]: row[1] for row in role_rows}
 
     tier_rows = await session.execute(
@@ -323,8 +326,10 @@ async def update_plan(
 ) -> dict:
     try:
         pid = uuid_lib.UUID(plan_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid plan ID")
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid plan ID"
+        ) from err  # noqa: E501
 
     plan = await session.get(SubscriptionPlan, pid)
     if plan is None:
@@ -356,12 +361,19 @@ async def update_plan(
     }
 
 
-@router.delete("/plans/{plan_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None, summary="Delete a plan")
+@router.delete(
+    "/plans/{plan_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+    summary="Delete a plan",
+)
 async def delete_plan(plan_id: str, _: AdminPrincipal, session: DbSession) -> Response:
     try:
         pid = uuid_lib.UUID(plan_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid plan ID")
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid plan ID"
+        ) from err  # noqa: E501
 
     plan = await session.get(SubscriptionPlan, pid)
     if plan is None:

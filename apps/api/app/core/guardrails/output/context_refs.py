@@ -15,7 +15,7 @@ def reference_texts_from_context(context: GuardrailContext | None) -> tuple[str,
     raw = context.extra.get("reference_texts")
     if raw is None:
         return ()
-    if isinstance(raw, (list, tuple)):
+    if isinstance(raw, list | tuple):
         out: list[str] = []
         for x in raw:
             s = str(x).strip()

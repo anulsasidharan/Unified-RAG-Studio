@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
-import uuid
 from typing import Annotated
+import uuid
 
 from fastapi import APIRouter, HTTPException, Query, status
 
 from app.dependencies import AdminPrincipal, DbSession, RequestUserId
-from app.schemas.deployment import DeployRequest, DeployResponse, DeploymentListResponse, DeploymentStatusResponse
+from app.schemas.deployment import (
+    DeploymentListResponse,
+    DeploymentStatusResponse,
+    DeployRequest,
+    DeployResponse,
+)
 from app.services.deployment_service import DeploymentService
 
 router = APIRouter(prefix="/api/deployment", tags=["deployment"])
@@ -33,7 +38,9 @@ async def deploy_pipeline(
 ) -> DeployResponse:
     out = await _svc(session).trigger_deploy(user_id, body)
     if out is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pipeline configuration not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Pipeline configuration not found"
+        )
     return out
 
 

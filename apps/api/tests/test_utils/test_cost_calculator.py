@@ -132,6 +132,8 @@ def test_rerank_cohere_pricing():
         top_n=5,
         provider="cohere",
     )
-    body = CostRequest(config=cfg, queries_per_month=1000, documents_count=1, avg_document_tokens=100)
+    body = CostRequest(
+        config=cfg, queries_per_month=1000, documents_count=1, avg_document_tokens=100
+    )
     out = CostEstimator(pricing).estimate(body)
     assert out.reranking == pytest.approx(10.0, rel=1e-6)  # 1000 * (10/1000)

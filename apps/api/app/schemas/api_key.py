@@ -3,23 +3,22 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
 class CreateAPIKeyRequest(BaseModel):
     key_name: str = Field(min_length=1, max_length=100)
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
 
 
 class APIKeyResponse(BaseModel):
     id: str
     key_name: str
     key_prefix: str
-    last_used: Optional[datetime] = None
+    last_used: datetime | None = None
     created_at: datetime
-    expires_at: Optional[datetime] = None
+    expires_at: datetime | None = None
     is_active: bool
 
 

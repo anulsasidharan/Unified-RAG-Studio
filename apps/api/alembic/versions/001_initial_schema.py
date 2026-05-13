@@ -4,12 +4,12 @@ Revision ID: 001
 Revises:
 Create Date: 2026-04-30 00:00:00.000000
 """
+
 from collections.abc import Sequence
 
+from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
-
-from alembic import op
 
 revision: str = "001"
 down_revision: str | None = None
@@ -140,12 +140,8 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["config_id"], ["pipeline_configs.id"], ondelete="CASCADE"
-        ),
-        sa.ForeignKeyConstraint(
-            ["build_id"], ["autopilot_builds.id"], ondelete="SET NULL"
-        ),
+        sa.ForeignKeyConstraint(["config_id"], ["pipeline_configs.id"], ondelete="CASCADE"),
+        sa.ForeignKeyConstraint(["build_id"], ["autopilot_builds.id"], ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_evaluation_runs_config_id", "evaluation_runs", ["config_id"])
@@ -176,9 +172,7 @@ def upgrade() -> None:
             server_default=sa.text("now()"),
             nullable=False,
         ),
-        sa.ForeignKeyConstraint(
-            ["config_id"], ["pipeline_configs.id"], ondelete="CASCADE"
-        ),
+        sa.ForeignKeyConstraint(["config_id"], ["pipeline_configs.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_deployments_config_id", "deployments", ["config_id"])

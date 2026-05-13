@@ -6,7 +6,7 @@ from typing import Any
 
 
 def extract_dashboard_metrics(result: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Build a dict compatible with ``AutopilotDashboardMetricsSchema`` from ``AutopilotBuild.result``."""
+    """Build a dict compatible with ``AutopilotDashboardMetricsSchema`` from ``AutopilotBuild.result``."""  # noqa: E501
 
     if not result or not isinstance(result, dict):
         return None
@@ -29,7 +29,7 @@ def extract_dashboard_metrics(result: dict[str, Any] | None) -> dict[str, Any] |
                 "avg_latency_ms",
             ):
                 v = m.get(key)
-                if isinstance(v, (int, float)):
+                if isinstance(v, int | float):
                     quality[key] = float(v)
             if isinstance(ev.get("meets_targets"), bool):
                 quality["meets_targets"] = ev["meets_targets"]
@@ -48,11 +48,11 @@ def extract_dashboard_metrics(result: dict[str, Any] | None) -> dict[str, Any] |
                 mod = str(r.get("model") or "").strip()
                 label = f"{prov}/{mod}".strip("/") or mod or "unknown"
                 row_out: dict[str, Any] = {"label": label}
-                if isinstance(r.get("avg_latency_ms"), (int, float)):
+                if isinstance(r.get("avg_latency_ms"), int | float):
                     row_out["latency_ms"] = float(r["avg_latency_ms"])
-                if isinstance(r.get("composite_score"), (int, float)):
+                if isinstance(r.get("composite_score"), int | float):
                     row_out["composite_score"] = float(r["composite_score"])
-                if isinstance(r.get("texts_per_second"), (int, float)):
+                if isinstance(r.get("texts_per_second"), int | float):
                     row_out["texts_per_second"] = float(r["texts_per_second"])
                 benches.append(row_out)
         if benches:
@@ -74,12 +74,12 @@ def extract_dashboard_metrics(result: dict[str, Any] | None) -> dict[str, Any] |
             if isinstance(st, str):
                 summ["strategy"] = st
             tk = sel.get("top_k")
-            if isinstance(tk, (int, float)):
+            if isinstance(tk, int | float):
                 summ["top_k"] = int(tk)
             if isinstance(perf, dict):
                 perf_map: dict[str, float] = {}
                 for pk, pv in perf.items():
-                    if isinstance(pk, str) and isinstance(pv, (int, float)):
+                    if isinstance(pk, str) and isinstance(pv, int | float):
                         perf_map[pk] = float(pv)
                 if perf_map:
                     summ["performance"] = perf_map

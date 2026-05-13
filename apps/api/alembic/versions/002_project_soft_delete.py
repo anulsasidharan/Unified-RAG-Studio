@@ -4,11 +4,11 @@ Revision ID: 002
 Revises: 001
 Create Date: 2026-05-01
 """
+
 from collections.abc import Sequence
 
-import sqlalchemy as sa
-
 from alembic import op
+import sqlalchemy as sa
 
 revision: str = "002"
 down_revision: str | None = "001"

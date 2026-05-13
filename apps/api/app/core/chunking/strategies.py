@@ -7,11 +7,11 @@ The Chunk type alias signals that output Documents carry enriched chunk metadata
 """
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 logger = structlog.get_logger(__name__)
 

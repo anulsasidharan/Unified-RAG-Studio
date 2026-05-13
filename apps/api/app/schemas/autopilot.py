@@ -4,7 +4,7 @@ These schemas handle the full build lifecycle:
   POST /api/autopilot/upload         — multipart document upload → MinIO object ids
   POST /api/autopilot/build          — start a new build
   GET  /api/autopilot/build/{id}     — poll build status
-  GET  /api/autopilot/build/{id}/stream — SSE progress events (includes optional ``dashboard_metrics`` — P7-5)
+  GET  /api/autopilot/build/{id}/stream — SSE stream (``dashboard_metrics`` — P7-5)
   POST /api/autopilot/build/{id}/cancel
   GET  /api/autopilot/build/{id}/result — orchestrator JSON artifact (opaque until normalised)
   GET  /api/autopilot/builds — paginated build history for the user (P7-7)

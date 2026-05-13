@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +45,9 @@ class ProjectService:
             )
             n = int((await self._session.execute(count_q)).scalar_one() or 0)
             if n >= 3:
-                raise ValueError("Free tier limit reached (max 3 projects). Upgrade to create more.")
+                raise ValueError(
+                    "Free tier limit reached (max 3 projects). Upgrade to create more."
+                )
 
         proj = Project(
             user_id=user_id,
@@ -79,9 +81,7 @@ class ProjectService:
         total = int((await self._session.execute(count_q)).scalar_one())
 
         offset = (page - 1) * page_size
-        rows = (
-            await self._session.execute(base.offset(offset).limit(page_size))
-        ).scalars().all()
+        rows = (await self._session.execute(base.offset(offset).limit(page_size))).scalars().all()
 
         items = [ProjectSummary.model_validate(r) for r in rows]
         return PaginatedProjectsResponse.from_rows(
@@ -91,7 +91,9 @@ class ProjectService:
             page_size=page_size,
         )
 
-    async def get_detail(self, project_id: uuid.UUID, user_id: uuid.UUID) -> ProjectDetailResponse | None:
+    async def get_detail(
+        self, project_id: uuid.UUID, user_id: uuid.UUID
+    ) -> ProjectDetailResponse | None:
         q = (
             select(Project)
             .where(Project.id == project_id)

@@ -7,7 +7,6 @@ import json
 import pytest
 
 from app.core.agents.document_analyst import (
-    build_corpus_summary,
     corpus_profiles_from_state,
     recommend_chunking,
 )
@@ -76,12 +75,18 @@ def test_summarize_and_recommend_tools_chain():
     ]
     s = json.loads(
         summarize_corpus_profiles_json.invoke(
-            {"profiles_json": json.dumps(profiles), "requirements_json": json.dumps({"optimize_for": "quality"})},
+            {
+                "profiles_json": json.dumps(profiles),
+                "requirements_json": json.dumps({"optimize_for": "quality"}),
+            },
         ),
     )
     r = json.loads(
         recommend_chunking_from_summary_json.invoke(
-            {"summary_json": json.dumps(s), "requirements_json": json.dumps({"optimize_for": "quality"})},
+            {
+                "summary_json": json.dumps(s),
+                "requirements_json": json.dumps({"optimize_for": "quality"}),
+            },
         ),
     )
     assert r["primary_strategy"] == "semantic"

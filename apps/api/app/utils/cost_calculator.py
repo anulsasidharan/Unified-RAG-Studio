@@ -168,22 +168,16 @@ class CostEstimator:
         max_out = float(stages.generation.max_tokens)
         eff_out = min(avg_out_ass, max_out) if max_out > 0 else avg_out_ass
         context_tokens_per_q = top_k * chunk_sz + avg_in_ass
-        generation_per_query = (
-            (context_tokens_per_q / 1_000_000.0) * in_gen + (eff_out / 1_000_000.0) * out_gen
-        )
+        generation_per_query = (context_tokens_per_q / 1_000_000.0) * in_gen + (
+            eff_out / 1_000_000.0
+        ) * out_gen
 
         rerank_per_query = 0.0
         if stages.reranking and stages.reranking.enabled and stages.reranking.model:
             rerank_per_query = self._rerank_per_query_cost(stages.reranking.model)
 
         total_doc_tokens = doc_n * doc_tokens
-        gb = (
-            total_doc_tokens
-            / max(chunk_sz, 1.0)
-            * emb_dims
-            * 4.0
-            / (1024.0**3)
-        )
+        gb = total_doc_tokens / max(chunk_sz, 1.0) * emb_dims * 4.0 / (1024.0**3)
         prov_key = stages.vector_store.provider
         vs_provider = prov_key.value if hasattr(prov_key, "value") else str(prov_key)
         storage_mo = self._storage_monthly(vs_provider, gb)

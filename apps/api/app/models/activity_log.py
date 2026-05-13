@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
-from sqlalchemy import DateTime, ForeignKey, Index, JSON, String, Text, Uuid, func
+import uuid
+
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, String, Text, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base

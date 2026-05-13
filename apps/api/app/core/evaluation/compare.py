@@ -37,9 +37,7 @@ def compare_metrics(
         else:
             winner = "b"
             score_b += 1
-        deltas.append(
-            MetricDelta(metric=field, value_a=va, value_b=vb, delta=delta, winner=winner)
-        )
+        deltas.append(MetricDelta(metric=field, value_a=va, value_b=vb, delta=delta, winner=winner))
 
     la = metrics_a.avg_latency_ms
     lb = metrics_b.avg_latency_ms

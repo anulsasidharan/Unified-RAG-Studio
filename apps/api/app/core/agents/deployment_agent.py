@@ -15,8 +15,8 @@ import json
 import re
 from typing import Any
 
-import structlog
 from pydantic import ValidationError
+import structlog
 
 from app.schemas.pipeline import PipelineConfigurationSchema
 from app.services.export_generators import (
@@ -52,7 +52,8 @@ def _fallback_sketches(
     emb_model = str(e_sel.get("model") or "text-embedding-3-small")
     ch_strat = str(c_sel.get("strategy") or "recursive-character")
 
-    compose = f"""# Autopilot deployment sketch — {label} (fallback; validate in Designer for full export)
+    compose = f"""# Autopilot deployment sketch — {label}
+# (fallback; validate in Designer for full export)
 name: {slug}
 services:
   api:
@@ -163,7 +164,9 @@ def run_deployment_agent(
     eval_ok = evaluation_payload.get("status") == "complete"
     warnings: list[str] = []
     if not eval_ok:
-        warnings.append("evaluation stage incomplete — artefacts use retrieval/embedding/chunking only")
+        warnings.append(
+            "evaluation stage incomplete — artefacts use retrieval/embedding/chunking only"
+        )
 
     cloud_hint: str | None = None
     if isinstance(pipeline_config, dict):
@@ -204,7 +207,11 @@ def run_deployment_agent(
             chunking=chunking_payload,
         )
 
-    metrics = evaluation_payload.get("metrics") if isinstance(evaluation_payload.get("metrics"), dict) else {}
+    metrics = (
+        evaluation_payload.get("metrics")
+        if isinstance(evaluation_payload.get("metrics"), dict)
+        else {}
+    )
     meets = evaluation_payload.get("meets_targets")
     rationale = (
         f"Packaging preview for **{label}** (synthesized_from={synthesized_from}). "

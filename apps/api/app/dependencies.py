@@ -5,21 +5,22 @@ Clients are created once per request (or shared via module-level singletons
 where the client itself is thread/async safe).
 """
 
-import uuid
 from collections.abc import AsyncGenerator
 from typing import Annotated
+import uuid
 
-import redis.asyncio as aioredis
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from qdrant_client import AsyncQdrantClient
+import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
-from app.core.security.auth import AuthPrincipal, decode_access_token
 from app.config import Settings, get_settings
+from app.core.security.auth import AuthPrincipal, decode_access_token
 
 # ─── Database ────────────────────────────────────────────────────────────────
+
 
 def _make_engine(settings: Settings):
     """Create SQLAlchemy async engine from settings."""
@@ -159,7 +160,9 @@ async def get_current_principal(
     try:
         principal = decode_access_token(settings, credentials.credentials)
     except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token") from exc
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid bearer token"
+        ) from exc
 
     if principal.jti:
         key = f"revoked_jti:{principal.jti}"

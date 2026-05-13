@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy import JSON, Boolean, Numeric, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 

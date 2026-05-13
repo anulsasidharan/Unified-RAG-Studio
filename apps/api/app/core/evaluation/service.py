@@ -11,9 +11,9 @@ import importlib
 import time
 from typing import Any
 
-import structlog
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from pydantic import SecretStr
+import structlog
 
 from app.config import Settings, get_settings
 
@@ -118,7 +118,12 @@ class EvaluationEngine:
                         "question": row.get("question", ""),
                         "answer": row.get("answer", ""),
                     }
-                    for col in ("faithfulness", "answer_relevancy", "context_precision", "context_recall"):
+                    for col in (
+                        "faithfulness",
+                        "answer_relevancy",
+                        "context_precision",
+                        "context_recall",
+                    ):
                         if col in row.index:
                             v = row[col]
                             try:

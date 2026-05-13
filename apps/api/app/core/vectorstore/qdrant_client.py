@@ -67,7 +67,7 @@ def _match_value_scalar(v: str | int | float | bool) -> str | int | bool:
 def _json_safe_metadata(meta: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for k, v in meta.items():
-        if isinstance(v, (str, int, float, bool)) or v is None:
+        if isinstance(v, str | int | float | bool) or v is None:
             out[k] = v
         elif isinstance(v, list) and all(isinstance(x, str) for x in v):
             out[k] = v

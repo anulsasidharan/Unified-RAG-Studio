@@ -6,12 +6,12 @@ responsive by enqueueing work and exposing status via AsyncResult IDs.
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
 from typing import Any
+import uuid
 
-import structlog
 from langchain_core.messages import AIMessage
+import structlog
 
 from app.config import get_settings
 from app.core.agents.graph import invoke_autopilot_orchestrator
@@ -207,9 +207,7 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         row.status = "complete"
         dep_ok = (stage_outputs.get("deployment") or {}).get("status") == "complete"
         row.progress = (
-            100
-            if final.get("current_stage") == "deployment_complete" or dep_ok
-            else last_progress
+            100 if final.get("current_stage") == "deployment_complete" or dep_ok else last_progress
         )
         row.current_stage = str(final.get("current_stage") or "done")
         total_iter = int(final.get("evaluation_pass_index") or 0) + 1

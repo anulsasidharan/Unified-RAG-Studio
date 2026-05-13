@@ -40,7 +40,7 @@ class GoogleEmbedder(TextEmbedder):
         from app.config import get_settings
 
         genai_mod = importlib.import_module("langchain_google_genai")
-        GoogleGenerativeAIEmbeddings = getattr(genai_mod, "GoogleGenerativeAIEmbeddings")
+        GoogleGenerativeAIEmbeddings = genai_mod.GoogleGenerativeAIEmbeddings  # noqa: N806
 
         return GoogleGenerativeAIEmbeddings(
             model=self._resolve_model(config.model),

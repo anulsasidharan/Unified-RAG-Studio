@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.config import get_settings
 
 USER_A = "11111111-1111-4111-8111-111111111111"
+
+
 @pytest.mark.integration
 def test_projects_crud_flow(sync_client: TestClient):
     h = {"X-User-ID": USER_A}

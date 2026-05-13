@@ -85,7 +85,7 @@ def test_export_terraform_aws(sync_client: TestClient):
     body = {"config": _minimal_pipeline_payload(), "format": "terraform"}
     r = sync_client.post("/api/designer/export", json=body)
     assert r.status_code == 200
-    assert "provider \"aws\"" in r.json()["code"]
+    assert 'provider "aws"' in r.json()["code"]
 
 
 @pytest.mark.integration

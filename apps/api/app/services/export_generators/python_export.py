@@ -102,8 +102,7 @@ _LLM_CLASS: dict[str, str] = {
 
 _VECTORSTORE_IMPORTS: dict[str, str] = {
     "qdrant": (
-        "from langchain_qdrant import QdrantVectorStore\n"
-        "from qdrant_client import QdrantClient"
+        "from langchain_qdrant import QdrantVectorStore\n" "from qdrant_client import QdrantClient"
     ),
     "pinecone": (
         "from langchain_pinecone import PineconeVectorStore\nfrom pinecone import Pinecone"
@@ -291,7 +290,8 @@ def _build_pipeline_extras(config: PipelineConfigurationSchema) -> list[str]:
             [
                 "",
                 "# ─── Adaptive policies (Designer hints) ───────────────────────────────",
-                "ADAPTIVE_POLICIES = " + pformat([r.model_dump() for r in ap], width=88, sort_dicts=False),
+                "ADAPTIVE_POLICIES = "
+                + pformat([r.model_dump() for r in ap], width=88, sort_dicts=False),
             ]
         )
     gen = stages.generation
@@ -396,7 +396,7 @@ def _build_text_splitter(stages: PipelineStagesSchema) -> list[str]:
     strategy = _ev(c.strategy)
     if strategy == ChunkingStrategy.RECURSIVE_CHARACTER.value:
         sep = (
-            f'    separators={json.dumps(c.separators)},'
+            f"    separators={json.dumps(c.separators)},"
             if c.separators
             else '    separators=["\\n\\n", "\\n", " ", ""],'
         )
@@ -456,9 +456,7 @@ def _build_text_splitter(stages: PipelineStagesSchema) -> list[str]:
 
 def _build_vector_store(stages: PipelineStagesSchema) -> str:
     vs = stages.vector_store
-    metric = (
-        _ev(vs.configuration.metric).upper() if vs.configuration.metric else "COSINE"
-    )
+    metric = _ev(vs.configuration.metric).upper() if vs.configuration.metric else "COSINE"
     p = _ev(vs.provider)
 
     if p == VectorStoreProvider.QDRANT.value:
@@ -558,7 +556,7 @@ def _build_retriever(stages: PipelineStagesSchema) -> str:
                 "# Hybrid dense+sparse retrieval",
                 "base_retriever = vector_store.as_retriever(",
                 '    search_type="similarity",',
-                f"    search_kwargs={{\"k\": {retrieval.top_k}}},",
+                f'    search_kwargs={{"k": {retrieval.top_k}}},',
                 ")",
                 "# TODO: combine with BM25Retriever using EnsembleRetriever:",
                 "# from langchain.retrievers import EnsembleRetriever, BM25Retriever",
@@ -572,7 +570,7 @@ def _build_retriever(stages: PipelineStagesSchema) -> str:
             [
                 "base_retriever = MultiQueryRetriever.from_llm(",
                 "    retriever=vector_store.as_retriever(",
-                f"        search_kwargs={{\"k\": {retrieval.top_k}}}",
+                f'        search_kwargs={{"k": {retrieval.top_k}}}',
                 "    ),",
                 "    llm=llm,",
                 ")",
@@ -583,7 +581,7 @@ def _build_retriever(stages: PipelineStagesSchema) -> str:
             [
                 "base_retriever = vector_store.as_retriever(",
                 f'    search_type="{search_type}",',
-                f"    search_kwargs={{\"k\": {retrieval.top_k}}},",
+                f'    search_kwargs={{"k": {retrieval.top_k}}},',
                 ")",
             ]
         )

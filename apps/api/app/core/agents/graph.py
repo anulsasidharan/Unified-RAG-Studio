@@ -14,6 +14,10 @@ from app.core.agents.chunking_optimizer import (
     human_readable_optimizer_message,
     run_chunking_optimizer,
 )
+from app.core.agents.deployment_agent import (
+    human_readable_deployment_message,
+    run_deployment_agent,
+)
 from app.core.agents.document_analyst import (
     human_readable_analyst_message,
     run_document_analyst,
@@ -22,14 +26,11 @@ from app.core.agents.embedding_tester import (
     human_readable_embedding_message,
     run_embedding_tester,
 )
-from app.core.agents.deployment_agent import (
-    human_readable_deployment_message,
-    run_deployment_agent,
-)
 from app.core.agents.evaluation_agent import (
     human_readable_evaluation_message,
     run_evaluation_agent,
 )
+from app.core.agents.progress import progress_trace_fields
 from app.core.agents.prompts import (
     CHUNKING_OPTIMIZER_PROMPT,
     DEPLOYMENT_AGENT_PROMPT,
@@ -43,7 +44,6 @@ from app.core.agents.retrieval_optimizer import (
     human_readable_retrieval_message,
     run_retrieval_optimizer,
 )
-from app.core.agents.progress import progress_trace_fields
 from app.core.agents.state import AutopilotGraphState
 
 logger = structlog.get_logger(__name__)
@@ -208,7 +208,7 @@ def _bootstrap_finalize(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def _deployment_agent_node(state: AutopilotGraphState) -> dict[str, Any]:
-    """P6-7: compose / K8s / Terraform previews + gated cloud stubs; ``stage_outputs['deployment']``."""
+    """P6-7: compose / K8s / Terraform previews + gated cloud stubs; ``stage_outputs['deployment']``."""  # noqa: E501
 
     merged = state.get("stage_outputs") or {}
     retrieval = merged.get("retrieval")
@@ -737,7 +737,7 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
 
 
 def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
-    """Compile Autopilot orchestrator graph: specialists, ``orchestration_gate``, optional retry loop, deployment."""
+    """Compile Autopilot orchestrator graph: specialists, ``orchestration_gate``, optional retry loop, deployment."""  # noqa: E501
 
     graph = StateGraph(AutopilotGraphState)
     graph.add_node("bootstrap_prepare", _bootstrap_prepare)
@@ -772,7 +772,7 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
 
 
 def compile_autopilot_orchestrator_graph(*, checkpointer: MemorySaver | None = None):
-    """P6-8: same graph as bootstrap — linear specialists + evaluation gate + optional retry loop."""
+    """P6-8: same graph as bootstrap — linear specialists + evaluation gate + optional retry loop."""  # noqa: E501
 
     return compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
 
@@ -797,7 +797,7 @@ def invoke_autopilot_bootstrap(
     thread_id: str = "bootstrap-test",
     checkpointer: MemorySaver | None = None,
 ) -> AutopilotGraphState:
-    """Run orchestrator graph (including evaluation gate and retries); return merged terminal state."""
+    """Run orchestrator graph (including evaluation gate and retries); return merged terminal state."""  # noqa: E501
 
     app = compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
     recursion_limit = _safe_recursion_limit(state)

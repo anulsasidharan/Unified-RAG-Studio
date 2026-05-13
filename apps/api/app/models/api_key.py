@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
+import uuid
+
 from sqlalchemy import Boolean, DateTime, ForeignKey, Index, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -25,6 +26,4 @@ class APIKey(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
-    __table_args__ = (
-        Index("ix_api_keys_user_id", "user_id"),
-    )
+    __table_args__ = (Index("ix_api_keys_user_id", "user_id"),)

@@ -12,11 +12,11 @@ from app.core.generation import (
     GenerationService,
     generation_runtime_from_pipeline,
 )
-from app.core.routing import generation_with_routing
 from app.core.guardrails.configure_manager import build_guardrail_manager
 from app.core.guardrails.metrics import record_guarded_rag_outcome
 from app.core.guardrails.orchestrator import GuardrailOrchestrator, RetrievalGuardPayload
 from app.core.guardrails.types import GuardrailContext, GuardrailPipelineResult, GuardrailStage
+from app.core.routing import generation_with_routing
 from app.core.vectorstore.strategies import ScoredDoc
 from app.schemas.guardrails import GuardrailsConfigSchema
 from app.schemas.pipeline import GenerationConfigSchema, PipelineConfigurationSchema
@@ -125,7 +125,9 @@ async def run_guarded_rag_query(
         )
 
     docs_after = _final_documents(retr_res.final_payload)
-    gen_cfg: GenerationConfigSchema = generation_with_routing(pipeline, q_after, retriever_max_score=None)
+    gen_cfg: GenerationConfigSchema = generation_with_routing(
+        pipeline, q_after, retriever_max_score=None
+    )
     runtime = generation_runtime_from_pipeline(gen_cfg)
     svc = generation_service or GenerationService()
     gen_out = await svc.generate(

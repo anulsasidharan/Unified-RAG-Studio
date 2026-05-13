@@ -52,7 +52,9 @@ def examples_from_documents(
     return out
 
 
-def examples_from_text_snippets(snippets: list[str], *, max_items: int = 50) -> list[EvaluationExample]:
+def examples_from_text_snippets(
+    snippets: list[str], *, max_items: int = 50
+) -> list[EvaluationExample]:
     """Create evaluation rows from raw strings (e.g. concatenated chunks)."""
     docs = [Document(page_content=s) for s in snippets if s.strip()]
     return examples_from_documents(docs, max_items=max_items)

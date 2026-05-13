@@ -8,9 +8,9 @@ splitters) are mocked where needed to keep tests fast and deterministic.
 import importlib
 from unittest.mock import MagicMock, patch
 
+from langchain_core.documents import Document
 import numpy as np
 import pytest
-from langchain_core.documents import Document
 
 from app.core.chunking import (
     ChunkerFactory,
@@ -28,16 +28,13 @@ from app.core.chunking import (
 )
 from app.core.chunking.optimizers import ChunkQualityMetrics
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
 
 @pytest.fixture
 def simple_doc():
     return Document(
-        page_content=(
-            "First sentence here. Second sentence follows. Third sentence ends this."
-        ),
+        page_content=("First sentence here. Second sentence follows. Third sentence ends this."),
         metadata={"source": "test.txt", "file_type": "txt", "page_number": 1},
     )
 
@@ -220,11 +217,13 @@ def test_semantic_chunker_splits_on_low_similarity(simple_doc):
     """Similarity below threshold should produce multiple chunks."""
     mock_model = MagicMock()
     # Three sentences → three embeddings; adjacent similarities all below threshold
-    mock_model.encode.return_value = np.array([
-        [1.0, 0.0, 0.0],
-        [0.0, 1.0, 0.0],
-        [0.0, 0.0, 1.0],
-    ])
+    mock_model.encode.return_value = np.array(
+        [
+            [1.0, 0.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 1.0],
+        ]
+    )
 
     chunker = SemanticChunker()
     chunker._model_cache["test-model"] = mock_model

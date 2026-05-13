@@ -34,7 +34,7 @@ class OpenAIEmbedder(TextEmbedder):
         from app.config import get_settings
 
         openai_mod = importlib.import_module("langchain_openai")
-        OpenAIEmbeddings = getattr(openai_mod, "OpenAIEmbeddings")
+        OpenAIEmbeddings = openai_mod.OpenAIEmbeddings  # noqa: N806
 
         kwargs: dict[str, Any] = {
             "model": config.model,

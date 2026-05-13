@@ -1,6 +1,6 @@
-import uuid
 from functools import lru_cache
 from typing import Literal
+import uuid
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 

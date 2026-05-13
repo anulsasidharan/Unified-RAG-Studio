@@ -6,8 +6,8 @@ status / project-scoped listing / teardown for owned pipeline configs.
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,11 +16,11 @@ from app.models.deployment import Deployment
 from app.models.pipeline_config import PipelineConfig
 from app.models.project import Project
 from app.schemas.deployment import (
-    DeployRequest,
-    DeployResponse,
     DeploymentListItem,
     DeploymentListResponse,
     DeploymentStatusResponse,
+    DeployRequest,
+    DeployResponse,
 )
 
 
@@ -32,7 +32,9 @@ class DeploymentService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def _owned_config(self, user_id: uuid.UUID, config_id: uuid.UUID) -> PipelineConfig | None:
+    async def _owned_config(
+        self, user_id: uuid.UUID, config_id: uuid.UUID
+    ) -> PipelineConfig | None:
         q = (
             select(PipelineConfig)
             .join(Project, PipelineConfig.project_id == Project.id)
@@ -87,7 +89,9 @@ class DeploymentService:
             error=err if isinstance(err, str) else None,
         )
 
-    async def trigger_deploy(self, user_id: uuid.UUID, body: DeployRequest) -> DeployResponse | None:
+    async def trigger_deploy(
+        self, user_id: uuid.UUID, body: DeployRequest
+    ) -> DeployResponse | None:
         try:
             cfg_uuid = uuid.UUID(body.config_id.strip())
         except ValueError:
@@ -132,10 +136,12 @@ class DeploymentService:
             provider=body.provider,
             environment=body.environment,
             status="deploying",
-            message="Deployment queued. Poll GET /api/deployment/{id}/status until status is deployed, failed, or teardown.",
+            message="Deployment queued. Poll GET /api/deployment/{id}/status until status is deployed, failed, or teardown.",  # noqa: E501
         )
 
-    async def get_status(self, user_id: uuid.UUID, deployment_id: uuid.UUID) -> DeploymentStatusResponse | None:
+    async def get_status(
+        self, user_id: uuid.UUID, deployment_id: uuid.UUID
+    ) -> DeploymentStatusResponse | None:
         row = await self._owned_deployment(user_id, deployment_id)
         if row is None:
             return None
@@ -195,7 +201,11 @@ class DeploymentService:
 
         items: list[DeploymentListItem] = []
         for r in rows:
-            st = r.status if r.status in ("deploying", "deployed", "failed", "teardown") else "failed"
+            st = (
+                r.status
+                if r.status in ("deploying", "deployed", "failed", "teardown")
+                else "failed"
+            )
             items.append(
                 DeploymentListItem(
                     deployment_id=str(r.id),
@@ -210,7 +220,9 @@ class DeploymentService:
 
         return DeploymentListResponse(items=items, total=total, page=page, page_size=page_size)
 
-    async def teardown(self, user_id: uuid.UUID, deployment_id: uuid.UUID) -> DeploymentStatusResponse | None:
+    async def teardown(
+        self, user_id: uuid.UUID, deployment_id: uuid.UUID
+    ) -> DeploymentStatusResponse | None:
         row = await self._owned_deployment(user_id, deployment_id)
         if row is None:
             return None

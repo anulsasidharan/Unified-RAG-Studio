@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-import pytest
 from langchain_core.documents import Document
+import pytest
 
 from app.core.guardrails import (
     GuardrailManager,
     GuardrailOrchestrator,
     RetrievalBiasHeuristicGuardrail,
-    RetrievedContentFilterGuardrail,
     RetrievalGuardPayload,
+    RetrievedContentFilterGuardrail,
     SourceProvenanceGuardrail,
     clear_retrieval_guardrails,
     register_default_retrieval_guardrails,
@@ -93,7 +93,9 @@ def test_bias_warns_on_query_match() -> None:
     assert r.metadata.get("where") == "query"
 
 
-def test_register_default_order_content_and_bias_only_without_source_rules(manager: GuardrailManager) -> None:
+def test_register_default_order_content_and_bias_only_without_source_rules(
+    manager: GuardrailManager,
+) -> None:
     register_default_retrieval_guardrails(manager, source_validation=True)
     names = [g.name for g in manager.guardrails_for(GuardrailStage.RETRIEVAL)]
     assert names == ["retrieved-content-filter", "retrieval-bias-heuristic"]

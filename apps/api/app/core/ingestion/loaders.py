@@ -82,9 +82,7 @@ class DOCXLoader(DocumentLoader):
             doc = docx.Document(str(source))
             source_path = str(source)
 
-        full_text = "\n".join(
-            para.text for para in doc.paragraphs if para.text.strip()
-        )
+        full_text = "\n".join(para.text for para in doc.paragraphs if para.text.strip())
         docs = [
             Document(
                 page_content=full_text,
@@ -256,9 +254,7 @@ class URLLoader(DocumentLoader):
             logger.warning("url_fetch_failed", url=url)
             return []
 
-        text = trafilatura.extract(
-            downloaded, include_comments=False, include_tables=True
-        )
+        text = trafilatura.extract(downloaded, include_comments=False, include_tables=True)
         if not text:
             logger.warning("url_extract_empty", url=url)
             return []

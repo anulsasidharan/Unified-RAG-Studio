@@ -1,11 +1,11 @@
 """Shared pytest fixtures for the RAG Studio API test suite."""
 
-import os
 from collections.abc import AsyncIterator, Iterator
+import os
 
-import pytest
 from fastapi.testclient import TestClient
 from httpx import ASGITransport, AsyncClient
+import pytest
 from sqlalchemy import create_engine
 
 from app.config import get_settings

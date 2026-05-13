@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -16,14 +15,14 @@ class UserProfileResponse(BaseModel):
     subscription_tier: str
     email_verified: bool
     is_active: bool = True
-    profile_image_url: Optional[str] = None
-    last_login: Optional[datetime] = None
+    profile_image_url: str | None = None
+    last_login: datetime | None = None
     created_at: datetime
 
 
 class UpdateProfileRequest(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    profile_image_url: Optional[str] = Field(None, max_length=500)
+    name: str | None = Field(None, min_length=1, max_length=255)
+    profile_image_url: str | None = Field(None, max_length=500)
 
 
 class ChangePasswordRequest(BaseModel):

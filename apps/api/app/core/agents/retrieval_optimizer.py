@@ -137,7 +137,9 @@ def _build_eval_queries(
     return _apply_query_processing(base, pipeline_config)
 
 
-def _apply_query_processing(queries: list[str], pipeline_config: dict[str, Any] | None) -> list[str]:
+def _apply_query_processing(
+    queries: list[str], pipeline_config: dict[str, Any] | None
+) -> list[str]:
     stages = (pipeline_config or {}).get("stages") if isinstance(pipeline_config, dict) else None
     qp = None
     if isinstance(stages, dict):
@@ -420,8 +422,15 @@ def _rank_indices_for_candidate(
         qv = _hashing_vector(query)
         doc_vecs = [_hashing_vector(chunks[i]) for i in range(n)]
         d_order = sorted(range(n), key=lambda i: dense[i], reverse=True)
-        mmr_idx = mmr_order(qv, doc_vecs, k=min(n, max(top_k * 4, top_k)), lambda_mult=float(c.get("mmr_lambda") or 0.5))
-        fused = reciprocal_rank_fusion_keys([[keys[i] for i in d_order], [keys[i] for i in mmr_idx]])
+        mmr_idx = mmr_order(
+            qv,
+            doc_vecs,
+            k=min(n, max(top_k * 4, top_k)),
+            lambda_mult=float(c.get("mmr_lambda") or 0.5),
+        )
+        fused = reciprocal_rank_fusion_keys(
+            [[keys[i] for i in d_order], [keys[i] for i in mmr_idx]]
+        )
         rank_map = {int(k.split(":")[1]): r for r, (k, _) in enumerate(fused)}
         order = sorted(range(n), key=lambda i: rank_map.get(i, 9999))
         return _maybe_rerank(query, chunks, order, c)
@@ -529,7 +538,10 @@ def run_retrieval_optimizer(
         }
     if len(chunks) == 1:
         # Single-chunk corpus still supports relative latency / strategy comparisons.
-        chunks = [chunks[0], chunks[0] + "\n\n(autopilot retrieval bench duplicate for rank stability.)"]
+        chunks = [
+            chunks[0],
+            chunks[0] + "\n\n(autopilot retrieval bench duplicate for rank stability.)",
+        ]
 
     queries = _build_eval_queries(analyze_payload, requirements, pipeline_config)
     tokenized = [tokenize(t) for t in chunks]

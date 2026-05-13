@@ -8,13 +8,13 @@ from typing import Any
 from langchain_core.tools import tool
 
 from app.core.agents.chunking_optimizer import run_chunking_optimizer_from_json
+from app.core.agents.deployment_agent import run_deployment_agent_from_json
 from app.core.agents.document_analyst import (
     build_corpus_summary,
     recommend_chunking,
     run_document_analyst,
 )
 from app.core.agents.embedding_tester import run_embedding_tester_from_json
-from app.core.agents.deployment_agent import run_deployment_agent_from_json
 from app.core.agents.evaluation_agent import run_evaluation_agent_from_json
 from app.core.agents.retrieval_optimizer import run_retrieval_optimizer_from_json
 

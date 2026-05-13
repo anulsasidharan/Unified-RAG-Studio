@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
-from app.schemas.pipeline import GenerationConfigSchema, PipelineConfigurationSchema, RoutingRuleSchema
+from app.schemas.pipeline import (
+    GenerationConfigSchema,
+    PipelineConfigurationSchema,
+    RoutingRuleSchema,
+)
 
 
 def _query_lower(query: str) -> str:

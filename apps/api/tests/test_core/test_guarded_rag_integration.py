@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
 from langchain_core.documents import Document
 from langchain_core.messages import AIMessage
+import pytest
 
 from app.core.generation import GenerationService
 from app.core.guardrails import (
@@ -18,16 +18,16 @@ from app.core.guardrails import (
 from app.core.rag import run_guarded_rag_query
 from app.schemas import GuardrailsConfigSchema
 from app.schemas.pipeline import (
-    CloudProvider,
     ChunkingConfigSchema,
     ChunkingStrategy,
+    CloudProvider,
     EmbeddingConfigSchema,
     EmbeddingProvider,
     GenerationConfigSchema,
     GenerationProvider,
     OutputFormat,
-    PipelineMetadataSchema,
     PipelineConfigurationSchema,
+    PipelineMetadataSchema,
     PipelineStagesSchema,
     RetrievalConfigSchema,
     RetrievalStrategy,

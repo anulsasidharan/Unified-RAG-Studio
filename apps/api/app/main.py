@@ -1,17 +1,17 @@
 """RAG Studio — FastAPI application entry point."""
 
-import time
-import uuid
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
+import time
+import uuid
 
-import structlog
 from fastapi import FastAPI, Request
-from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
+from starlette.responses import JSONResponse
+import structlog
 
 from app.config import get_settings
 from app.core.security.auth import decode_access_token
@@ -19,7 +19,6 @@ from app.metadata import API_SEMVER
 from app.observability.context import bind_request_observability, clear_observability_context
 from app.observability.logging_setup import configure_logging
 from app.observability.rag_metrics import observe_http_request
-
 
 logger = structlog.get_logger(__name__)
 _rate_limit_buckets: dict[str, list[float]] = {}
@@ -31,9 +30,9 @@ _rate_limit_buckets: dict[str, list[float]] = {}
 
 _USER_COLUMN_MIGRATIONS = [
     # (column_name, DDL fragment for ALTER TABLE)
-    ("is_active",          "is_active BOOLEAN NOT NULL DEFAULT true"),
-    ("profile_image_url",  "profile_image_url VARCHAR(500)"),
-    ("last_login",         "last_login TIMESTAMP"),
+    ("is_active", "is_active BOOLEAN NOT NULL DEFAULT true"),
+    ("profile_image_url", "profile_image_url VARCHAR(500)"),
+    ("last_login", "last_login TIMESTAMP"),
 ]
 
 _NEW_TABLES = [
@@ -46,9 +45,8 @@ _NEW_TABLES = [
 
 def _apply_column_migrations(conn):
     """Synchronous helper: adds missing columns and tables on existing DBs."""
-    from sqlalchemy import text, inspect
+    from sqlalchemy import inspect, text
 
-    dialect = conn.dialect.name  # "sqlite" or "postgresql"
     insp = inspect(conn)
 
     # ── 1. Add missing columns to the users table ─────────────────────────
@@ -67,9 +65,11 @@ async def _seed_bootstrap_users(settings) -> None:
     Format: comma-separated ``email:password:role:uuid`` entries.
     """
     import uuid as uuid_lib
+
     from sqlalchemy import select
-    from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
     from sqlalchemy.orm import sessionmaker
+
     from app.core.security.auth import hash_password
     from app.models.user import User
 
@@ -88,15 +88,17 @@ async def _seed_bootstrap_users(settings) -> None:
             if existing:
                 continue
 
-            session.add(User(
-                id=user_id,
-                email=email,
-                password_hash=hash_password(password),
-                name=email.split("@")[0].capitalize(),
-                role=role,
-                email_verified=True,
-                is_active=True,
-            ))
+            session.add(
+                User(
+                    id=user_id,
+                    email=email,
+                    password_hash=hash_password(password),
+                    name=email.split("@")[0].capitalize(),
+                    role=role,
+                    email_verified=True,
+                    is_active=True,
+                )
+            )
             logger.info("bootstrap_user_seeded", email=email, role=role)
 
         await session.commit()
@@ -326,7 +328,9 @@ def create_app() -> FastAPI:
             clear_observability_context()
 
     # ── Routes ───────────────────────────────────────────────
+    from app.routers.admin import router as admin_router
     from app.routers.analytics import router as analytics_router
+    from app.routers.api_keys import router as api_keys_router
     from app.routers.auth import router as auth_router
     from app.routers.autopilot import router as autopilot_router
     from app.routers.deployment import router as deployment_router
@@ -336,12 +340,10 @@ def create_app() -> FastAPI:
     from app.routers.jobs import router as jobs_router
     from app.routers.monitoring import router as monitoring_router
     from app.routers.projects import router as projects_router
-    from app.routers.templates import router as templates_router
-    from app.routers.utilities import router as utilities_router
-    from app.routers.users import router as users_router
-    from app.routers.api_keys import router as api_keys_router
     from app.routers.subscriptions import router as subscriptions_router
-    from app.routers.admin import router as admin_router
+    from app.routers.templates import router as templates_router
+    from app.routers.users import router as users_router
+    from app.routers.utilities import router as utilities_router
 
     app.include_router(monitoring_router)
     app.include_router(health_router)

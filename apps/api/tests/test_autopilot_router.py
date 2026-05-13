@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.services.autopilot_object_storage import UploadedBlobMeta
 from app.worker import tasks
 
-# Dedicated user so this file does not inflate project counts for ``test_projects`` (same SQLite DB).
+# Dedicated user so this file does not inflate project counts for ``test_projects`` (same SQLite DB).  # noqa: E501
 USER_AUTO = "22222222-2222-4222-8222-222222222222"
 
 
@@ -212,6 +212,11 @@ def test_autopilot_cancel_twice_conflict(sync_client: TestClient):
             headers={"X-User-ID": USER_AUTO},
         )
     bid = start.json()["buildId"]
-    assert sync_client.post(f"/api/autopilot/build/{bid}/cancel", headers={"X-User-ID": USER_AUTO}).status_code == 200
+    assert (
+        sync_client.post(
+            f"/api/autopilot/build/{bid}/cancel", headers={"X-User-ID": USER_AUTO}
+        ).status_code
+        == 200
+    )
     again = sync_client.post(f"/api/autopilot/build/{bid}/cancel", headers={"X-User-ID": USER_AUTO})
     assert again.status_code == 409

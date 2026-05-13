@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 USER = "aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee"
 

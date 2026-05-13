@@ -149,7 +149,11 @@ def run_evaluation_agent(
         }
 
     tokenized = [tokenize(t) for t in chunks]
-    sel = retrieval_payload.get("selected") if isinstance(retrieval_payload.get("selected"), dict) else {}
+    sel = (
+        retrieval_payload.get("selected")
+        if isinstance(retrieval_payload.get("selected"), dict)
+        else {}
+    )
     cand = _retrieval_candidate_dict(sel)
     top_k = min(max(int(cand.get("top_k") or 5), 1), len(chunks))
 
@@ -236,8 +240,7 @@ def run_evaluation_agent(
         f"answer_relevance≈{metrics['answer_relevance']}, "
         f"context_precision≈{metrics['context_precision']}, "
         f"context_recall≈{metrics['context_recall']}. "
-        f"Targets met: **{meets}**."
-        + (f" Gaps: {'; '.join(gaps)}." if gaps else "")
+        f"Targets met: **{meets}**." + (f" Gaps: {'; '.join(gaps)}." if gaps else "")
     )
 
     payload: dict[str, Any] = {
