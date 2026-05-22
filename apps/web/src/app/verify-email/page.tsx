@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { apiClient, ApiError } from '@/lib/api-client';
 import type { VerifyEmailResponse } from '@/types/auth';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const sp = useSearchParams();
   const tokenFromQuery = sp.get('token') ?? '';
@@ -114,6 +114,14 @@ export default function VerifyEmailPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
 

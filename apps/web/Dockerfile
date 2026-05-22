@@ -39,6 +39,11 @@ COPY data/ /data/
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Rewrites in next.config.js are evaluated at build time for standalone output.
+# Pass the Docker-internal API address so the server-side proxy resolves correctly.
+ARG NEXT_PUBLIC_API_URL=http://api:8000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN npm run build
 
 # ── Stage 3: Runtime ──────────────────────────────────────────────────────────
@@ -62,6 +67,6 @@ USER nextjs
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-  CMD wget -qO- http://localhost:3000/ || exit 1
+  CMD wget -qO/dev/null http://127.0.0.1:3000/ || exit 1
 
 CMD ["node", "server.js"]
