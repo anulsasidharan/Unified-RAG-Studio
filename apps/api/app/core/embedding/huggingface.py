@@ -68,4 +68,4 @@ class HuggingFaceEmbedder(TextEmbedder):
         hf_name = self._resolve_model(config.model)
         model = self._get_model(hf_name)
         embedding = model.encode(text, normalize_embeddings=True)
-        return embedding.tolist()
+        return embedding.tolist()  # type: ignore[no-any-return]

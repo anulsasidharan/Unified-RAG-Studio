@@ -38,7 +38,7 @@ def extract_pdf_metadata(source: "str | bytes") -> dict[str, Any]:
         reader = (
             PdfReader(io.BytesIO(source)) if isinstance(source, bytes) else PdfReader(str(source))
         )
-        info = reader.metadata or {}
+        info: Any = reader.metadata or {}
         return {
             k: v
             for k, v in {

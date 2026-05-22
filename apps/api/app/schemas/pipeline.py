@@ -419,7 +419,7 @@ class HumanInTheLoopConfigSchema(RAGBaseModel):
 
     enabled: bool = False
     tier: HitlTier = "simple"
-    roles: list[HitlRole] = Field(default_factory=lambda: ["approver"])
+    roles: list[HitlRole] = Field(default_factory=lambda: ["approver"])  # type: ignore[arg-type]
     placement: HitlPlacementSchema = Field(default_factory=HitlPlacementSchema)
     confidence: HitlConfidenceSchema = Field(default_factory=HitlConfidenceSchema)
     workflow: HitlWorkflowSchema = Field(default_factory=HitlWorkflowSchema)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from app.config import get_settings
 from app.schemas.guardrails import GuardrailsConfigSchema
 
@@ -45,7 +47,7 @@ def build_guardrail_manager(cfg: GuardrailsConfigSchema | None) -> GuardrailMana
         default_patterns=DEFAULT_BIAS_HEURISTIC_PATTERNS,
     )
 
-    tox_kw: dict[str, object] = {}
+    tox_kw: dict[str, Any] = {}
     if tox is not None:
         tox_kw["toxicity_blocked_terms"] = tox.blocked_terms
         tox_kw["toxicity_extra_patterns"] = tox.extra_patterns
@@ -60,7 +62,7 @@ def build_guardrail_manager(cfg: GuardrailsConfigSchema | None) -> GuardrailMana
             **tox_kw,
         )
 
-    ret_kw: dict[str, object] = {}
+    ret_kw: dict[str, Any] = {}
     if cf is not None:
         ret_kw["content_blocked_terms"] = cf.blocked_terms
         ret_kw["content_extra_patterns"] = cf.extra_patterns

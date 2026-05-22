@@ -9,6 +9,7 @@ Language is auto-detected from file extension metadata when config.language="aut
 """
 
 import importlib
+from typing import Any
 
 from langchain_core.documents import Document
 import structlog
@@ -35,7 +36,7 @@ _EXTENSION_TO_LANG: dict[str, str] = {
 }
 
 
-def _get_lc_language(lang: str):
+def _get_lc_language(lang: str) -> Any:
     """Map an internal language name to a LangChain Language enum member."""
     lcts = importlib.import_module("langchain_text_splitters")
     Language = lcts.Language  # noqa: N806

@@ -46,7 +46,7 @@ def create_access_token(
         "jti": jti,
         "exp": expire,
     }
-    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)  # type: ignore[no-any-return]
 
 
 def decode_access_token(settings: Settings, token: str) -> AuthPrincipal:
@@ -92,8 +92,8 @@ def decode_access_token(settings: Settings, token: str) -> AuthPrincipal:
 
 
 def hash_password(plain_password: str) -> str:
-    return pwd_context.hash(plain_password)
+    return pwd_context.hash(plain_password)  # type: ignore[no-any-return]
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)  # type: ignore[no-any-return]

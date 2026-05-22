@@ -25,7 +25,7 @@ def _sum_counts(rows: Sequence[tuple[str, int]]) -> dict[str, int]:
     return {str(status): int(n) for status, n in rows}
 
 
-def _scoped_user(user_id: uuid.UUID):
+def _scoped_user(user_id: uuid.UUID) -> Any:
     return (Project.user_id == user_id, Project.deleted_at.is_(None))
 
 
@@ -96,9 +96,9 @@ class AnalyticsService:
         return AnalyticsSummarySchema(
             projects=n_projects,
             pipeline_configs=n_configs,
-            autopilot_builds=CountBreakdownSchema(counts=_sum_counts(ab_rows)),
-            evaluation_runs=CountBreakdownSchema(counts=_sum_counts(ev_rows)),
-            deployments=CountBreakdownSchema(counts=_sum_counts(dep_rows)),
+            autopilot_builds=CountBreakdownSchema(counts=_sum_counts(ab_rows)),  # type: ignore[arg-type]
+            evaluation_runs=CountBreakdownSchema(counts=_sum_counts(ev_rows)),  # type: ignore[arg-type]
+            deployments=CountBreakdownSchema(counts=_sum_counts(dep_rows)),  # type: ignore[arg-type]
             documents_uploaded_recent_builds_hint=doc_hint,
             cost_signals=cost,
         )

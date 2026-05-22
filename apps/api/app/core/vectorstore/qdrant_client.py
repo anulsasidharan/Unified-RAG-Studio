@@ -169,7 +169,7 @@ class QdrantVectorStore(VectorStoreClient):
         score_threshold: float | None = None,
     ) -> list[ScoredDoc]:
         qf = _build_qdrant_filter(filters)
-        hits = await self._client.search(
+        hits = await self._client.search(  # type: ignore[attr-defined]
             collection_name=self._collection,
             query_vector=query_vector,
             limit=top_k,

@@ -44,9 +44,12 @@ def _fallback_sketches(
     """Minimal artefacts when no full ``PipelineConfigurationSchema`` is available."""
 
     slug = _slug(label)
-    r_sel = retrieval.get("selected") if isinstance(retrieval.get("selected"), dict) else {}
-    e_sel = embedding.get("selected") if isinstance(embedding.get("selected"), dict) else {}
-    c_sel = chunking.get("selected") if isinstance(chunking.get("selected"), dict) else {}
+    _r = retrieval.get("selected")
+    r_sel: dict[str, Any] = _r if isinstance(_r, dict) else {}
+    _e = embedding.get("selected")
+    e_sel: dict[str, Any] = _e if isinstance(_e, dict) else {}
+    _c = chunking.get("selected")
+    c_sel: dict[str, Any] = _c if isinstance(_c, dict) else {}
     strat = str(r_sel.get("strategy") or "similarity")
     top_k = int(r_sel.get("top_k") or 5)
     emb_model = str(e_sel.get("model") or "text-embedding-3-small")
@@ -222,7 +225,7 @@ def run_deployment_agent(
     )
     if eval_ok:
         rationale += (
-            f"Evaluation proxies: faithfulness≈{metrics.get('faithfulness')}, "
+            f"Evaluation proxies: faithfulness≈{metrics.get('faithfulness')}, "  # type: ignore[union-attr]
             f"meets_targets={meets}. "
         )
     rationale += "All cloud **apply** paths are stubbed and operator-gated."

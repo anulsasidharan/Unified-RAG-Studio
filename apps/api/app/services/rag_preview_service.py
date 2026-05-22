@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Literal, cast
 import uuid
 
 from app.core.guardrails.types import GuardrailContext, GuardrailPipelineResult, GuardrailStage
@@ -30,13 +31,15 @@ def _any_warnings(*results: GuardrailPipelineResult | None) -> bool:
     return False
 
 
-def _blocked_stage_literal(stage: GuardrailStage | None) -> str | None:
+def _blocked_stage_literal(
+    stage: GuardrailStage | None,
+) -> Literal["input", "retrieval", "output"] | None:  # noqa: E501
     if stage is None:
         return None
     v = stage.value
     if v in ("input", "retrieval", "output"):
-        return v
-    return v
+        return cast(Literal["input", "retrieval", "output"], v)
+    return None
 
 
 async def run_rag_preview(req: RagPreviewRequest) -> RagPreviewResponse:

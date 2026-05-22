@@ -71,7 +71,7 @@ async def ready(
             max_connections=5,
         )
         pong = await asyncio.wait_for(
-            cast(Awaitable[bool], redis_client.ping()),
+            cast(Awaitable[bool], redis_client.ping()),  # type: ignore[union-attr]
             timeout=2.0,
         )
         checks["redis"] = {"ok": pong is True}

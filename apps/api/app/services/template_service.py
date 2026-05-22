@@ -37,7 +37,7 @@ def _resolver_paths(settings: Settings) -> list[Path]:
 @lru_cache(maxsize=8)
 def _load_catalog_raw(path_str: str) -> dict[str, object]:
     with Path(path_str).open(encoding="utf-8") as fh:
-        return json.load(fh)
+        return json.load(fh)  # type: ignore[no-any-return]
 
 
 def load_templates_catalog(settings: Settings | None = None) -> TemplatesCatalogResponse:

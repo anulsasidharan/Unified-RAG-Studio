@@ -43,7 +43,7 @@ class OpenAIEmbedder(TextEmbedder):
         if config.model in _DIMENSIONS_SUPPORTED and config.dimensions:
             kwargs["dimensions"] = config.dimensions
 
-        return OpenAIEmbeddings(**kwargs)
+        return OpenAIEmbeddings(**kwargs)  # type: ignore[no-any-return]
 
     def embed_documents(self, texts: list[str], config: EmbeddingConfig) -> list[Embedding]:
         client = self._build_client(config)

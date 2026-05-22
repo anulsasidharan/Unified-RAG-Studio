@@ -1,8 +1,10 @@
 """RAG Studio — FastAPI application entry point."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import time
+from typing import Any
 import uuid
 
 from fastapi import FastAPI, Request
@@ -43,7 +45,7 @@ _NEW_TABLES = [
 ]
 
 
-def _apply_column_migrations(conn):
+def _apply_column_migrations(conn: Any) -> None:
     """Synchronous helper: adds missing columns and tables on existing DBs."""
     from sqlalchemy import inspect, text
 
@@ -59,7 +61,7 @@ def _apply_column_migrations(conn):
     # ── 2. New tables are handled by create_all above; nothing extra needed ─
 
 
-async def _seed_bootstrap_users(settings) -> None:
+async def _seed_bootstrap_users(settings: Any) -> None:
     """Idempotently seed dev/test users from the AUTH_BOOTSTRAP_USERS env var.
 
     Format: comma-separated ``email:password:role:uuid`` entries.
@@ -67,14 +69,13 @@ async def _seed_bootstrap_users(settings) -> None:
     import uuid as uuid_lib
 
     from sqlalchemy import select
-    from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
     from app.core.security.auth import hash_password
     from app.models.user import User
 
     engine = create_async_engine(settings.database_url, echo=False, poolclass=NullPool)
-    async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
         for entry in settings.auth_bootstrap_users.split(","):
@@ -123,7 +124,7 @@ def _route_template(request: Request) -> str:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application startup and shutdown logic."""
     settings = get_settings()
     configure_logging(settings.log_level)
@@ -215,7 +216,7 @@ def create_app() -> FastAPI:
 
     # ── Request ID, correlation ID, Prometheus HTTP metrics, latency JSON logs ───
     @app.middleware("http")
-    async def observability_http_middleware(request: Request, call_next):
+    async def observability_http_middleware(request: Request, call_next: Any) -> Any:
         start = time.perf_counter()
 
         # Enforce JWT for all API endpoints (except /api/auth/* itself; those

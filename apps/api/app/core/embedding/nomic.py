@@ -60,4 +60,4 @@ class NomicEmbedder(TextEmbedder):
     def embed_query(self, text: str, config: EmbeddingConfig) -> Embedding:
         model = self._get_model()
         embedding = model.encode(text, normalize_embeddings=True)
-        return embedding.tolist()
+        return embedding.tolist()  # type: ignore[no-any-return]

@@ -142,4 +142,4 @@ class AutopilotBuildService:
             .limit(page_size)
         )
         rows = list((await self._session.execute(data_q)).all())
-        return total, rows
+        return total, rows  # type: ignore[return-value]

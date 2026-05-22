@@ -34,7 +34,7 @@ class BiasPolicyData:
 
 
 def _read_json(path: Path) -> dict[str, Any]:
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8"))  # type: ignore[no-any-return]
 
 
 def _compile_regex_list(raw: list[Any], *, context: str) -> tuple[re.Pattern[str], ...]:

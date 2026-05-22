@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from app.core.guardrails.manager import GuardrailManager
 from app.core.guardrails.types import GuardrailStage
@@ -36,7 +37,7 @@ def register_default_retrieval_guardrails(
     ingestion metadata is reliable. Empty keys skip provenance filtering.
     """
     if content_filter:
-        cf_kw: dict[str, object] = {}
+        cf_kw: dict[str, Any] = {}
         if content_blocked_terms is not None:
             cf_kw["blocked_terms"] = content_blocked_terms
         if content_extra_patterns is not None:

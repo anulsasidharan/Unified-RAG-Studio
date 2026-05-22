@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from app.core.guardrails.manager import GuardrailManager
 from app.core.guardrails.types import GuardrailStage
@@ -36,7 +37,7 @@ def register_default_input_guardrails(
         manager.register(PromptInjectionGuardrail())
 
     if toxicity:
-        kwargs: dict[str, frozenset[str] | tuple[re.Pattern[str], ...]] = {}
+        kwargs: dict[str, Any] = {}
         if toxicity_blocked_terms is not None:
             kwargs["blocked_terms"] = toxicity_blocked_terms
         if toxicity_extra_patterns is not None:

@@ -149,11 +149,8 @@ def run_evaluation_agent(
         }
 
     tokenized = [tokenize(t) for t in chunks]
-    sel = (
-        retrieval_payload.get("selected")
-        if isinstance(retrieval_payload.get("selected"), dict)
-        else {}
-    )
+    _sel_raw = retrieval_payload.get("selected")
+    sel: dict[str, Any] = _sel_raw if isinstance(_sel_raw, dict) else {}
     cand = _retrieval_candidate_dict(sel)
     top_k = min(max(int(cand.get("top_k") or 5), 1), len(chunks))
 

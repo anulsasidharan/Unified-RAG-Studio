@@ -38,7 +38,8 @@ def _synthetic_corpus_from_summary(
             if not isinstance(item, dict):
                 continue
             text = item.get("page_content") or item.get("text") or ""
-            meta = item.get("metadata") if isinstance(item.get("metadata"), dict) else {}
+            _meta = item.get("metadata")
+            meta: dict[str, Any] = _meta if isinstance(_meta, dict) else {}
             if str(text).strip():
                 out.append(Document(page_content=str(text), metadata=dict(meta)))
         if out:
@@ -252,7 +253,7 @@ def run_chunking_optimizer(
     )
 
     if winner is None:
-        payload = {
+        payload: dict[str, Any] = {
             "status": "failed",
             "reason": "all_chunking_benchmarks_failed",
             "candidates_tried": rows,
