@@ -3,6 +3,7 @@
 import { Calculator, Loader2, RefreshCw } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useWhenVisible } from '@/hooks/use-when-visible';
 import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
@@ -57,6 +58,7 @@ export function CostEstimator({
 }>) {
   const draft = useDesignerStore((s) => s.draft);
   const accessToken = useAuthStore((s) => s.accessToken);
+  const [sectionRef, sectionVisible] = useWhenVisible<HTMLElement>();
 
   const [assumptions, setAssumptions] = useState<CostAssumptions>({
     queriesPerMonth: 100_000,
@@ -65,7 +67,7 @@ export function CostEstimator({
   });
 
   const [estimate, setEstimate] = useState<CostEstimate | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const firstFetch = useRef(true);
   const [error, setError] = useState<string | null>(null);
   const [lastOkAt, setLastOkAt] = useState<number | null>(null);
@@ -122,6 +124,7 @@ export function CostEstimator({
   );
 
   useEffect(() => {
+    if (!sectionVisible) return;
     if (!accessToken?.trim()) {
       setLoading(false);
       setError('Sign in to load cost estimates.');
@@ -138,12 +141,13 @@ export function CostEstimator({
       window.clearTimeout(tid);
       ctrl.abort();
     };
-  }, [payloadDigest, fetchEstimate, accessToken]);
+  }, [payloadDigest, fetchEstimate, accessToken, sectionVisible]);
 
   const breakdown = estimate?.breakdown ?? [];
 
   return (
     <section
+      ref={sectionRef}
       id={id}
       className={cn(
         'w-full shrink-0 border-t border-neutral-200 bg-white py-6 dark:border-neutral-800 dark:bg-neutral-950 scroll-mt-4',

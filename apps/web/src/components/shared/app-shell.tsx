@@ -66,7 +66,18 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
   }, [pathname]);
 
   if (!isPublicRoute && !hasInitialized) {
-    return null;
+    return (
+      <div className="flex min-h-screen flex-col bg-background" aria-busy="true" aria-label="Loading workspace">
+        <div className="h-14 shrink-0 border-b border-neutral-200/60 bg-muted/30 dark:border-neutral-800" />
+        <div className="flex min-h-0 flex-1">
+          <div className="hidden w-14 shrink-0 border-r border-neutral-100 md:block dark:border-neutral-800" />
+          <div className="flex flex-1 flex-col gap-4 p-6 sm:p-8">
+            <div className="h-8 w-48 max-w-full animate-pulse rounded-lg bg-muted/50" />
+            <div className="min-h-[12rem] flex-1 animate-pulse rounded-2xl bg-muted/30" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

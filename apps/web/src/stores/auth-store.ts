@@ -8,6 +8,18 @@ import { useProjectStore } from '@/stores/project-store';
 import { useAutopilotStore } from '@/stores/autopilot-store';
 
 const TOKEN_KEY = 'ragstudio.accessToken';
+const USER_ID_KEY = 'ragstudio.userId';
+
+function readStoredUserId(): string | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(USER_ID_KEY)?.trim() || null;
+}
+
+function writeStoredUserId(userId: string | null): void {
+  if (typeof window === 'undefined') return;
+  if (!userId) window.localStorage.removeItem(USER_ID_KEY);
+  else window.localStorage.setItem(USER_ID_KEY, userId);
+}
 
 export type AuthProfile = {
   userId: string;
@@ -66,17 +78,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const token = readToken();
     set({ accessToken: token, lastError: null });
     if (!token) {
-      set({ profile: null, isAuthenticated: false });
-      set({ hasInitialized: true });
+      set({ profile: null, isAuthenticated: false, hasInitialized: true });
       return;
     }
-    // Prevent brief cross-user leakage from persisted local state.
-    useProjectStore.getState().clearProjects();
+
+    // Unblock route transitions immediately; validate the token in the background.
+    set({ hasInitialized: true, isAuthenticated: true });
+    const previousUserId = readStoredUserId();
+
     try {
       await get().loadMe();
-    } finally {
-      set({ hasInitialized: true });
+    } catch {
+      return;
     }
+
+    const nextUserId = get().profile?.userId ?? null;
+    if (previousUserId && nextUserId && previousUserId !== nextUserId) {
+      useProjectStore.getState().clearProjects();
+      useAutopilotStore.getState().resetSession();
+      useAutopilotStore.getState().clearBuildHistory();
+    }
+    writeStoredUserId(nextUserId);
+
     if (get().isAuthenticated) {
       void get().syncProjectsInBackground();
     }
@@ -105,6 +128,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       isAuthenticated: true,
       hasInitialized: true,
     });
+    writeStoredUserId(res.user_id);
 
     // Sync the user-owned workspace.
     useProjectStore.getState().clearProjects();
@@ -148,6 +172,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // ignore: logout should still clear client token
     } finally {
       writeToken(null);
+      writeStoredUserId(null);
       set({ accessToken: null, profile: null, isAuthenticated: false, hasInitialized: true });
       useProjectStore.getState().clearProjects();
       useAutopilotStore.getState().resetSession();

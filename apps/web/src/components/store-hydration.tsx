@@ -64,10 +64,12 @@ function migrateLegacyDesignerDraftOnce(): void {
 export function StoreHydration() {
   useEffect(() => {
     void (async () => {
-      await Promise.resolve(useProjectStore.persist.rehydrate());
+      await Promise.all([
+        useProjectStore.persist.rehydrate(),
+        useAuthStore.getState().initFromToken(),
+        useAutopilotStore.persist.rehydrate(),
+      ]);
       migrateLegacyDesignerDraftOnce();
-
-      await useAuthStore.getState().initFromToken();
 
       // If unauthenticated, keep the legacy persisted designer snapshot behavior.
       if (!useAuthStore.getState().isAuthenticated) {
@@ -76,8 +78,6 @@ export function StoreHydration() {
         applyDesignerSnapshot(project?.designerSnapshot);
       }
     })();
-
-    void useAutopilotStore.persist.rehydrate();
   }, []);
 
   return null;

@@ -3,16 +3,18 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
-import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { normalizeDesignerPathname } from '@/lib/designer-routes';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
 import { takeDesignerSnapshot } from '@/lib/project-designer-bridge';
 import { useDesignerStore } from '@/stores/designer-store';
 import { useProjectStore } from '@/stores/project-store';
 
-import { CodeExporter } from './code-exporter';
-import { CostEstimator } from './cost-estimator';
-import { PipelineVisualizer } from './pipeline-visualizer';
+import {
+  DeferredCodeExporter,
+  DeferredCostEstimator,
+  DeferredPipelineVisualizer,
+  DESIGNER_DOM_SECTION_IDS as DEFERRED_SECTION_IDS,
+} from './designer-shell-deferred';
 import { StageNavigator } from './stage-navigator';
 
 export function DesignerShell({
@@ -77,9 +79,9 @@ export function DesignerShell({
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
         </div>
       </div>
-      <CostEstimator id={DESIGNER_DOM_SECTION_IDS.cost} className="w-full" />
-      <CodeExporter id={DESIGNER_DOM_SECTION_IDS.export} className="w-full" />
-      <PipelineVisualizer id={DESIGNER_DOM_SECTION_IDS.pipeline} className="w-full" />
+      <DeferredCostEstimator id={DEFERRED_SECTION_IDS.cost} className="w-full" />
+      <DeferredCodeExporter id={DEFERRED_SECTION_IDS.export} className="w-full" />
+      <DeferredPipelineVisualizer id={DEFERRED_SECTION_IDS.pipeline} className="w-full" />
     </div>
   );
 }
