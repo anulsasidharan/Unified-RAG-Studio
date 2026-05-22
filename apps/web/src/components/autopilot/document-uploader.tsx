@@ -75,7 +75,9 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
       const files = Array.from(fileList);
       if (!files.length) return;
       if (!selectedProjectId) {
-        setUploadError('Select a backend project first (create one from Templates if the list is empty).');
+        setUploadError(
+          'Select a backend project first (create one from Templates if the list is empty).',
+        );
         return;
       }
       setUploadError(null);
@@ -92,7 +94,7 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
             objectId: d.objectId,
             originalName: d.originalFilename,
             sizeBytes: d.sizeBytes,
-          }))
+          })),
         );
       } catch (e) {
         setUploadError(e instanceof ApiError ? formatApiErrorForUi(e) : String(e));
@@ -101,7 +103,7 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
         if (fileInputRef.current) fileInputRef.current.value = '';
       }
     },
-    [addUploadedDocuments, selectedProjectId]
+    [addUploadedDocuments, selectedProjectId],
   );
 
   const onInputChange = useCallback(
@@ -109,7 +111,7 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
       const list = e.target.files;
       if (list?.length) void uploadFiles(list);
     },
-    [uploadFiles]
+    [uploadFiles],
   );
 
   const onDrop = useCallback(
@@ -118,23 +120,33 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
       setDragActive(false);
       if (e.dataTransfer.files?.length) void uploadFiles(e.dataTransfer.files);
     },
-    [uploadFiles]
+    [uploadFiles],
   );
 
   return (
-    <section className={cn('rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950', className)}>
+    <section
+      className={cn(
+        'rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950',
+        className,
+      )}
+    >
       <h2 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
         Document upload
       </h2>
       <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
         Files are stored in the MinIO bucket configured for this environment. Object IDs are sent as{' '}
-        <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">documentIds</code> when you
-        start a build from the progress panel below.
+        <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+          documentIds
+        </code>{' '}
+        when you start a build from the progress panel below.
       </p>
 
       <div className="mt-6 space-y-4">
         <div>
-          <label htmlFor={`${inputId}-project`} className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+          <label
+            htmlFor={`${inputId}-project`}
+            className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+          >
             Backend project
           </label>
           <select
@@ -154,26 +166,33 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
             ))}
           </select>
           {projectsLoading ? (
-            <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
               Loading projects…
             </p>
           ) : null}
-          {projectsError ? (
-            <p className="mt-1 text-xs text-destructive">{projectsError}</p>
-          ) : null}
+          {projectsError ? <p className="text-destructive mt-1 text-xs">{projectsError}</p> : null}
           {apiProjects.length === 0 && !projectsLoading && !projectsError ? (
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-sm">
               No server projects yet.{' '}
-              <Link href={ROUTES.templates} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+              <Link
+                href={ROUTES.templates}
+                className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+              >
                 Open Templates
               </Link>{' '}
               to create a project, or use the{' '}
-              <Link href={ROUTES.autopilotProjects} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+              <Link
+                href={ROUTES.autopilotProjects}
+                className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+              >
                 Autopilot projects
               </Link>{' '}
               or{' '}
-              <Link href={ROUTES.projects} className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+              <Link
+                href={ROUTES.projects}
+                className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+              >
                 global Projects
               </Link>
               .
@@ -216,51 +235,61 @@ export function DocumentUploader({ className }: Readonly<{ className?: string }>
               'flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-10 text-center transition-colors',
               dragActive
                 ? 'border-primary-500 bg-primary-50/80 dark:bg-primary-950/30'
-                : 'border-neutral-300 bg-neutral-50/50 hover:border-primary-400 hover:bg-primary-50/40 dark:border-neutral-600 dark:bg-neutral-900/40',
-              (!selectedProjectId || uploading) && 'pointer-events-none opacity-60'
+                : 'hover:border-primary-400 hover:bg-primary-50/40 border-neutral-300 bg-neutral-50/50 dark:border-neutral-600 dark:bg-neutral-900/40',
+              (!selectedProjectId || uploading) && 'pointer-events-none opacity-60',
             )}
           >
             {uploading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-primary-600 dark:text-primary-400" aria-hidden />
+              <Loader2
+                className="text-primary-600 dark:text-primary-400 h-8 w-8 animate-spin"
+                aria-hidden
+              />
             ) : (
               <FileUp className="h-8 w-8 text-neutral-400 dark:text-neutral-500" aria-hidden />
             )}
             <p className="mt-3 text-sm font-medium text-neutral-800 dark:text-neutral-200">
               {uploading ? 'Uploading…' : 'Drop files here or click to browse'}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-xs">
               PDF, TXT, Markdown, CSV, JSON, HTML, DOCX — up to 25 files, 50 MiB each
             </p>
           </div>
-          {uploadError ? <p className="mt-2 text-sm text-destructive">{uploadError}</p> : null}
+          {uploadError ? <p className="text-destructive mt-2 text-sm">{uploadError}</p> : null}
         </div>
 
         {uploadedDocuments.length > 0 ? (
           <div>
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">Uploaded for this session</h3>
+              <h3 className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                Uploaded for this session
+              </h3>
               <button
                 type="button"
                 onClick={() => clearUploadedDocuments()}
-                className="text-xs font-medium text-muted-foreground hover:text-destructive"
+                className="text-muted-foreground hover:text-destructive text-xs font-medium"
               >
                 Clear all
               </button>
             </div>
             <ul className="mt-2 divide-y rounded-md border border-neutral-200 dark:border-neutral-800">
               {uploadedDocuments.map((doc, index) => (
-                <li key={`${doc.objectId}-${index}`} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                <li
+                  key={`${doc.objectId}-${index}`}
+                  className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                >
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-neutral-900 dark:text-neutral-100">{doc.originalName}</p>
-                    <p className="truncate text-xs text-muted-foreground" title={doc.objectId}>
+                    <p className="truncate font-medium text-neutral-900 dark:text-neutral-100">
+                      {doc.originalName}
+                    </p>
+                    <p className="text-muted-foreground truncate text-xs" title={doc.objectId}>
                       {doc.objectId}
                     </p>
-                    <p className="text-xs text-muted-foreground">{formatBytes(doc.sizeBytes)}</p>
+                    <p className="text-muted-foreground text-xs">{formatBytes(doc.sizeBytes)}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => removeUploadedDocument(index)}
-                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-destructive/10 hover:text-destructive"
+                    className="hover:bg-destructive/10 hover:text-destructive inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500"
                     aria-label={`Remove ${doc.originalName}`}
                   >
                     <Trash2 className="h-4 w-4" />

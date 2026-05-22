@@ -4,10 +4,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { Check, Cloud, Layers, Shield } from 'lucide-react';
 
-import {
-  getCloudProviderMeta,
-  listCloudProviders,
-} from '@/lib/cloud-providers-catalog';
+import { getCloudProviderMeta, listCloudProviders } from '@/lib/cloud-providers-catalog';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 import type { CloudProvider } from '@/types/pipeline';
@@ -37,11 +34,7 @@ export function CloudProviderSelector({
 
   return (
     <div className={cn('space-y-8', className)}>
-      <div
-        role="radiogroup"
-        aria-label="Cloud provider"
-        className="grid gap-4 sm:grid-cols-2"
-      >
+      <div role="radiogroup" aria-label="Cloud provider" className="grid gap-4 sm:grid-cols-2">
         {providers.map((p) => {
           const isSelected = p.id === selectedId;
           const showFallback = logoFailed[p.id];
@@ -54,17 +47,19 @@ export function CloudProviderSelector({
               onClick={() => patchDraft({ cloudProvider: p.id as CloudProvider })}
               className={cn(
                 'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                 isSelected
-                  ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                  : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
+                  ? 'border-primary-600 bg-primary-600/[0.06] ring-primary-600 dark:bg-primary-500/10 ring-2'
+                  : 'bg-card hover:border-primary-400/60 hover:bg-accent/40 border-neutral-200 dark:border-neutral-700',
               )}
             >
               <div className="flex items-start gap-3">
                 <span
                   className={cn(
-                    'relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-background text-lg font-bold tracking-tight',
-                    isSelected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                    'bg-background relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border text-lg font-bold tracking-tight',
+                    isSelected
+                      ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                      : 'border-muted',
                   )}
                   aria-hidden
                 >
@@ -88,24 +83,24 @@ export function CloudProviderSelector({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-foreground">{p.shortName}</span>
+                    <span className="text-foreground font-semibold">{p.shortName}</span>
                     <span
                       className={cn(
                         'rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide',
-                        tierStyles(p.pricingTier)
+                        tierStyles(p.pricingTier),
                       )}
                     >
                       {p.pricingTier}
                     </span>
                   </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{p.description}</p>
+                  <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{p.description}</p>
                 </div>
                 <span
                   className={cn(
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border',
                     isSelected
                       ? 'border-primary-600 bg-primary-600 text-primary-foreground'
-                      : 'border-muted bg-muted/50 text-transparent'
+                      : 'border-muted bg-muted/50 text-transparent',
                   )}
                   aria-hidden
                 >
@@ -119,37 +114,39 @@ export function CloudProviderSelector({
 
       {selectedMeta ? (
         <section
-          className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+          className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
           aria-live="polite"
         >
-          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+          <div className="border-border flex flex-wrap items-start justify-between gap-3 border-b pb-4">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight text-foreground">{selectedMeta.name}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{selectedMeta.description}</p>
+              <h2 className="text-foreground text-lg font-semibold tracking-tight">
+                {selectedMeta.name}
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm">{selectedMeta.description}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               Selection is saved with your pipeline draft (local storage).
             </p>
           </div>
 
           <div className="mt-5 grid gap-6 lg:grid-cols-2">
             <div>
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Cloud className="h-4 w-4 text-primary-600" aria-hidden />
+              <h3 className="text-foreground mb-2 flex items-center gap-2 text-sm font-semibold">
+                <Cloud className="text-primary-600 h-4 w-4" aria-hidden />
                 Best for
               </h3>
-              <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+              <ul className="text-muted-foreground list-inside list-disc space-y-1 text-sm">
                 {selectedMeta.bestFor.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
               </ul>
             </div>
             <div>
-              <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-foreground">
-                <Layers className="h-4 w-4 text-primary-600" aria-hidden />
+              <h3 className="text-foreground mb-2 flex items-center gap-2 text-sm font-semibold">
+                <Layers className="text-primary-600 h-4 w-4" aria-hidden />
                 Strengths
               </h3>
-              <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+              <ul className="text-muted-foreground list-inside list-disc space-y-1 text-sm">
                 {selectedMeta.strengths.map((item) => (
                   <li key={item}>{item}</li>
                 ))}
@@ -158,7 +155,9 @@ export function CloudProviderSelector({
           </div>
 
           <div className="mt-6">
-            <h3 className="mb-3 text-sm font-semibold text-foreground">Native services (high level)</h3>
+            <h3 className="text-foreground mb-3 text-sm font-semibold">
+              Native services (high level)
+            </h3>
             <dl className="grid gap-3 sm:grid-cols-2">
               {(
                 [
@@ -170,19 +169,19 @@ export function CloudProviderSelector({
                   ['Secrets', selectedMeta.nativeServices.secretsManagement],
                 ] as const
               ).map(([label, items]) => (
-                <div key={label} className="rounded-lg border border-border bg-muted/30 p-3">
-                  <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</dt>
-                  <dd className="mt-1 text-sm text-foreground">
-                    {items.join(' · ')}
-                  </dd>
+                <div key={label} className="border-border bg-muted/30 rounded-lg border p-3">
+                  <dt className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+                    {label}
+                  </dt>
+                  <dd className="text-foreground mt-1 text-sm">{items.join(' · ')}</dd>
                 </div>
               ))}
               {selectedMeta.nativeServices.computeOptions?.length ? (
-                <div className="rounded-lg border border-border bg-muted/30 p-3 sm:col-span-2">
-                  <dt className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <div className="border-border bg-muted/30 rounded-lg border p-3 sm:col-span-2">
+                  <dt className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                     Compute options
                   </dt>
-                  <dd className="mt-1 text-sm text-foreground">
+                  <dd className="text-foreground mt-1 text-sm">
                     {selectedMeta.nativeServices.computeOptions.join(' · ')}
                   </dd>
                 </div>
@@ -190,28 +189,34 @@ export function CloudProviderSelector({
             </dl>
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-6 border-t border-border pt-5">
+          <div className="border-border mt-6 flex flex-wrap gap-6 border-t pt-5">
             <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-muted-foreground mb-2 text-xs font-semibold uppercase tracking-wide">
                 RAG Studio defaults (hints for later stages)
               </h3>
               <dl className="grid gap-1 text-sm">
                 <div className="flex gap-2">
                   <dt className="text-muted-foreground">Vector store</dt>
-                  <dd className="font-medium text-foreground">{selectedMeta.ragStudioDefaults.vectorStore}</dd>
+                  <dd className="text-foreground font-medium">
+                    {selectedMeta.ragStudioDefaults.vectorStore}
+                  </dd>
                 </div>
                 <div className="flex gap-2">
                   <dt className="text-muted-foreground">Object storage</dt>
-                  <dd className="font-medium text-foreground">{selectedMeta.ragStudioDefaults.objectStorage}</dd>
+                  <dd className="text-foreground font-medium">
+                    {selectedMeta.ragStudioDefaults.objectStorage}
+                  </dd>
                 </div>
                 <div className="flex gap-2">
                   <dt className="text-muted-foreground">Deployment</dt>
-                  <dd className="font-medium text-foreground">{selectedMeta.ragStudioDefaults.deployment}</dd>
+                  <dd className="text-foreground font-medium">
+                    {selectedMeta.ragStudioDefaults.deployment}
+                  </dd>
                 </div>
               </dl>
             </div>
             <div className="min-w-[200px] flex-1">
-              <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-muted-foreground mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide">
                 <Shield className="h-3.5 w-3.5" aria-hidden />
                 Compliance &amp; pricing signals
               </h3>
@@ -219,7 +224,7 @@ export function CloudProviderSelector({
                 {selectedMeta.compliance.map((c) => (
                   <span
                     key={c}
-                    className="rounded-md border border-border bg-muted/50 px-2 py-0.5 text-xs text-foreground"
+                    className="border-border bg-muted/50 text-foreground rounded-md border px-2 py-0.5 text-xs"
                   >
                     {c}
                   </span>

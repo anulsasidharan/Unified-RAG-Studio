@@ -19,8 +19,8 @@ export function Logo({ className }: LogoProps) {
     <Link
       href={ROUTES.home}
       className={cn(
-        'flex shrink-0 items-center gap-2.5 outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 rounded-md',
-        className
+        'focus-visible:ring-primary-500 flex shrink-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+        className,
       )}
       aria-label="RAG Studio — go to home"
     >
@@ -34,14 +34,7 @@ export function Logo({ className }: LogoProps) {
         className="shrink-0"
       >
         <rect width="32" height="32" rx="9" fill={`url(#${gradId})`} />
-        <ellipse
-          cx="10"
-          cy="9"
-          rx="10"
-          ry="7"
-          fill={`url(#${shineId})`}
-          opacity="0.35"
-        />
+        <ellipse cx="10" cy="9" rx="10" ry="7" fill={`url(#${shineId})`} opacity="0.35" />
         {/* Pipeline: Retrieve → Augment → Generate */}
         <circle cx="16" cy="8" r="3" fill="white" fillOpacity="0.98" />
         <circle cx="9" cy="22" r="3" fill="white" fillOpacity="0.98" />
@@ -71,14 +64,7 @@ export function Logo({ className }: LogoProps) {
         />
         <circle cx="16" cy="15.5" r="1.25" fill="white" fillOpacity="0.85" />
         <defs>
-          <linearGradient
-            id={gradId}
-            x1="4"
-            y1="4"
-            x2="30"
-            y2="30"
-            gradientUnits="userSpaceOnUse"
-          >
+          <linearGradient id={gradId} x1="4" y1="4" x2="30" y2="30" gradientUnits="userSpaceOnUse">
             <stop stopColor="#2563EB" />
             <stop offset="0.55" stopColor="#6366F1" />
             <stop offset="1" stopColor="#7C3AED" />
@@ -98,8 +84,7 @@ export function Logo({ className }: LogoProps) {
       </svg>
 
       <span className="truncate text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
-        RAG{' '}
-        <span className="text-primary-600 dark:text-primary-400">Studio</span>
+        RAG <span className="text-primary-600 dark:text-primary-400">Studio</span>
       </span>
     </Link>
   );

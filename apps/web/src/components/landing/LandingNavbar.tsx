@@ -27,9 +27,7 @@ export function LandingNavbar() {
     <header
       className={cn(
         'fixed inset-x-0 top-0 z-50 transition-all duration-300',
-        scrolled
-          ? 'border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl'
-          : 'bg-transparent'
+        scrolled ? 'border-b border-white/10 bg-neutral-950/80 backdrop-blur-xl' : 'bg-transparent',
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">

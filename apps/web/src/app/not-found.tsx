@@ -5,7 +5,7 @@ import { ROUTES } from '@/lib/constants';
 export default function NotFound() {
   return (
     <main className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 py-16">
-      <p className="text-sm font-semibold uppercase tracking-wide text-primary-600">404</p>
+      <p className="text-primary-600 text-sm font-semibold uppercase tracking-wide">404</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
         Page not found
       </h1>
@@ -15,7 +15,7 @@ export default function NotFound() {
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Link
           href={ROUTES.home}
-          className="inline-flex rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700"
+          className="bg-primary-600 hover:bg-primary-700 inline-flex rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
         >
           Home
         </Link>

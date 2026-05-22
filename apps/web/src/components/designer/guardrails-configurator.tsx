@@ -6,7 +6,12 @@ import { Shield } from 'lucide-react';
 import { resolveGuardrailsConfig } from '@/lib/guardrails-summary';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { GuardrailsConfig, InputStageGuardrails, OutputStageGuardrails, RetrievalStageGuardrails } from '@/types/pipeline';
+import type {
+  GuardrailsConfig,
+  InputStageGuardrails,
+  OutputStageGuardrails,
+  RetrievalStageGuardrails,
+} from '@/types/pipeline';
 
 function SubToggle({
   id,
@@ -26,8 +31,8 @@ function SubToggle({
   return (
     <label
       className={cn(
-        'flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2 hover:bg-muted/50',
-        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent'
+        'hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2',
+        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent',
       )}
     >
       <input
@@ -36,11 +41,11 @@ function SubToggle({
         checked={checked}
         disabled={disabled}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 h-4 w-4 rounded border-input"
+        className="border-input mt-1 h-4 w-4 rounded"
       />
       <span>
-        <span className="font-medium text-foreground">{label}</span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>
+        <span className="text-foreground font-medium">{label}</span>
+        <span className="text-muted-foreground mt-0.5 block text-xs">{hint}</span>
       </span>
     </label>
   );
@@ -60,7 +65,7 @@ export function GuardrailsConfigurator({
     (next: GuardrailsConfig) => {
       patchDraft({ guardrails: next });
     },
-    [patchDraft]
+    [patchDraft],
   );
 
   const patchInput = useCallback(
@@ -68,7 +73,7 @@ export function GuardrailsConfigurator({
       const g = resolveGuardrailsConfig(draft.guardrails);
       setGuardrails({ ...g, input: { ...g.input, ...patch } });
     },
-    [draft.guardrails, setGuardrails]
+    [draft.guardrails, setGuardrails],
   );
 
   const patchRetrieval = useCallback(
@@ -76,7 +81,7 @@ export function GuardrailsConfigurator({
       const g = resolveGuardrailsConfig(draft.guardrails);
       setGuardrails({ ...g, retrieval: { ...g.retrieval, ...patch } });
     },
-    [draft.guardrails, setGuardrails]
+    [draft.guardrails, setGuardrails],
   );
 
   const patchOutput = useCallback(
@@ -84,7 +89,7 @@ export function GuardrailsConfigurator({
       const g = resolveGuardrailsConfig(draft.guardrails);
       setGuardrails({ ...g, output: { ...g.output, ...patch } });
     },
-    [draft.guardrails, setGuardrails]
+    [draft.guardrails, setGuardrails],
   );
 
   const inDisabled = !cfg.input.enabled;
@@ -94,40 +99,46 @@ export function GuardrailsConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="guardrails-main-heading"
       >
         <div className="flex items-start gap-3">
-          <Shield className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <Shield
+            className="text-primary-600 dark:text-primary-400 mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0 flex-1">
-            <h2 id="guardrails-main-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="guardrails-main-heading" className="text-foreground text-lg font-semibold">
               Guardrails
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Per-stage safety policy for input, retrieved context, and model output. Stored on{' '}
-              <strong className="font-medium text-foreground">draft.guardrails</strong> and sent with designer export
-              and <code className="text-xs">POST /api/designer/rag-preview</code> (API defaults match “all on” when
-              omitted).
+              <strong className="text-foreground font-medium">draft.guardrails</strong> and sent
+              with designer export and{' '}
+              <code className="text-xs">POST /api/designer/rag-preview</code> (API defaults match
+              “all on” when omitted).
             </p>
           </div>
         </div>
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="guardrails-input-heading"
       >
-        <h3 id="guardrails-input-heading" className="text-base font-semibold text-foreground">
+        <h3 id="guardrails-input-heading" className="text-foreground text-base font-semibold">
           Input (user query)
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">Runs before retrieval on the raw user message.</p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          Runs before retrieval on the raw user message.
+        </p>
         <div className="mt-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
               checked={cfg.input.enabled}
               onChange={(e) => patchInput({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable input guardrails
           </label>
@@ -167,20 +178,22 @@ export function GuardrailsConfigurator({
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="guardrails-retrieval-heading"
       >
-        <h3 id="guardrails-retrieval-heading" className="text-base font-semibold text-foreground">
+        <h3 id="guardrails-retrieval-heading" className="text-foreground text-base font-semibold">
           Retrieval (chunks)
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">Runs on retrieved documents before they reach the LLM.</p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          Runs on retrieved documents before they reach the LLM.
+        </p>
         <div className="mt-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
               checked={cfg.retrieval.enabled}
               onChange={(e) => patchRetrieval({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable retrieval guardrails
           </label>
@@ -220,20 +233,22 @@ export function GuardrailsConfigurator({
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="guardrails-output-heading"
       >
-        <h3 id="guardrails-output-heading" className="text-base font-semibold text-foreground">
+        <h3 id="guardrails-output-heading" className="text-foreground text-base font-semibold">
           Output (LLM answer)
         </h3>
-        <p className="mt-1 text-xs text-muted-foreground">Runs on the generated answer before it is returned.</p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          Runs on the generated answer before it is returned.
+        </p>
         <div className="mt-4">
           <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
             <input
               type="checkbox"
               checked={cfg.output.enabled}
               onChange={(e) => patchOutput({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable output guardrails
           </label>

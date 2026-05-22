@@ -11,7 +11,14 @@ export type EmbeddingsCatalogFile = {
 
 const catalog = catalogJson as EmbeddingsCatalogFile;
 
-const PROVIDERS = ['openai', 'cohere', 'google', 'huggingface', 'nomic', 'custom'] as const satisfies readonly EmbeddingProvider[];
+const PROVIDERS = [
+  'openai',
+  'cohere',
+  'google',
+  'huggingface',
+  'nomic',
+  'custom',
+] as const satisfies readonly EmbeddingProvider[];
 
 export function getEmbeddingsCatalog(): EmbeddingsCatalogFile {
   return catalog;
@@ -35,7 +42,7 @@ export function isEmbeddingProvider(id: string): id is EmbeddingProvider {
  */
 export function embeddingConfigFromCatalogEntry(
   modelId: string,
-  options?: { batchSize?: number }
+  options?: { batchSize?: number },
 ): Partial<EmbeddingConfig> | undefined {
   const meta = getEmbeddingModelMeta(modelId);
   if (!meta || !isEmbeddingProvider(meta.provider)) {

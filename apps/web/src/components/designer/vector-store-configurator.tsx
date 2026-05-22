@@ -20,7 +20,7 @@ const DEFAULT_VS = createDefaultPipelineConfiguration().stages.vectorStore;
 
 function mergeVectorStore(
   current: typeof DEFAULT_VS | undefined,
-  patch: Partial<typeof DEFAULT_VS>
+  patch: Partial<typeof DEFAULT_VS>,
 ): typeof DEFAULT_VS {
   const base = current ?? DEFAULT_VS;
   const cfgPatch = patch.configuration;
@@ -63,14 +63,14 @@ export function VectorStoreConfigurator({
     (next: typeof DEFAULT_VS) => {
       updateStages({ vectorStore: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchVectorStore = useCallback(
     (patch: Partial<typeof DEFAULT_VS>) => {
       setVectorStore(mergeVectorStore(draft.stages.vectorStore, patch));
     },
-    [draft.stages.vectorStore, setVectorStore]
+    [draft.stages.vectorStore, setVectorStore],
   );
 
   const validation = useMemo(() => VectorStoreConfigSchema.safeParse(cfg), [cfg]);
@@ -131,15 +131,17 @@ export function VectorStoreConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="vs-filter-heading"
       >
-        <h2 id="vs-filter-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="vs-filter-heading" className="text-foreground text-lg font-semibold">
           Discover & filter
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Browse <code className="rounded bg-muted px-1">data/vector-stores.json</code> and choose a backend. Selection
-          updates <strong className="font-medium text-foreground">draft.stages.vectorStore</strong> for exports and APIs.
+        <p className="text-muted-foreground mt-1 text-sm">
+          Browse <code className="bg-muted rounded px-1">data/vector-stores.json</code> and choose a
+          backend. Selection updates{' '}
+          <strong className="text-foreground font-medium">draft.stages.vectorStore</strong> for
+          exports and APIs.
         </p>
 
         <div className="mt-4">
@@ -147,14 +149,17 @@ export function VectorStoreConfigurator({
             Search vector stores
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Search
+              className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              aria-hidden
+            />
             <input
               id="vs-search"
               type="search"
               placeholder="Search by name, id, description, best-for…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring w-full rounded-md border py-2 pl-9 pr-3 text-sm shadow-sm outline-none focus-visible:ring-2"
             />
           </div>
         </div>
@@ -163,13 +168,13 @@ export function VectorStoreConfigurator({
           <div>
             <label
               htmlFor="vs-filter-type"
-              className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
             >
               Deployment type
             </label>
             <select
               id="vs-filter-type"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             >
@@ -182,13 +187,13 @@ export function VectorStoreConfigurator({
           <div>
             <label
               htmlFor="vs-filter-cloud"
-              className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
             >
               Cloud native
             </label>
             <select
               id="vs-filter-cloud"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={cloudFilter}
               onChange={(e) => setCloudFilter(e.target.value)}
             >
@@ -206,21 +211,23 @@ export function VectorStoreConfigurator({
               onClick={() => setHybridOnly((v) => !v)}
               className={cn(
                 'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-                hybridOnly ? 'border-primary-200 bg-primary-50/50 dark:border-primary-900 dark:bg-primary-950/30' : 'border-border bg-muted/30'
+                hybridOnly
+                  ? 'border-primary-200 bg-primary-50/50 dark:border-primary-900 dark:bg-primary-950/30'
+                  : 'border-border bg-muted/30',
               )}
             >
               <span>Hybrid search capable only</span>
               <span
                 className={cn(
                   'relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-colors',
-                  hybridOnly ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted'
+                  hybridOnly ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted',
                 )}
                 aria-hidden
               >
                 <span
                   className={cn(
-                    'pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full bg-background shadow transition',
-                    hybridOnly ? 'translate-x-5' : 'translate-x-0.5'
+                    'bg-background pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full shadow transition',
+                    hybridOnly ? 'translate-x-5' : 'translate-x-0.5',
                   )}
                 />
               </span>
@@ -228,19 +235,24 @@ export function VectorStoreConfigurator({
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground mt-3 text-xs" aria-live="polite">
           Showing {filteredStores.length} of {allStores.length} stores
           {filteredStores.length === 0 ? ' — relax filters or clear search.' : '.'}
           {pinnedSelectionId ? (
             <>
               {' '}
-              Your current selection is pinned at the top because it does not match the active filters.
+              Your current selection is pinned at the top because it does not match the active
+              filters.
             </>
           ) : null}
         </p>
       </section>
 
-      <div role="radiogroup" aria-label="Vector store provider" className="grid gap-4 sm:grid-cols-2">
+      <div
+        role="radiogroup"
+        aria-label="Vector store provider"
+        className="grid gap-4 sm:grid-cols-2"
+      >
         {displayStores.map((s) => {
           const selected = cfg.provider === s.id;
           return (
@@ -252,17 +264,19 @@ export function VectorStoreConfigurator({
               onClick={() => selectStore(s)}
               className={cn(
                 'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                 selected
-                  ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                  : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
+                  ? 'border-primary-600 bg-primary-600/[0.06] ring-primary-600 dark:bg-primary-500/10 ring-2'
+                  : 'bg-card hover:border-primary-400/60 hover:bg-accent/40 border-neutral-200 dark:border-neutral-700',
               )}
             >
               <div className="flex items-start gap-3">
                 <span
                   className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
-                    selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                    'bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border',
+                    selected
+                      ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                      : 'border-muted',
                   )}
                   aria-hidden
                 >
@@ -270,7 +284,7 @@ export function VectorStoreConfigurator({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-foreground">{s.name}</span>
+                    <span className="text-foreground font-semibold">{s.name}</span>
                     {s.id === pinnedSelectionId ? (
                       <span className="rounded-md border border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-100">
                         Current · outside filters
@@ -279,25 +293,33 @@ export function VectorStoreConfigurator({
                     <span
                       className={cn(
                         'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                        typeBadgeStyles(s.type)
+                        typeBadgeStyles(s.type),
                       )}
                     >
                       {s.type}
                     </span>
                   </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{s.description}</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{s.description}</p>
+                  <div className="text-muted-foreground mt-2 flex flex-wrap gap-1.5 text-[11px]">
                     {s.cloudNative.aws ? (
-                      <span className="rounded border border-border bg-muted/40 px-1.5 py-0.5">AWS</span>
+                      <span className="border-border bg-muted/40 rounded border px-1.5 py-0.5">
+                        AWS
+                      </span>
                     ) : null}
                     {s.cloudNative.gcp ? (
-                      <span className="rounded border border-border bg-muted/40 px-1.5 py-0.5">GCP</span>
+                      <span className="border-border bg-muted/40 rounded border px-1.5 py-0.5">
+                        GCP
+                      </span>
                     ) : null}
                     {s.cloudNative.azure ? (
-                      <span className="rounded border border-border bg-muted/40 px-1.5 py-0.5">Azure</span>
+                      <span className="border-border bg-muted/40 rounded border px-1.5 py-0.5">
+                        Azure
+                      </span>
                     ) : null}
                     {s.cloudNative.ownCloud ? (
-                      <span className="rounded border border-border bg-muted/40 px-1.5 py-0.5">Self-managed</span>
+                      <span className="border-border bg-muted/40 rounded border px-1.5 py-0.5">
+                        Self-managed
+                      </span>
                     ) : null}
                   </div>
                 </div>
@@ -306,7 +328,7 @@ export function VectorStoreConfigurator({
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border',
                     selected
                       ? 'border-primary-600 bg-primary-600 text-primary-foreground'
-                      : 'border-muted bg-muted/50 text-transparent'
+                      : 'border-muted bg-muted/50 text-transparent',
                   )}
                   aria-hidden
                 >
@@ -320,16 +342,18 @@ export function VectorStoreConfigurator({
 
       {selectedMeta ? (
         <section
-          className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+          className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
           aria-labelledby="vs-detail-heading"
         >
-          <h2 id="vs-detail-heading" className="text-lg font-semibold text-foreground">
+          <h2 id="vs-detail-heading" className="text-foreground text-lg font-semibold">
             About this store
           </h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Best for</h3>
-              <ul className="mt-2 list-inside list-disc text-sm text-foreground">
+              <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                Best for
+              </h3>
+              <ul className="text-foreground mt-2 list-inside list-disc text-sm">
                 {selectedMeta.bestFor.map((x) => (
                   <li key={x}>{x}</li>
                 ))}
@@ -337,16 +361,20 @@ export function VectorStoreConfigurator({
             </div>
             <div className="space-y-3 text-sm">
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Strengths</h3>
-                <ul className="mt-2 list-inside list-disc text-muted-foreground">
+                <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Strengths
+                </h3>
+                <ul className="text-muted-foreground mt-2 list-inside list-disc">
                   {selectedMeta.pros.slice(0, 4).map((x) => (
                     <li key={x}>{x}</li>
                   ))}
                 </ul>
               </div>
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trade-offs</h3>
-                <ul className="mt-2 list-inside list-disc text-muted-foreground">
+                <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Trade-offs
+                </h3>
+                <ul className="text-muted-foreground mt-2 list-inside list-disc">
                   {selectedMeta.cons.slice(0, 3).map((x) => (
                     <li key={x}>{x}</li>
                   ))}
@@ -358,21 +386,23 @@ export function VectorStoreConfigurator({
       ) : null}
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="vs-params-heading"
       >
-        <h2 id="vs-params-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="vs-params-heading" className="text-foreground text-lg font-semibold">
           Index & provider settings
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Index name must match <strong className="font-medium text-foreground">VectorStoreConfigSchema</strong>{' '}
-          (lowercase letters, numbers, hyphens). Similarity metric options are limited to values supported by both the
-          catalog entry and the shared pipeline schema (cosine, euclidean, dot).
+        <p className="text-muted-foreground mt-1 text-sm">
+          Index name must match{' '}
+          <strong className="text-foreground font-medium">VectorStoreConfigSchema</strong>{' '}
+          (lowercase letters, numbers, hyphens). Similarity metric options are limited to values
+          supported by both the catalog entry and the shared pipeline schema (cosine, euclidean,
+          dot).
         </p>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label htmlFor="vs-index" className="text-sm font-medium text-foreground">
+            <label htmlFor="vs-index" className="text-foreground text-sm font-medium">
               Index / collection name
             </label>
             <input
@@ -381,19 +411,19 @@ export function VectorStoreConfigurator({
               autoComplete="off"
               value={cfg.indexName}
               onChange={(e) => patchVectorStore({ indexName: e.target.value })}
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm shadow-sm outline-none focus-visible:ring-2"
               placeholder="rag-documents"
             />
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="vs-metric" className="text-sm font-medium text-foreground">
+              <label htmlFor="vs-metric" className="text-foreground text-sm font-medium">
                 Similarity metric
               </label>
               <select
                 id="vs-metric"
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 value={cfg.configuration.metric ?? metricOptions[0] ?? 'cosine'}
                 onChange={(e) =>
                   patchVectorStore({
@@ -412,7 +442,7 @@ export function VectorStoreConfigurator({
               </select>
             </div>
             <div>
-              <label htmlFor="vs-namespace" className="text-sm font-medium text-foreground">
+              <label htmlFor="vs-namespace" className="text-foreground text-sm font-medium">
                 Namespace (optional)
               </label>
               <input
@@ -428,7 +458,7 @@ export function VectorStoreConfigurator({
                     },
                   })
                 }
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 placeholder="production"
               />
             </div>
@@ -436,7 +466,7 @@ export function VectorStoreConfigurator({
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="vs-replicas" className="text-sm font-medium text-foreground">
+              <label htmlFor="vs-replicas" className="text-foreground text-sm font-medium">
                 Replicas
               </label>
               <input
@@ -453,11 +483,11 @@ export function VectorStoreConfigurator({
                     },
                   })
                 }
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               />
             </div>
             <div>
-              <label htmlFor="vs-shards" className="text-sm font-medium text-foreground">
+              <label htmlFor="vs-shards" className="text-foreground text-sm font-medium">
                 Shards
               </label>
               <input
@@ -474,19 +504,21 @@ export function VectorStoreConfigurator({
                     },
                   })
                 }
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               />
             </div>
           </div>
 
-          <div className="rounded-lg border border-dashed border-border bg-muted/10 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Cloud placement (optional)</p>
-            <p className="mt-1 text-xs text-muted-foreground">
+          <div className="border-border bg-muted/10 rounded-lg border border-dashed p-4">
+            <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+              Cloud placement (optional)
+            </p>
+            <p className="text-muted-foreground mt-1 text-xs">
               Non-secret hints for managed deployments; credentials stay in your environment.
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="vs-region" className="text-xs font-medium text-foreground">
+                <label htmlFor="vs-region" className="text-foreground text-xs font-medium">
                   Region
                 </label>
                 <input
@@ -510,12 +542,12 @@ export function VectorStoreConfigurator({
                       },
                     });
                   }}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   placeholder="us-east-1"
                 />
               </div>
               <div>
-                <label htmlFor="vs-instance" className="text-xs font-medium text-foreground">
+                <label htmlFor="vs-instance" className="text-foreground text-xs font-medium">
                   Instance type
                 </label>
                 <input
@@ -542,7 +574,7 @@ export function VectorStoreConfigurator({
                       },
                     });
                   }}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   placeholder="m7g.large"
                 />
               </div>
@@ -551,13 +583,15 @@ export function VectorStoreConfigurator({
         </div>
 
         <dl className="mt-6 grid gap-2 text-sm sm:grid-cols-2">
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Provider id</dt>
-            <dd className="mt-1 font-mono text-xs text-foreground">{cfg.provider}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">Provider id</dt>
+            <dd className="text-foreground mt-1 font-mono text-xs">{cfg.provider}</dd>
           </div>
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Max vectors (catalog)</dt>
-            <dd className="mt-1 text-foreground">{selectedMeta?.maxVectors ?? '—'}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">
+              Max vectors (catalog)
+            </dt>
+            <dd className="text-foreground mt-1">{selectedMeta?.maxVectors ?? '—'}</dd>
           </div>
         </dl>
       </section>
@@ -565,7 +599,7 @@ export function VectorStoreConfigurator({
       {!validation.success ? (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm"
         >
           <p className="font-medium">Configuration needs adjustment</p>
           <ul className="mt-2 list-inside list-disc text-xs">
@@ -575,24 +609,30 @@ export function VectorStoreConfigurator({
           </ul>
         </div>
       ) : (
-        <p className="flex items-start gap-2 text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground flex items-start gap-2 text-xs" aria-live="polite">
           <Layers className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
           <span>
-            Vector store settings are valid and saved with your pipeline draft (local storage). Provision an index with{' '}
-            <strong className="font-medium text-foreground">{cfg.configuration.metric ?? 'cosine'}</strong> distance and
-            dimension <strong className="font-medium text-foreground">{draft.stages.embedding?.dimensions ?? '—'}</strong>{' '}
+            Vector store settings are valid and saved with your pipeline draft (local storage).
+            Provision an index with{' '}
+            <strong className="text-foreground font-medium">
+              {cfg.configuration.metric ?? 'cosine'}
+            </strong>{' '}
+            distance and dimension{' '}
+            <strong className="text-foreground font-medium">
+              {draft.stages.embedding?.dimensions ?? '—'}
+            </strong>{' '}
             to match your embedding stage.
           </span>
         </p>
       )}
 
-      <p className="flex items-start gap-2 text-xs text-muted-foreground">
+      <p className="text-muted-foreground flex items-start gap-2 text-xs">
         <Box className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
         <span>
-          Catalog metrics such as <code className="rounded bg-muted px-1">l2</code> or{' '}
-          <code className="rounded bg-muted px-1">ip</code> map to pipeline{' '}
-          <strong className="font-medium text-foreground">euclidean</strong> /{' '}
-          <strong className="font-medium text-foreground">dot</strong> for export compatibility.
+          Catalog metrics such as <code className="bg-muted rounded px-1">l2</code> or{' '}
+          <code className="bg-muted rounded px-1">ip</code> map to pipeline{' '}
+          <strong className="text-foreground font-medium">euclidean</strong> /{' '}
+          <strong className="text-foreground font-medium">dot</strong> for export compatibility.
         </span>
       </p>
     </div>

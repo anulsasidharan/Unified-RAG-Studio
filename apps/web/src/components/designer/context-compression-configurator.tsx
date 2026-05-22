@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { Filter } from 'lucide-react';
 
-import { createDefaultContextCompressionConfig, createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
+import { createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
 import { ContextCompressionConfigSchema } from '@/lib/validators';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
@@ -13,7 +13,7 @@ const DEFAULT_CC = createDefaultPipelineConfiguration().stages.contextCompressio
 
 function mergeContextCompression(
   current: ContextCompressionConfig | undefined,
-  patch: Partial<ContextCompressionConfig>
+  patch: Partial<ContextCompressionConfig>,
 ): ContextCompressionConfig {
   const base = current ?? DEFAULT_CC;
   return { ...base, ...patch };
@@ -40,14 +40,14 @@ export function ContextCompressionConfigurator({
     (next: ContextCompressionConfig) => {
       updateStages({ contextCompression: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patch = useCallback(
     (p: Partial<ContextCompressionConfig>) => {
       setCfg(mergeContextCompression(draft.stages.contextCompression, p));
     },
-    [draft.stages.contextCompression, setCfg]
+    [draft.stages.contextCompression, setCfg],
   );
 
   const validation = useMemo(() => ContextCompressionConfigSchema.safeParse(cfg), [cfg]);
@@ -55,19 +55,26 @@ export function ContextCompressionConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="cc-main-heading"
       >
         <div className="flex items-start gap-3">
-          <Filter className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <Filter
+            className="text-primary-600 dark:text-primary-400 mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0 flex-1">
-            <h2 id="cc-main-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="cc-main-heading" className="text-foreground text-lg font-semibold">
               Context compression
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Post-retrieval shaping before reranking and generation. Updates{' '}
-              <strong className="font-medium text-foreground">draft.stages.contextCompression</strong>; the API applies
-              this in <strong className="font-medium text-foreground">RetrievalService</strong> when configured.
+              <strong className="text-foreground font-medium">
+                draft.stages.contextCompression
+              </strong>
+              ; the API applies this in{' '}
+              <strong className="text-foreground font-medium">RetrievalService</strong> when
+              configured.
             </p>
           </div>
         </div>
@@ -78,7 +85,7 @@ export function ContextCompressionConfigurator({
               type="checkbox"
               checked={cfg.enabled}
               onChange={(e) => patch({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable compression pass
           </label>
@@ -87,12 +94,12 @@ export function ContextCompressionConfigurator({
         {cfg.enabled ? (
           <div className="mt-8 space-y-6">
             <div>
-              <label htmlFor="cc-mode" className="text-sm font-medium text-foreground">
+              <label htmlFor="cc-mode" className="text-foreground text-sm font-medium">
                 Mode
               </label>
               <select
                 id="cc-mode"
-                className="mt-1 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full max-w-md rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 value={cfg.mode}
                 onChange={(e) => patch({ mode: e.target.value as ContextCompressionMode })}
               >
@@ -107,10 +114,10 @@ export function ContextCompressionConfigurator({
             {cfg.mode === 'relevance_filter' ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="cc-min" className="text-sm font-medium text-foreground">
+                  <label htmlFor="cc-min" className="text-foreground text-sm font-medium">
                     Minimum chunk score
                   </label>
-                  <span className="tabular-nums text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm tabular-nums">
                     {cfg.minScore != null ? cfg.minScore.toFixed(2) : '—'}
                   </span>
                 </div>
@@ -122,10 +129,11 @@ export function ContextCompressionConfigurator({
                   step={0.01}
                   value={cfg.minScore ?? 0.35}
                   onChange={(e) => patch({ minScore: Number(e.target.value) })}
-                  className="h-2 w-full max-w-md cursor-pointer accent-primary-600"
+                  className="accent-primary-600 h-2 w-full max-w-md cursor-pointer"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Chunks below this similarity score are dropped before rerank (at least one chunk is kept).
+                <p className="text-muted-foreground text-xs">
+                  Chunks below this similarity score are dropped before rerank (at least one chunk
+                  is kept).
                 </p>
               </div>
             ) : null}
@@ -133,7 +141,7 @@ export function ContextCompressionConfigurator({
             {cfg.mode === 'summarize_stub' ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="cc-budget" className="text-sm font-medium text-foreground">
+                  <label htmlFor="cc-budget" className="text-foreground text-sm font-medium">
                     Token budget hint (optional)
                   </label>
                 </div>
@@ -149,10 +157,11 @@ export function ContextCompressionConfigurator({
                     const v = e.target.value;
                     patch({ maxTokenBudget: v === '' ? null : Number(v) });
                   }}
-                  className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full max-w-xs rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Runtime stub currently trims to the first few chunks; full summarisation belongs in a worker job.
+                <p className="text-muted-foreground text-xs">
+                  Runtime stub currently trims to the first few chunks; full summarisation belongs
+                  in a worker job.
                 </p>
               </div>
             ) : null}
@@ -163,7 +172,7 @@ export function ContextCompressionConfigurator({
       {!validation.success ? (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm"
         >
           <p className="font-medium">Configuration needs adjustment</p>
           <ul className="mt-2 list-inside list-disc text-xs">

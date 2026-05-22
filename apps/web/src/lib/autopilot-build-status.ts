@@ -58,7 +58,7 @@ function normalizeStage(cell: StageWire | undefined): StageStatus {
 }
 
 export function normalizeStagesFromApi(
-  raw: Record<string, StageWire> | undefined | null
+  raw: Record<string, StageWire> | undefined | null,
 ): Record<string, StageStatus> {
   const out: Record<string, StageStatus> = {};
   for (const key of AUTOPILOT_STAGE_ORDER as readonly string[]) {
@@ -92,7 +92,9 @@ function numOrUndef(v: unknown): number | undefined {
   return undefined;
 }
 
-function parseDashboardQuality(raw: Record<string, unknown> | undefined): DashboardQualitySnapshot | undefined {
+function parseDashboardQuality(
+  raw: Record<string, unknown> | undefined,
+): DashboardQualitySnapshot | undefined {
   if (!raw) return undefined;
   const out: DashboardQualitySnapshot = {};
   const f = numOrUndef(raw.faithfulness);
@@ -127,7 +129,9 @@ function parseDashboardEmbeddingRows(raw: unknown): DashboardEmbeddingBenchRow[]
   return out;
 }
 
-function parseDashboardRetrieval(raw: Record<string, unknown> | undefined): DashboardRetrievalSummary | undefined {
+function parseDashboardRetrieval(
+  raw: Record<string, unknown> | undefined,
+): DashboardRetrievalSummary | undefined {
   if (!raw) return undefined;
   const out: DashboardRetrievalSummary = {};
   if (typeof raw.strategy === 'string') out.strategy = raw.strategy;
@@ -147,13 +151,15 @@ function parseDashboardMetricsPayload(raw: unknown): AutopilotDashboardMetrics |
   if (!raw || typeof raw !== 'object') return undefined;
   const d = raw as Record<string, unknown>;
   const quality = parseDashboardQuality(
-    d.quality && typeof d.quality === 'object' ? (d.quality as Record<string, unknown>) : undefined
+    d.quality && typeof d.quality === 'object' ? (d.quality as Record<string, unknown>) : undefined,
   );
   const embeddingBenchmarks = parseDashboardEmbeddingRows(d.embeddingBenchmarks);
   const selectedEmbeddingLabel =
     typeof d.selectedEmbeddingLabel === 'string' ? d.selectedEmbeddingLabel : undefined;
   const retrieval = parseDashboardRetrieval(
-    d.retrieval && typeof d.retrieval === 'object' ? (d.retrieval as Record<string, unknown>) : undefined
+    d.retrieval && typeof d.retrieval === 'object'
+      ? (d.retrieval as Record<string, unknown>)
+      : undefined,
   );
   if (!quality && embeddingBenchmarks.length === 0 && !selectedEmbeddingLabel && !retrieval) {
     return undefined;
@@ -205,7 +211,8 @@ export function parseBuildStatusPayload(data: unknown): Omit<AutopilotBuild, 'in
   }
 
   const progress = typeof o.progress === 'number' ? Math.min(100, Math.max(0, o.progress)) : 0;
-  const iteration = typeof o.iteration === 'number' && Number.isFinite(o.iteration) ? o.iteration : 0;
+  const iteration =
+    typeof o.iteration === 'number' && Number.isFinite(o.iteration) ? o.iteration : 0;
   const currentStage = typeof o.currentStage === 'string' ? o.currentStage : 'queued';
 
   let result: BuildResult | undefined;
@@ -234,7 +241,7 @@ export function parseBuildStatusPayload(data: unknown): Omit<AutopilotBuild, 'in
 
 export function mergeBuildFromServer(
   prev: AutopilotBuild | undefined,
-  server: Omit<AutopilotBuild, 'input'>
+  server: Omit<AutopilotBuild, 'input'>,
 ): AutopilotBuild {
   return {
     ...server,

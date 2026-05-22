@@ -15,10 +15,18 @@ const OPTIMIZE_OPTIONS: ReadonlyArray<{
   label: string;
   description: string;
 }> = [
-  { id: 'quality', label: 'Quality', description: 'Prioritise RAGAS-style scores over cost and latency.' },
+  {
+    id: 'quality',
+    label: 'Quality',
+    description: 'Prioritise RAGAS-style scores over cost and latency.',
+  },
   { id: 'cost', label: 'Cost', description: 'Minimise spend per 1K queries within your targets.' },
   { id: 'latency', label: 'Latency', description: 'Prefer faster retrieval and generation paths.' },
-  { id: 'balanced', label: 'Balanced', description: 'Trade off quality, cost, and latency evenly.' },
+  {
+    id: 'balanced',
+    label: 'Balanced',
+    description: 'Trade off quality, cost, and latency evenly.',
+  },
 ];
 
 const METRIC_FIELDS: ReadonlyArray<{
@@ -44,10 +52,10 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
   const setRequirements = useAutopilotStore((s) => s.setRequirements);
 
   const [budgetText, setBudgetText] = useState(() =>
-    requirements.budgetConstraint != null ? String(requirements.budgetConstraint) : ''
+    requirements.budgetConstraint != null ? String(requirements.budgetConstraint) : '',
   );
   const [latencyText, setLatencyText] = useState(() =>
-    requirements.latencyRequirement != null ? String(requirements.latencyRequirement) : ''
+    requirements.latencyRequirement != null ? String(requirements.latencyRequirement) : '',
   );
   const [zodError, setZodError] = useState<string | null>(null);
   const [validated, setValidated] = useState(false);
@@ -107,7 +115,7 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
     <section
       className={cn(
         'rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950',
-        className
+        className,
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -117,8 +125,10 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
           </h2>
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             Targets, constraints, and optimisation goals for{' '}
-            <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">POST /api/autopilot/build</code>.
-            Values persist in the Autopilot store with your uploads.
+            <code className="rounded bg-neutral-100 px-1 py-0.5 text-xs dark:bg-neutral-800">
+              POST /api/autopilot/build
+            </code>
+            . Values persist in the Autopilot store with your uploads.
           </p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -133,7 +143,7 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
           <button
             type="button"
             onClick={resetDefaults}
-            className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium text-muted-foreground hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:hover:text-neutral-100"
+            className="text-muted-foreground inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-1.5 text-sm font-medium hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:hover:text-neutral-100"
           >
             <RotateCcw className="h-4 w-4" aria-hidden />
             Reset defaults
@@ -142,7 +152,7 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
       </div>
 
       {zodError ? (
-        <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <p className="border-destructive/40 bg-destructive/5 text-destructive mt-4 rounded-md border px-3 py-2 text-sm">
           {zodError}
         </p>
       ) : validated ? (
@@ -150,7 +160,7 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
           Requirements valid — ready to start a build.
         </p>
       ) : (
-        <p className="mt-4 text-xs text-muted-foreground">
+        <p className="text-muted-foreground mt-4 text-xs">
           Optional budget and latency fields apply when you blur the inputs or click Validate.
         </p>
       )}
@@ -158,10 +168,10 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
       <div className="mt-8 space-y-10">
         <div>
           <h3 className="flex items-center gap-2 text-sm font-semibold text-neutral-800 dark:text-neutral-200">
-            <Gauge className="h-4 w-4 text-primary-600 dark:text-primary-400" aria-hidden />
+            <Gauge className="text-primary-600 dark:text-primary-400 h-4 w-4" aria-hidden />
             Evaluation targets (0–1)
           </h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-xs">
             Minimum scores agents should aim for before treating a configuration as acceptable.
           </p>
           <ul className="mt-4 space-y-5">
@@ -169,12 +179,15 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
               <li key={key}>
                 <div className="flex flex-wrap items-end justify-between gap-2">
                   <div>
-                    <label className="text-sm font-medium text-neutral-800 dark:text-neutral-200" htmlFor={`${baseId}-${key}`}>
+                    <label
+                      className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+                      htmlFor={`${baseId}-${key}`}
+                    >
                       {label}
                     </label>
-                    <p className="text-xs text-muted-foreground">{hint}</p>
+                    <p className="text-muted-foreground text-xs">{hint}</p>
                   </div>
-                  <span className="tabular-nums text-sm font-medium text-primary-700 dark:text-primary-300">
+                  <span className="text-primary-700 dark:text-primary-300 text-sm font-medium tabular-nums">
                     {(requirements.targetMetrics[key] ?? 0).toFixed(2)}
                   </span>
                 </div>
@@ -184,7 +197,7 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
                   min={0}
                   max={100}
                   step={1}
-                  className="mt-2 h-2 w-full cursor-pointer accent-primary-600"
+                  className="accent-primary-600 mt-2 h-2 w-full cursor-pointer"
                   value={pct01(requirements.targetMetrics[key])}
                   onChange={(e) => patchMetric(key, Number(e.target.value))}
                 />
@@ -194,8 +207,12 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
         </div>
 
         <div>
-          <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">Optimisation focus</h3>
-          <p className="mt-1 text-xs text-muted-foreground">Maps to the orchestrator&apos;s optimise_for signal.</p>
+          <h3 className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+            Optimisation focus
+          </h3>
+          <p className="text-muted-foreground mt-1 text-xs">
+            Maps to the orchestrator&apos;s optimise_for signal.
+          </p>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             {OPTIMIZE_OPTIONS.map((opt) => {
               const active = requirements.optimizeFor === opt.id;
@@ -207,12 +224,12 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
                   className={cn(
                     'rounded-lg border px-3 py-3 text-left text-sm transition-colors',
                     active
-                      ? 'border-primary-500 bg-primary-50/90 text-neutral-900 dark:bg-primary-950/40 dark:text-neutral-50'
-                      : 'border-neutral-200 bg-neutral-50/40 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900/30 dark:hover:border-neutral-600'
+                      ? 'border-primary-500 bg-primary-50/90 dark:bg-primary-950/40 text-neutral-900 dark:text-neutral-50'
+                      : 'border-neutral-200 bg-neutral-50/40 hover:border-neutral-300 dark:border-neutral-700 dark:bg-neutral-900/30 dark:hover:border-neutral-600',
                   )}
                 >
                   <span className="font-semibold">{opt.label}</span>
-                  <p className="mt-1 text-xs text-muted-foreground">{opt.description}</p>
+                  <p className="text-muted-foreground mt-1 text-xs">{opt.description}</p>
                 </button>
               );
             })}
@@ -221,10 +238,15 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
 
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <label htmlFor={`${baseId}-budget`} className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            <label
+              htmlFor={`${baseId}-budget`}
+              className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+            >
               Budget cap (USD / 1K queries)
             </label>
-            <p className="text-xs text-muted-foreground">Leave empty for no explicit budget ceiling.</p>
+            <p className="text-muted-foreground text-xs">
+              Leave empty for no explicit budget ceiling.
+            </p>
             <input
               id={`${baseId}-budget`}
               type="number"
@@ -239,10 +261,15 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
             />
           </div>
           <div>
-            <label htmlFor={`${baseId}-latency`} className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            <label
+              htmlFor={`${baseId}-latency`}
+              className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+            >
               Latency ceiling (ms)
             </label>
-            <p className="text-xs text-muted-foreground">End-to-end target; leave empty if not binding.</p>
+            <p className="text-muted-foreground text-xs">
+              End-to-end target; leave empty if not binding.
+            </p>
             <input
               id={`${baseId}-latency`}
               type="number"
@@ -260,10 +287,15 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
 
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <label htmlFor={`${baseId}-cloud`} className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            <label
+              htmlFor={`${baseId}-cloud`}
+              className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+            >
               Preferred cloud (optional)
             </label>
-            <p className="text-xs text-muted-foreground">Hints deployment packaging; agents may still vary resources.</p>
+            <p className="text-muted-foreground text-xs">
+              Hints deployment packaging; agents may still vary resources.
+            </p>
             <select
               id={`${baseId}-cloud`}
               className="mt-2 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm dark:border-neutral-600 dark:bg-neutral-900"
@@ -282,21 +314,26 @@ export function RequirementsForm({ className }: Readonly<{ className?: string }>
             </select>
           </div>
           <div>
-            <label htmlFor={`${baseId}-iter`} className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+            <label
+              htmlFor={`${baseId}-iter`}
+              className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+            >
               Max orchestration iterations
             </label>
-            <p className="text-xs text-muted-foreground">API allows 1–10; higher values run longer optimisation loops.</p>
+            <p className="text-muted-foreground text-xs">
+              API allows 1–10; higher values run longer optimisation loops.
+            </p>
             <input
               id={`${baseId}-iter`}
               type="range"
               min={1}
               max={10}
               step={1}
-              className="mt-4 h-2 w-full cursor-pointer accent-primary-600"
+              className="accent-primary-600 mt-4 h-2 w-full cursor-pointer"
               value={requirements.maxIterations ?? 5}
               onChange={(e) => patchRequirements({ maxIterations: Number(e.target.value) })}
             />
-            <p className="mt-2 text-center text-sm font-medium tabular-nums text-primary-700 dark:text-primary-300">
+            <p className="text-primary-700 dark:text-primary-300 mt-2 text-center text-sm font-medium tabular-nums">
               {requirements.maxIterations ?? 5}
             </p>
           </div>

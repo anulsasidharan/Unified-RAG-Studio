@@ -1,14 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  ChevronRight,
-  FolderPlus,
-  PanelLeftClose,
-  PanelLeft,
-  Trash2,
-  X,
-} from 'lucide-react';
+import { ChevronRight, FolderPlus, PanelLeftClose, PanelLeft, Trash2, X } from 'lucide-react';
 
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -23,12 +16,7 @@ type SidebarProps = {
   onMobileClose: () => void;
 };
 
-export function Sidebar({
-  collapsed,
-  onToggleCollapsed,
-  mobileOpen,
-  onMobileClose,
-}: SidebarProps) {
+export function Sidebar({ collapsed, onToggleCollapsed, mobileOpen, onMobileClose }: SidebarProps) {
   const projects = useProjectStore((s) => s.projects);
   const activeProjectId = useProjectStore((s) => s.activeProjectId);
   const setActiveProject = useProjectStore((s) => s.setActiveProject);
@@ -39,8 +27,7 @@ export function Sidebar({
 
   const handleNewProject = async () => {
     const n = projects.filter((p) => p.name.startsWith('Untitled project')).length;
-    const name =
-      n === 0 ? 'Untitled project' : `Untitled project (${n + 1})`;
+    const name = n === 0 ? 'Untitled project' : `Untitled project (${n + 1})`;
     await createProjectOnServer({ name });
     onMobileClose();
   };
@@ -69,15 +56,15 @@ export function Sidebar({
 
       <aside
         className={cn(
-          'fixed bottom-0 left-0 top-14 z-50 flex flex-col border-r border-neutral-100 bg-white transition-transform duration-200 dark:border-neutral-800 dark:bg-neutral-950 md:static md:top-0 md:z-0 md:h-auto md:min-h-[calc(100vh-3.5rem)] md:translate-x-0',
+          'fixed bottom-0 left-0 top-14 z-50 flex flex-col border-r border-neutral-100 bg-white transition-transform duration-200 md:static md:top-0 md:z-0 md:h-auto md:min-h-[calc(100vh-3.5rem)] md:translate-x-0 dark:border-neutral-800 dark:bg-neutral-950',
           collapsed ? 'md:w-14' : 'w-56 sm:w-60',
-          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+          mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
         )}
       >
         <div
           className={cn(
             'flex items-center justify-between border-b border-neutral-100 px-2 py-2.5 dark:border-neutral-800',
-            collapsed && 'md:flex-col md:gap-2 md:py-3'
+            collapsed && 'md:flex-col md:gap-2 md:py-3',
           )}
         >
           {!collapsed ? (
@@ -90,7 +77,7 @@ export function Sidebar({
           <div className="flex items-center gap-1">
             <button
               type="button"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 hover:bg-accent md:hidden"
+              className="hover:bg-accent inline-flex h-8 w-8 items-center justify-center rounded-md text-neutral-600 md:hidden"
               onClick={onMobileClose}
               aria-label="Close menu"
             >
@@ -98,7 +85,7 @@ export function Sidebar({
             </button>
             <button
               type="button"
-              className="hidden h-8 w-8 items-center justify-center rounded-md text-neutral-600 hover:bg-accent md:inline-flex"
+              className="hover:bg-accent hidden h-8 w-8 items-center justify-center rounded-md text-neutral-600 md:inline-flex"
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               onClick={onToggleCollapsed}
             >
@@ -116,8 +103,8 @@ export function Sidebar({
             type="button"
             onClick={handleNewProject}
             className={cn(
-              'flex w-full items-center gap-2 rounded-lg border border-dashed border-primary-200 px-2 py-2 text-left text-sm font-semibold text-primary-600 transition-all hover:border-primary-300 hover:bg-primary-50 dark:border-primary-800/50 dark:text-primary-400 dark:hover:bg-primary-950/30',
-              collapsed && 'md:justify-center md:px-0'
+              'border-primary-200 text-primary-600 hover:border-primary-300 hover:bg-primary-50 dark:border-primary-800/50 dark:text-primary-400 dark:hover:bg-primary-950/30 flex w-full items-center gap-2 rounded-lg border border-dashed px-2 py-2 text-left text-sm font-semibold transition-all',
+              collapsed && 'md:justify-center md:px-0',
             )}
             title="Create project"
           >
@@ -141,7 +128,7 @@ export function Sidebar({
                 className={cn(
                   'flex w-full items-center gap-0.5 rounded-lg pr-0.5 transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/60',
                   p.id === activeProjectId && 'bg-primary-50/80 dark:bg-primary-950/30',
-                  collapsed && 'md:justify-center'
+                  collapsed && 'md:justify-center',
                 )}
               >
                 <EditableProjectName
@@ -159,7 +146,12 @@ export function Sidebar({
                   showLabel={!collapsed}
                   hidePencil={collapsed}
                   leading={
-                    <span className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold', badgeColor)}>
+                    <span
+                      className={cn(
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold',
+                        badgeColor,
+                      )}
+                    >
                       {p.name.slice(0, 1).toUpperCase()}
                     </span>
                   }
@@ -188,8 +180,8 @@ export function Sidebar({
             href={ROUTES.projects}
             onClick={onMobileClose}
             className={cn(
-              'flex items-center gap-2 rounded-lg py-2 text-xs font-semibold text-primary-600 transition-colors hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-950/30 sm:text-sm',
-              collapsed ? 'justify-center md:px-0' : 'px-2'
+              'text-primary-600 hover:bg-primary-50 dark:text-primary-400 dark:hover:bg-primary-950/30 flex items-center gap-2 rounded-lg py-2 text-xs font-semibold transition-colors sm:text-sm',
+              collapsed ? 'justify-center md:px-0' : 'px-2',
             )}
             title="All projects"
           >

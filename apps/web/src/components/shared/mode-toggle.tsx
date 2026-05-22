@@ -26,7 +26,7 @@ export function ModeToggle() {
           'rounded-full px-3 py-1 text-xs font-semibold transition-colors sm:px-4 sm:text-sm',
           designerActive
             ? 'bg-primary-600 text-white shadow-sm'
-            : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
+            : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100',
         )}
       >
         Designer
@@ -38,7 +38,7 @@ export function ModeToggle() {
           'rounded-full px-3 py-1 text-xs font-semibold transition-colors sm:px-4 sm:text-sm',
           autopilotActive
             ? 'bg-primary-600 text-white shadow-sm'
-            : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100'
+            : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100',
         )}
       >
         Autopilot

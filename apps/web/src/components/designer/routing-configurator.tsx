@@ -12,7 +12,10 @@ import type { RoutingConfig, RoutingRule } from '@/types/pipeline';
 
 const DEFAULT_ROUTING = createDefaultPipelineConfiguration().stages.routing!;
 
-function mergeRouting(current: RoutingConfig | undefined, patch: Partial<RoutingConfig>): RoutingConfig {
+function mergeRouting(
+  current: RoutingConfig | undefined,
+  patch: Partial<RoutingConfig>,
+): RoutingConfig {
   const base = current ?? DEFAULT_ROUTING;
   return {
     ...base,
@@ -41,20 +44,21 @@ export function RoutingConfigurator({
   const updateStages = useDesignerStore((s) => s.updateStages);
 
   const cfg = draft.stages.routing ?? DEFAULT_ROUTING;
-  const generationModel = draft.stages.generation?.model ?? DEFAULT_ROUTING.defaultModel ?? 'gpt-4o-mini';
+  const generationModel =
+    draft.stages.generation?.model ?? DEFAULT_ROUTING.defaultModel ?? 'gpt-4o-mini';
 
   const setRouting = useCallback(
     (next: RoutingConfig) => {
       updateStages({ routing: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchRouting = useCallback(
     (patch: Partial<RoutingConfig>) => {
       setRouting(mergeRouting(draft.stages.routing, patch));
     },
-    [draft.stages.routing, setRouting]
+    [draft.stages.routing, setRouting],
   );
 
   const validation = useMemo(() => RoutingConfigSchema.safeParse(cfg), [cfg]);
@@ -86,19 +90,22 @@ export function RoutingConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="routing-main-heading"
       >
         <div className="flex items-start gap-3">
-          <GitBranch className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <GitBranch
+            className="text-primary-600 dark:text-primary-400 mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0 flex-1">
-            <h2 id="routing-main-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="routing-main-heading" className="text-foreground text-lg font-semibold">
               LLM routing
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Route queries to different generation models using ordered rules. Updates{' '}
-              <strong className="font-medium text-foreground">draft.stages.routing</strong> for YAML/Python export and
-              APIs.
+              <strong className="text-foreground font-medium">draft.stages.routing</strong> for
+              YAML/Python export and APIs.
             </p>
           </div>
         </div>
@@ -109,7 +116,7 @@ export function RoutingConfigurator({
               type="checkbox"
               checked={cfg.enabled}
               onChange={(e) => patchRouting({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable conditional routing
           </label>
@@ -118,12 +125,15 @@ export function RoutingConfigurator({
         {cfg.enabled ? (
           <>
             <div className="mt-6">
-              <label htmlFor="routing-default-model" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <label
+                htmlFor="routing-default-model"
+                className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+              >
                 Fallback model (no rule matched)
               </label>
               <select
                 id="routing-default-model"
-                className="mt-1 w-full max-w-xl rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full max-w-xl rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 value={cfg.defaultModel ?? generationModel}
                 onChange={(e) => patchRouting({ defaultModel: e.target.value })}
               >
@@ -133,23 +143,25 @@ export function RoutingConfigurator({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Defaults to your Generation stage model when unset; you can pick another fallback here.
+              <p className="text-muted-foreground mt-1 text-xs">
+                Defaults to your Generation stage model when unset; you can pick another fallback
+                here.
               </p>
             </div>
 
             <div className="mt-8">
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold text-foreground">Rules</h3>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
-                    First matching rule wins (top to bottom). Use keywords, length thresholds, or complexity thresholds.
+                  <h3 className="text-foreground text-base font-semibold">Rules</h3>
+                  <p className="text-muted-foreground mt-0.5 text-sm">
+                    First matching rule wins (top to bottom). Use keywords, length thresholds, or
+                    complexity thresholds.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={addRule}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium shadow-sm hover:bg-accent"
+                  className="border-input bg-background hover:bg-accent inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm font-medium shadow-sm"
                 >
                   <Plus className="h-4 w-4" aria-hidden />
                   Add rule
@@ -157,7 +169,7 @@ export function RoutingConfigurator({
               </div>
 
               {(cfg.rules ?? []).length === 0 ? (
-                <p className="mt-4 rounded-lg border border-dashed border-muted-foreground/40 px-4 py-6 text-center text-sm text-muted-foreground">
+                <p className="border-muted-foreground/40 text-muted-foreground mt-4 rounded-lg border border-dashed px-4 py-6 text-center text-sm">
                   No rules yet — add a rule or all traffic uses the fallback model.
                 </p>
               ) : (
@@ -165,14 +177,16 @@ export function RoutingConfigurator({
                   {(cfg.rules ?? []).map((rule, idx) => (
                     <li
                       key={`rule-${idx}-${rule.condition}-${rule.targetModel}`}
-                      className="rounded-lg border border-neutral-200 bg-muted/20 p-4 dark:border-neutral-700"
+                      className="bg-muted/20 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700"
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
-                        <span className="text-xs font-semibold text-muted-foreground">Rule {idx + 1}</span>
+                        <span className="text-muted-foreground text-xs font-semibold">
+                          Rule {idx + 1}
+                        </span>
                         <button
                           type="button"
                           onClick={() => removeRule(idx)}
-                          className="inline-flex items-center gap-1 rounded text-xs font-medium text-destructive hover:underline"
+                          className="text-destructive inline-flex items-center gap-1 rounded text-xs font-medium hover:underline"
                         >
                           <Trash2 className="h-3.5 w-3.5" aria-hidden />
                           Remove
@@ -181,42 +195,44 @@ export function RoutingConfigurator({
 
                       <div className="mt-3 grid gap-3 sm:grid-cols-2">
                         <div className="sm:col-span-2">
-                          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
                             Condition
                           </label>
                           <select
-                            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                             value={rule.condition}
                             onChange={(e) =>
                               updateRule(idx, {
                                 condition: e.target.value as RoutingRule['condition'],
                                 keywords:
                                   e.target.value === 'keyword' || e.target.value === 'tool-routing'
-                                    ? rule.keywords ?? []
+                                    ? (rule.keywords ?? [])
                                     : undefined,
                                 threshold:
                                   e.target.value !== 'keyword' && e.target.value !== 'tool-routing'
-                                    ? rule.threshold ?? 128
+                                    ? (rule.threshold ?? 128)
                                     : undefined,
                               })
                             }
                           >
-                            {(Object.keys(CONDITION_LABEL) as RoutingRule['condition'][]).map((c) => (
-                              <option key={c} value={c}>
-                                {CONDITION_LABEL[c]}
-                              </option>
-                            ))}
+                            {(Object.keys(CONDITION_LABEL) as RoutingRule['condition'][]).map(
+                              (c) => (
+                                <option key={c} value={c}>
+                                  {CONDITION_LABEL[c]}
+                                </option>
+                              ),
+                            )}
                           </select>
                         </div>
 
                         {rule.condition === 'keyword' || rule.condition === 'tool-routing' ? (
                           <div className="sm:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
                               Keywords (comma-separated)
                             </label>
                             <input
                               type="text"
-                              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                               placeholder="legal, contract, compliance"
                               value={(rule.keywords ?? []).join(', ')}
                               onChange={(e) =>
@@ -231,22 +247,23 @@ export function RoutingConfigurator({
                           </div>
                         ) : (
                           <div>
-                            <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                            <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
                               Threshold
                             </label>
                             <input
                               type="number"
                               min={1}
                               max={100000}
-                              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                               value={rule.threshold ?? ''}
                               onChange={(e) =>
                                 updateRule(idx, {
-                                  threshold: e.target.value === '' ? undefined : Number(e.target.value),
+                                  threshold:
+                                    e.target.value === '' ? undefined : Number(e.target.value),
                                 })
                               }
                             />
-                            <p className="mt-1 text-xs text-muted-foreground">
+                            <p className="text-muted-foreground mt-1 text-xs">
                               {rule.condition === 'query-length'
                                 ? 'Character or token count hint for routing (pipeline-specific).'
                                 : rule.condition === 'latency-aware'
@@ -261,11 +278,11 @@ export function RoutingConfigurator({
                         )}
 
                         <div className="sm:col-span-2">
-                          <label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          <label className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
                             Target model
                           </label>
                           <select
-                            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                             value={rule.targetModel}
                             onChange={(e) => updateRule(idx, { targetModel: e.target.value })}
                           >
@@ -287,12 +304,12 @@ export function RoutingConfigurator({
       </section>
 
       {!validation.success ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           Invalid routing configuration — check rule fields against the schema.
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Validated with <code className="rounded bg-muted px-1">RoutingConfigSchema</code>.
+        <p className="text-muted-foreground text-sm">
+          Validated with <code className="bg-muted rounded px-1">RoutingConfigSchema</code>.
         </p>
       )}
     </div>

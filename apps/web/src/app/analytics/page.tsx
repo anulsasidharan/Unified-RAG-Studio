@@ -1,10 +1,8 @@
 'use client';
 
-import Link from 'next/link';
 import { BarChart3, RefreshCw, FolderOpen, FileCode2, Bot, FileUp, TrendingUp } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
-import { ROUTES } from '@/lib/constants';
 import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 
@@ -62,7 +60,7 @@ function StatCard({
 }) {
   const colors = {
     primary: 'bg-primary-100 text-primary-600 dark:bg-primary-950/40 dark:text-primary-400',
-    purple:  'bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400',
+    purple: 'bg-purple-100 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400',
     success: 'bg-success-100 text-success-600 dark:bg-success-950/40 dark:text-success-400',
     warning: 'bg-warning-100 text-warning-600 dark:bg-warning-950/40 dark:text-warning-400',
   };
@@ -74,7 +72,7 @@ function StatCard({
           <Icon className="h-5 w-5" />
         </div>
       </div>
-      <p className="mt-4 font-display text-3xl font-bold tabular-nums text-neutral-900 dark:text-neutral-50">
+      <p className="font-display mt-4 text-3xl font-bold tabular-nums text-neutral-900 dark:text-neutral-50">
         {value}
       </p>
       <p className="mt-1 text-sm font-medium text-neutral-600 dark:text-neutral-400">{label}</p>
@@ -93,7 +91,9 @@ export default function AnalyticsPage() {
   const load = useCallback(async () => {
     if (!useAuthStore.getState().accessToken?.trim()) {
       setLoading(false);
-      setError('Sign in to load analytics. If you were signed in, your session may have expired — log in again.');
+      setError(
+        'Sign in to load analytics. If you were signed in, your session may have expired — log in again.',
+      );
       setData(null);
       return;
     }
@@ -121,15 +121,16 @@ export default function AnalyticsPage() {
       <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-950/40">
-              <BarChart3 className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+            <div className="bg-primary-100 dark:bg-primary-950/40 flex h-10 w-10 items-center justify-center rounded-xl">
+              <BarChart3 className="text-primary-600 dark:text-primary-400 h-5 w-5" />
             </div>
             <h1 className="font-display text-2xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
               Usage &amp; Analytics
             </h1>
           </div>
           <p className="mt-2 max-w-2xl text-sm text-neutral-500 dark:text-neutral-400">
-            Portfolio snapshot scoped to your API session. Cost averages are inferred from Autopilot results — not cloud billing.
+            Portfolio snapshot scoped to your API session. Cost averages are inferred from Autopilot
+            results — not cloud billing.
           </p>
         </div>
         <button
@@ -145,7 +146,7 @@ export default function AnalyticsPage() {
 
       {/* Error */}
       {error ? (
-        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+        <div className="border-destructive/20 bg-destructive/8 text-destructive mb-6 rounded-xl border px-4 py-3 text-sm">
           {error}
         </div>
       ) : null}
@@ -154,7 +155,10 @@ export default function AnalyticsPage() {
       {loading && !data ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-36 animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900" />
+            <div
+              key={i}
+              className="h-36 animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100 dark:border-neutral-800 dark:bg-neutral-900"
+            />
           ))}
         </div>
       ) : null}
@@ -164,12 +168,7 @@ export default function AnalyticsPage() {
         <div className="space-y-6">
           {/* Hero stat row */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
-              icon={FolderOpen}
-              label="Projects"
-              value={data.projects}
-              color="primary"
-            />
+            <StatCard icon={FolderOpen} label="Projects" value={data.projects} color="primary" />
             <StatCard
               icon={FileCode2}
               label="Pipeline configs"
@@ -233,7 +232,9 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <div className="rounded-xl border border-neutral-100 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900">
-                <dt className="text-xs text-neutral-500 dark:text-neutral-400">Avg budget constraint / 1k queries</dt>
+                <dt className="text-xs text-neutral-500 dark:text-neutral-400">
+                  Avg budget constraint / 1k queries
+                </dt>
                 <dd className="mt-1 font-mono text-2xl font-bold text-neutral-900 dark:text-neutral-50">
                   {costSignals?.avg_budget_constraint_usd_per_1k_queries != null
                     ? `$${costSignals.avg_budget_constraint_usd_per_1k_queries.toFixed(4)}`
@@ -248,12 +249,18 @@ export default function AnalyticsPage() {
 
           {/* Observability notice */}
           <div className="rounded-xl border border-dashed border-neutral-200 p-5 text-sm dark:border-neutral-700">
-            <p className="font-medium text-neutral-700 dark:text-neutral-300">Operational metrics</p>
+            <p className="font-medium text-neutral-700 dark:text-neutral-300">
+              Operational metrics
+            </p>
             <p className="mt-1.5 text-neutral-500 dark:text-neutral-400">
               Prometheus scraping available at{' '}
-              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-800">/metrics</code>{' '}
+              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-800">
+                /metrics
+              </code>{' '}
               · JSON snapshot at{' '}
-              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-800">/monitoring/rag</code>
+              <code className="rounded bg-neutral-100 px-1.5 py-0.5 text-xs dark:bg-neutral-800">
+                /monitoring/rag
+              </code>
             </p>
           </div>
         </div>

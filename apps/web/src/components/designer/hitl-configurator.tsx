@@ -11,13 +11,15 @@ import type {
   HitlEscalationMode,
   HitlOrchestrationHint,
   HitlRole,
-  HitlTier,
   HumanInTheLoopConfig,
 } from '@/types/pipeline';
 
 const DEFAULT_HITL = createDefaultHumanInTheLoopConfig();
 
-function mergeHitl(current: HumanInTheLoopConfig | undefined, patch: Partial<HumanInTheLoopConfig>): HumanInTheLoopConfig {
+function mergeHitl(
+  current: HumanInTheLoopConfig | undefined,
+  patch: Partial<HumanInTheLoopConfig>,
+): HumanInTheLoopConfig {
   const base = current ?? DEFAULT_HITL;
   return {
     ...base,
@@ -34,7 +36,11 @@ const ROLE_OPTIONS: { id: HitlRole; label: string; hint: string }[] = [
   { id: 'reviewer', label: 'Reviewer', hint: 'Validate responses against sources' },
   { id: 'approver', label: 'Approver', hint: 'Final sign-off before delivery' },
   { id: 'corrector', label: 'Corrector', hint: 'Edit tone or fix hallucinations' },
-  { id: 'escalation_handler', label: 'Escalation handler', hint: 'Take over low-confidence queries' },
+  {
+    id: 'escalation_handler',
+    label: 'Escalation handler',
+    hint: 'Take over low-confidence queries',
+  },
   { id: 'trainer', label: 'Trainer', hint: 'Feedback for continuous improvement' },
   { id: 'data_curator', label: 'Data curator', hint: 'Approve documents before indexing' },
 ];
@@ -75,14 +81,14 @@ export function HitlConfigurator({
     (next: HumanInTheLoopConfig) => {
       updateStages({ humanInTheLoop: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchHitl = useCallback(
     (patch: Partial<HumanInTheLoopConfig>) => {
       setHitl(mergeHitl(draft.stages.humanInTheLoop, patch));
     },
-    [draft.stages.humanInTheLoop, setHitl]
+    [draft.stages.humanInTheLoop, setHitl],
   );
 
   const validation = useMemo(() => HumanInTheLoopConfigSchema.safeParse(cfg), [cfg]);
@@ -95,19 +101,23 @@ export function HitlConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="hitl-main-heading"
       >
         <div className="flex items-start gap-3">
-          <UsersRound className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <UsersRound
+            className="text-primary-600 dark:text-primary-400 mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0 flex-1">
-            <h2 id="hitl-main-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="hitl-main-heading" className="text-foreground text-lg font-semibold">
               Human in the loop
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Define whether runtime workflows pause for human review, where those gates sit, and how escalation behaves.
-              Updates <strong className="font-medium text-foreground">draft.stages.humanInTheLoop</strong> for exports and
-              pipeline YAML.
+            <p className="text-muted-foreground mt-1 text-sm">
+              Define whether runtime workflows pause for human review, where those gates sit, and
+              how escalation behaves. Updates{' '}
+              <strong className="text-foreground font-medium">draft.stages.humanInTheLoop</strong>{' '}
+              for exports and pipeline YAML.
             </p>
           </div>
         </div>
@@ -118,7 +128,7 @@ export function HitlConfigurator({
               type="checkbox"
               checked={cfg.enabled}
               onChange={(e) => patchHitl({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable human in the loop
           </label>
@@ -127,10 +137,11 @@ export function HitlConfigurator({
         {cfg.enabled ? (
           <div className="mt-8 space-y-8">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Capability tier</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Simple focuses on answer-time review; Medium adds confidence-driven escalation and workflow controls;
-                Advanced adds orchestration hints, agentic gates, and governance-oriented flags.
+              <h3 className="text-foreground text-sm font-semibold">Capability tier</h3>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Simple focuses on answer-time review; Medium adds confidence-driven escalation and
+                workflow controls; Advanced adds orchestration hints, agentic gates, and
+                governance-oriented flags.
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {(['simple', 'medium', 'advanced'] as const).map((tier) => (
@@ -142,7 +153,7 @@ export function HitlConfigurator({
                       'rounded-md border px-3 py-1.5 text-sm font-medium transition-colors',
                       cfg.tier === tier
                         ? 'border-primary-600 bg-primary-600/10 text-primary-900 dark:text-primary-50'
-                        : 'border-neutral-200 bg-background text-muted-foreground hover:bg-muted dark:border-neutral-600'
+                        : 'bg-background text-muted-foreground hover:bg-muted border-neutral-200 dark:border-neutral-600',
                     )}
                   >
                     {tier.charAt(0).toUpperCase() + tier.slice(1)}
@@ -152,21 +163,23 @@ export function HitlConfigurator({
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Human roles</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Which responsibilities humans cover in this pipeline.</p>
+              <h3 className="text-foreground text-sm font-semibold">Human roles</h3>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Which responsibilities humans cover in this pipeline.
+              </p>
               <ul className="mt-3 space-y-2">
                 {ROLE_OPTIONS.map((r) => (
                   <li key={r.id}>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2 hover:bg-muted/50">
+                    <label className="hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2">
                       <input
                         type="checkbox"
                         checked={roleSet.has(r.id)}
                         onChange={() => patchHitl({ roles: toggleRole(cfg.roles, r.id) })}
-                        className="mt-1 h-4 w-4 rounded border-input"
+                        className="border-input mt-1 h-4 w-4 rounded"
                       />
                       <span>
-                        <span className="font-medium text-foreground">{r.label}</span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">{r.hint}</span>
+                        <span className="text-foreground font-medium">{r.label}</span>
+                        <span className="text-muted-foreground mt-0.5 block text-xs">{r.hint}</span>
                       </span>
                     </label>
                   </li>
@@ -175,9 +188,10 @@ export function HitlConfigurator({
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Placement in the pipeline</h3>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Where humans can intervene. Combine placements for stricter governance (adds latency).
+              <h3 className="text-foreground text-sm font-semibold">Placement in the pipeline</h3>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Where humans can intervene. Combine placements for stricter governance (adds
+                latency).
               </p>
               <ul className="mt-3 space-y-2">
                 <li>
@@ -190,7 +204,7 @@ export function HitlConfigurator({
                           placement: { ...cfg.placement, preIngestionValidation: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Pre-ingestion — approve documents before indexing
                   </label>
@@ -201,9 +215,11 @@ export function HitlConfigurator({
                       type="checkbox"
                       checked={cfg.placement.retrievalTime}
                       onChange={(e) =>
-                        patchHitl({ placement: { ...cfg.placement, retrievalTime: e.target.checked } })
+                        patchHitl({
+                          placement: { ...cfg.placement, retrievalTime: e.target.checked },
+                        })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Retrieval-time — escalate weak retrieval / manual sources
                   </label>
@@ -214,9 +230,11 @@ export function HitlConfigurator({
                       type="checkbox"
                       checked={cfg.placement.generationTime}
                       onChange={(e) =>
-                        patchHitl({ placement: { ...cfg.placement, generationTime: e.target.checked } })
+                        patchHitl({
+                          placement: { ...cfg.placement, generationTime: e.target.checked },
+                        })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Generation-time — review LLM answers before delivery
                   </label>
@@ -231,7 +249,7 @@ export function HitlConfigurator({
                           placement: { ...cfg.placement, postResponseFeedback: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Post-response — capture corrections and ratings for learning loops
                   </label>
@@ -242,8 +260,8 @@ export function HitlConfigurator({
             {showMedium ? (
               <>
                 <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-                  <h3 className="text-sm font-semibold text-foreground">Confidence & escalation</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <h3 className="text-foreground text-sm font-semibold">Confidence & escalation</h3>
+                  <p className="text-muted-foreground mt-1 text-xs">
                     Signals that route requests to humans (implement in your confidence engine).
                   </p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -264,7 +282,7 @@ export function HitlConfigurator({
                             },
                           });
                         }}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                       />
                     </label>
                     <label className="block text-sm">
@@ -284,7 +302,7 @@ export function HitlConfigurator({
                             },
                           });
                         }}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                       />
                     </label>
                   </div>
@@ -294,14 +312,17 @@ export function HitlConfigurator({
                       checked={cfg.confidence.llmUncertaintySignals}
                       onChange={(e) =>
                         patchHitl({
-                          confidence: { ...cfg.confidence, llmUncertaintySignals: e.target.checked },
+                          confidence: {
+                            ...cfg.confidence,
+                            llmUncertaintySignals: e.target.checked,
+                          },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Include LLM uncertainty / self-check signals in escalation
                   </label>
-                  <label className="mt-4 block text-sm font-medium text-foreground">
+                  <label className="text-foreground mt-4 block text-sm font-medium">
                     Escalation mode
                     <select
                       value={cfg.confidence.escalationMode}
@@ -313,7 +334,7 @@ export function HitlConfigurator({
                           },
                         })
                       }
-                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                     >
                       {ESCALATION_OPTIONS.map((o) => (
                         <option key={o.id} value={o.id}>
@@ -325,7 +346,7 @@ export function HitlConfigurator({
                 </div>
 
                 <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-                  <h3 className="text-sm font-semibold text-foreground">Review workflow</h3>
+                  <h3 className="text-foreground text-sm font-semibold">Review workflow</h3>
                   <label className="mt-3 flex cursor-pointer items-center gap-2 text-sm">
                     <input
                       type="checkbox"
@@ -335,7 +356,7 @@ export function HitlConfigurator({
                           workflow: { ...cfg.workflow, synchronousReview: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Synchronous review (blocks until human responds)
                   </label>
@@ -344,15 +365,17 @@ export function HitlConfigurator({
                       type="checkbox"
                       checked={cfg.workflow.allowHumanEdit}
                       onChange={(e) =>
-                        patchHitl({ workflow: { ...cfg.workflow, allowHumanEdit: e.target.checked } })
+                        patchHitl({
+                          workflow: { ...cfg.workflow, allowHumanEdit: e.target.checked },
+                        })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Allow humans to edit answers (not only approve/reject)
                   </label>
-                  <p className="mt-4 text-xs text-muted-foreground">
-                    Sequential approvals (ordered roles): pick roles in the order gates should run — duplicate a role if
-                    needed for multi-stage sign-off.
+                  <p className="text-muted-foreground mt-4 text-xs">
+                    Sequential approvals (ordered roles): pick roles in the order gates should run —
+                    duplicate a role if needed for multi-stage sign-off.
                   </p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {ROLE_OPTIONS.map((r) => (
@@ -364,31 +387,33 @@ export function HitlConfigurator({
                           patchHitl({
                             workflow: {
                               ...cfg.workflow,
-                              sequentialApprovalRoles: [...cfg.workflow.sequentialApprovalRoles, r.id],
+                              sequentialApprovalRoles: [
+                                ...cfg.workflow.sequentialApprovalRoles,
+                                r.id,
+                              ],
                             },
                           })
                         }
-                        className="rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium hover:bg-muted dark:border-neutral-600"
+                        className="hover:bg-muted rounded-md border border-neutral-200 px-2 py-1 text-xs font-medium dark:border-neutral-600"
                       >
                         + {r.label}
                       </button>
                     ))}
                   </div>
                   {cfg.workflow.sequentialApprovalRoles.length > 0 ? (
-                    <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm text-foreground">
+                    <ol className="text-foreground mt-3 list-decimal space-y-1 pl-5 text-sm">
                       {cfg.workflow.sequentialApprovalRoles.map((role, i) => (
                         <li key={`${role}-${i}`} className="flex flex-wrap items-center gap-2">
                           <span>{ROLE_OPTIONS.find((x) => x.id === role)?.label ?? role}</span>
                           <button
                             type="button"
-                            className="text-xs text-primary-600 hover:underline dark:text-primary-400"
+                            className="text-primary-600 dark:text-primary-400 text-xs hover:underline"
                             onClick={() =>
                               patchHitl({
                                 workflow: {
                                   ...cfg.workflow,
-                                  sequentialApprovalRoles: cfg.workflow.sequentialApprovalRoles.filter(
-                                    (_, j) => j !== i
-                                  ),
+                                  sequentialApprovalRoles:
+                                    cfg.workflow.sequentialApprovalRoles.filter((_, j) => j !== i),
                                 },
                               })
                             }
@@ -399,7 +424,9 @@ export function HitlConfigurator({
                       ))}
                     </ol>
                   ) : (
-                    <p className="mt-2 text-xs text-muted-foreground">No ordered chain yet — optional.</p>
+                    <p className="text-muted-foreground mt-2 text-xs">
+                      No ordered chain yet — optional.
+                    </p>
                   )}
                 </div>
               </>
@@ -407,11 +434,13 @@ export function HitlConfigurator({
 
             {showAdvanced ? (
               <div className="rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
-                <h3 className="text-sm font-semibold text-foreground">Advanced orchestration & governance</h3>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <h3 className="text-foreground text-sm font-semibold">
+                  Advanced orchestration & governance
+                </h3>
+                <p className="text-muted-foreground mt-1 text-xs">
                   Hints for generated IaC/code; wire to your workflow engine in deployment.
                 </p>
-                <label className="mt-4 block text-sm font-medium text-foreground">
+                <label className="text-foreground mt-4 block text-sm font-medium">
                   Preferred orchestration pattern
                   <select
                     value={cfg.advanced.orchestrationHint ?? ''}
@@ -419,11 +448,12 @@ export function HitlConfigurator({
                       patchHitl({
                         advanced: {
                           ...cfg.advanced,
-                          orchestrationHint: (e.target.value || null) as HitlOrchestrationHint | null,
+                          orchestrationHint: (e.target.value ||
+                            null) as HitlOrchestrationHint | null,
                         },
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                   >
                     <option value="">Not specified</option>
                     {ORCH_OPTIONS.map((o) => (
@@ -443,7 +473,7 @@ export function HitlConfigurator({
                           advanced: { ...cfg.advanced, agenticToolApproval: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Agentic tool / API call approval
                   </label>
@@ -456,7 +486,7 @@ export function HitlConfigurator({
                           advanced: { ...cfg.advanced, multiReviewerConsensus: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Multi-reviewer consensus
                   </label>
@@ -469,7 +499,7 @@ export function HitlConfigurator({
                           advanced: { ...cfg.advanced, auditLoggingRequired: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Immutable audit logging required
                   </label>
@@ -482,7 +512,7 @@ export function HitlConfigurator({
                           advanced: { ...cfg.advanced, humanGuidedRetrieval: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Human-guided retrieval overrides
                   </label>
@@ -495,7 +525,7 @@ export function HitlConfigurator({
                           advanced: { ...cfg.advanced, activeLearningFeedback: e.target.checked },
                         })
                       }
-                      className="h-4 w-4 rounded border-input"
+                      className="border-input h-4 w-4 rounded"
                     />
                     Active learning / feedback datasets
                   </label>
@@ -506,7 +536,7 @@ export function HitlConfigurator({
         ) : null}
 
         {!validation.success ? (
-          <p className="mt-4 text-xs text-destructive" role="alert">
+          <p className="text-destructive mt-4 text-xs" role="alert">
             Configuration does not match the schema — check numeric thresholds (0–1).
           </p>
         ) : null}

@@ -1,4 +1,8 @@
-import type { DataIngestionConfig, DataIngestionSourceSlot, DataIngestionSourceType } from '@/types/pipeline';
+import type {
+  DataIngestionConfig,
+  DataIngestionSourceSlot,
+  DataIngestionSourceType,
+} from '@/types/pipeline';
 
 /** Stable UI / export order for ingestion source types. */
 export const INGESTION_SOURCE_TYPE_ORDER: readonly DataIngestionSourceType[] = [
@@ -31,7 +35,9 @@ export function ensureIngestionSources(cfg: DataIngestionConfig): DataIngestionS
         enabled: row?.enabled ?? id === cfg.sourceType,
         connectionConfig: cloneConn(
           (row?.connectionConfig as Record<string, unknown> | undefined) ??
-            (id === cfg.sourceType ? (cfg.connectionConfig as Record<string, unknown> | undefined) : undefined)
+            (id === cfg.sourceType
+              ? (cfg.connectionConfig as Record<string, unknown> | undefined)
+              : undefined),
         ),
       };
     });
@@ -40,23 +46,30 @@ export function ensureIngestionSources(cfg: DataIngestionConfig): DataIngestionS
     sourceType: id,
     enabled: id === cfg.sourceType,
     connectionConfig: cloneConn(
-      id === cfg.sourceType ? (cfg.connectionConfig as Record<string, unknown> | undefined) : undefined
+      id === cfg.sourceType
+        ? (cfg.connectionConfig as Record<string, unknown> | undefined)
+        : undefined,
     ),
   }));
 }
 
-export function getEnabledIngestionSourceTypes(cfg: DataIngestionConfig): DataIngestionSourceType[] {
+export function getEnabledIngestionSourceTypes(
+  cfg: DataIngestionConfig,
+): DataIngestionSourceType[] {
   const slots = ensureIngestionSources(cfg);
-  return INGESTION_SOURCE_TYPE_ORDER.filter((id) => slots.find((s) => s.sourceType === id)?.enabled);
+  return INGESTION_SOURCE_TYPE_ORDER.filter(
+    (id) => slots.find((s) => s.sourceType === id)?.enabled,
+  );
 }
 
 /** Primary source for legacy fields (`sourceType`, root `connectionConfig`). */
-export function primaryIngestionSource(
-  slots: DataIngestionSourceSlot[]
-): { sourceType: DataIngestionSourceType; connectionConfig?: Record<string, unknown> } {
-  const enabled = INGESTION_SOURCE_TYPE_ORDER.map((id) => slots.find((s) => s.sourceType === id)).filter(
-    (s): s is DataIngestionSourceSlot => Boolean(s?.enabled)
-  );
+export function primaryIngestionSource(slots: DataIngestionSourceSlot[]): {
+  sourceType: DataIngestionSourceType;
+  connectionConfig?: Record<string, unknown>;
+} {
+  const enabled = INGESTION_SOURCE_TYPE_ORDER.map((id) =>
+    slots.find((s) => s.sourceType === id),
+  ).filter((s): s is DataIngestionSourceSlot => Boolean(s?.enabled));
   const first = enabled[0];
   if (!first) {
     return { sourceType: 'file-upload', connectionConfig: undefined };
@@ -70,7 +83,7 @@ export function primaryIngestionSource(
 
 export function buildIngestionConfigWithSources(
   base: DataIngestionConfig,
-  slots: DataIngestionSourceSlot[]
+  slots: DataIngestionSourceSlot[],
 ): DataIngestionConfig {
   const primary = primaryIngestionSource(slots);
   return {

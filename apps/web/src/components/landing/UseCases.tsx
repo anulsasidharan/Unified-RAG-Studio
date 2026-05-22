@@ -71,7 +71,7 @@ export function UseCases() {
     <section className="bg-neutral-50/60 py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-16 text-center">
-          <h2 className="mb-4 font-display text-3xl font-bold text-neutral-900 sm:text-4xl">
+          <h2 className="font-display mb-4 text-3xl font-bold text-neutral-900 sm:text-4xl">
             Built for Every Team
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-neutral-500">
@@ -93,19 +93,23 @@ export function UseCases() {
                 <div className="flex flex-1 flex-col p-7">
                   {/* Header */}
                   <div className="mb-5 flex items-start gap-4">
-                    <div className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl font-bold text-sm ${c.avatar}`}>
+                    <div
+                      className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-sm font-bold ${c.avatar}`}
+                    >
                       {initial}
                     </div>
                     <div>
                       <h3 className="font-display font-bold text-neutral-900">{role}</h3>
-                      <span className={`mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-medium ${c.pill}`}>
+                      <span
+                        className={`mt-1 inline-block rounded-full px-3 py-0.5 text-xs font-medium ${c.pill}`}
+                      >
                         {tag}
                       </span>
                     </div>
                   </div>
 
                   {/* Quote */}
-                  <blockquote className="mb-6 flex-1 text-sm leading-relaxed text-neutral-500 italic border-l-2 border-neutral-200 pl-4">
+                  <blockquote className="mb-6 flex-1 border-l-2 border-neutral-200 pl-4 text-sm italic leading-relaxed text-neutral-500">
                     {quote}
                   </blockquote>
 

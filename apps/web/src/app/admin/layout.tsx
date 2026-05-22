@@ -20,8 +20,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     if (!hasInitialized) return;
-    if (!isAuthenticated) { router.replace('/login'); return; }
-    if (profile?.role !== 'admin') { router.replace('/projects'); }
+    if (!isAuthenticated) {
+      router.replace('/login');
+      return;
+    }
+    if (profile?.role !== 'admin') {
+      router.replace('/projects');
+    }
   }, [hasInitialized, isAuthenticated, profile, router]);
 
   if (!hasInitialized || !profile || profile.role !== 'admin') return null;
@@ -45,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 'flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all',
                 pathname === href || pathname?.startsWith(href)
                   ? 'bg-primary-50 text-primary-700 dark:bg-primary-950/40 dark:text-primary-300'
-                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800'
+                  : 'text-neutral-600 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800',
               )}
             >
               <Icon className="h-4 w-4" />

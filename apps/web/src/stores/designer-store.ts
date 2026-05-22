@@ -76,9 +76,7 @@ export const useDesignerStore = create<DesignerState>()((set, get) => ({
   expandDiagramReach: (stageId) =>
     set((s) => {
       const idx = designerStageIndex(stageId);
-      return idx > s.diagramMaxVisitedStageIndex
-        ? { diagramMaxVisitedStageIndex: idx }
-        : s;
+      return idx > s.diagramMaxVisitedStageIndex ? { diagramMaxVisitedStageIndex: idx } : s;
     }),
 
   resetDraft: () =>
@@ -126,7 +124,8 @@ export const useDesignerStore = create<DesignerState>()((set, get) => ({
     const { draft, autopilotImportSnapshot } = get();
     const bid = draft.metadata.buildId;
     if (draft.metadata.source !== 'autopilot' || !bid) return;
-    if (autopilotImportSnapshot?.buildId === bid && autopilotImportSnapshot.metrics !== undefined) return;
+    if (autopilotImportSnapshot?.buildId === bid && autopilotImportSnapshot.metrics !== undefined)
+      return;
     const r = useAutopilotStore.getState().builds[bid]?.result;
     if (!r) return;
     set({

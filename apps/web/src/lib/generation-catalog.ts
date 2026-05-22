@@ -12,7 +12,15 @@ export type GenerationCatalogFile = {
 
 const catalog = catalogJson as GenerationCatalogFile;
 
-const PROVIDERS = ['openai', 'anthropic', 'google', 'meta', 'mistral', 'cohere', 'custom'] as const satisfies readonly GenerationProvider[];
+const PROVIDERS = [
+  'openai',
+  'anthropic',
+  'google',
+  'meta',
+  'mistral',
+  'cohere',
+  'custom',
+] as const satisfies readonly GenerationProvider[];
 
 export function getGenerationCatalog(): GenerationCatalogFile {
   return catalog;
@@ -37,7 +45,7 @@ export function isGenerationProvider(id: string): id is GenerationProvider {
 export function generationConfigFromCatalogEntry(
   modelId: string,
   current: GenerationConfig | undefined,
-  options?: { maxTokensFloor?: number }
+  options?: { maxTokensFloor?: number },
 ): Partial<GenerationConfig> | undefined {
   const meta = getGenerationModelMeta(modelId);
   if (!meta || !isGenerationProvider(meta.provider)) {

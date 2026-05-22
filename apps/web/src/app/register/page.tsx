@@ -30,7 +30,13 @@ export default function RegisterPage() {
       const res = await register({ email, password, name });
       setResult(res);
     } catch (err) {
-      setError(err instanceof ApiError ? formatApiErrorForUi(err) : err instanceof Error ? err.message : String(err));
+      setError(
+        err instanceof ApiError
+          ? formatApiErrorForUi(err)
+          : err instanceof Error
+            ? err.message
+            : String(err),
+      );
     } finally {
       setLoading(false);
     }
@@ -45,16 +51,17 @@ export default function RegisterPage() {
       {/* Form panel */}
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-12 xl:px-20">
         <div className="w-full max-w-md">
-
           {result ? (
             /* Post-registration success state */
             <div className="space-y-6">
               <div className="flex flex-col items-center gap-4 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success-100">
-                  <CheckCircle2 className="h-8 w-8 text-success-600" />
+                <div className="bg-success-100 flex h-16 w-16 items-center justify-center rounded-full">
+                  <CheckCircle2 className="text-success-600 h-8 w-8" />
                 </div>
                 <div>
-                  <h1 className="font-display text-2xl font-bold text-neutral-900">Account created!</h1>
+                  <h1 className="font-display text-2xl font-bold text-neutral-900">
+                    Account created!
+                  </h1>
                   <p className="mt-1 text-sm text-neutral-500">{result.message}</p>
                 </div>
               </div>
@@ -70,7 +77,7 @@ export default function RegisterPage() {
                   <button
                     type="button"
                     onClick={() => router.push(`/verify-email?token=${encodeURIComponent(token)}`)}
-                    className="mt-4 w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 active:scale-[0.98]"
+                    className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 mt-4 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 active:scale-[0.98]"
                   >
                     Verify email →
                   </button>
@@ -83,7 +90,10 @@ export default function RegisterPage() {
 
               <p className="text-center text-sm text-neutral-500">
                 Already verified?{' '}
-                <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700">
+                <Link
+                  href="/login"
+                  className="text-primary-600 hover:text-primary-700 font-semibold"
+                >
                   Log in
                 </Link>
               </p>
@@ -92,7 +102,9 @@ export default function RegisterPage() {
             /* Registration form */
             <>
               <div className="mb-8">
-                <h1 className="font-display text-3xl font-bold text-neutral-900">Create your account</h1>
+                <h1 className="font-display text-3xl font-bold text-neutral-900">
+                  Create your account
+                </h1>
                 <p className="mt-2 text-sm text-neutral-500">
                   Free forever. No credit card required.
                 </p>
@@ -111,7 +123,7 @@ export default function RegisterPage() {
                     type="text"
                     autoComplete="name"
                     required
-                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                    className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                     placeholder="Jane Smith"
                   />
                 </div>
@@ -128,7 +140,7 @@ export default function RegisterPage() {
                     type="email"
                     autoComplete="email"
                     required
-                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                    className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                     placeholder="you@company.com"
                   />
                 </div>
@@ -147,7 +159,7 @@ export default function RegisterPage() {
                       autoComplete="new-password"
                       required
                       minLength={6}
-                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                      className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                       placeholder="At least 6 characters"
                     />
                     <button
@@ -163,7 +175,7 @@ export default function RegisterPage() {
 
                 {/* Error */}
                 {error ? (
-                  <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+                  <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-3 text-sm">
                     {error}
                   </div>
                 ) : null}
@@ -172,7 +184,7 @@ export default function RegisterPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
+                  className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
                 >
                   {loading ? 'Creating account…' : 'Create free account'}
                 </button>
@@ -184,7 +196,10 @@ export default function RegisterPage() {
 
               <p className="mt-6 text-center text-sm text-neutral-500">
                 Already have an account?{' '}
-                <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700">
+                <Link
+                  href="/login"
+                  className="text-primary-600 hover:text-primary-700 font-semibold"
+                >
                   Sign in
                 </Link>
               </p>

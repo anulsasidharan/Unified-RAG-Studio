@@ -60,4 +60,3 @@ export type MeResponse = LoginResponse;
 export type LogoutResponse = {
   message: string;
 };
-

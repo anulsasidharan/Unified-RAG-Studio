@@ -148,7 +148,7 @@ export const DataIngestionConfigSchema = z
       if (!data.sources?.length) return true;
       return data.sources.some((s) => s.enabled);
     },
-    { message: 'Enable at least one data source.', path: ['sources'] }
+    { message: 'Enable at least one data source.', path: ['sources'] },
   )
   .refine(
     (data) => {
@@ -160,25 +160,31 @@ export const DataIngestionConfigSchema = z
       }
       return true;
     },
-    { message: 'Each data source type may appear only once.', path: ['sources'] }
+    { message: 'Each data source type may appear only once.', path: ['sources'] },
   );
 
-export const ChunkingConfigSchema = z.object({
-  strategy: ChunkingStrategySchema,
-  chunkSize: z.number().int().min(128, 'Minimum chunk size is 128').max(4096, 'Maximum chunk size is 4096'),
-  chunkOverlap: z.number().int().min(0).max(1024, 'Overlap cannot exceed 1024 tokens'),
-  separators: z.array(z.string()).optional(),
-  metadata: z
-    .object({
-      includeSource: z.boolean(),
-      includePageNumber: z.boolean(),
-      customMetadata: z.record(z.unknown()).optional(),
-    })
-    .optional(),
-}).refine(
-  (data) => data.chunkOverlap < data.chunkSize,
-  { message: 'Chunk overlap must be less than chunk size', path: ['chunkOverlap'] }
-);
+export const ChunkingConfigSchema = z
+  .object({
+    strategy: ChunkingStrategySchema,
+    chunkSize: z
+      .number()
+      .int()
+      .min(128, 'Minimum chunk size is 128')
+      .max(4096, 'Maximum chunk size is 4096'),
+    chunkOverlap: z.number().int().min(0).max(1024, 'Overlap cannot exceed 1024 tokens'),
+    separators: z.array(z.string()).optional(),
+    metadata: z
+      .object({
+        includeSource: z.boolean(),
+        includePageNumber: z.boolean(),
+        customMetadata: z.record(z.unknown()).optional(),
+      })
+      .optional(),
+  })
+  .refine((data) => data.chunkOverlap < data.chunkSize, {
+    message: 'Chunk overlap must be less than chunk size',
+    path: ['chunkOverlap'],
+  });
 
 export const EmbeddingConfigSchema = z.object({
   model: z.string().min(1, 'Embedding model is required'),
@@ -283,7 +289,10 @@ export const RetrievalConfigSchema = z
       if (data.strategy === 'hybrid' && !data.hybridSearch) return false;
       return true;
     },
-    { message: 'Hybrid search config is required when using hybrid strategy', path: ['hybridSearch'] }
+    {
+      message: 'Hybrid search config is required when using hybrid strategy',
+      path: ['hybridSearch'],
+    },
   )
   .refine(
     (data) => {
@@ -292,7 +301,7 @@ export const RetrievalConfigSchema = z
       }
       return true;
     },
-    { message: 'MMR fetch pool must be at least topK', path: ['mmrFetchK'] }
+    { message: 'MMR fetch pool must be at least topK', path: ['mmrFetchK'] },
   );
 
 export const RerankingConfigSchema = z.object({

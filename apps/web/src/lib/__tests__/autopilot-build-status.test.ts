@@ -18,7 +18,9 @@ describe('parseBuildStatusPayload', () => {
           answerRelevance: 0.85,
           meetsTargets: true,
         },
-        embeddingBenchmarks: [{ label: 'openai/text-embedding-3-small', latencyMs: 40, compositeScore: 0.8 }],
+        embeddingBenchmarks: [
+          { label: 'openai/text-embedding-3-small', latencyMs: 40, compositeScore: 0.8 },
+        ],
         selectedEmbeddingLabel: 'openai/text-embedding-3-small',
         retrieval: { strategy: 'similarity', topK: 5, performance: { ndcg: 0.7 } },
       },

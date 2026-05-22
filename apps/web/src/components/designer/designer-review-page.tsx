@@ -20,7 +20,10 @@ import { hitlHighlightBullet } from '@/lib/hitl-summary';
 import { guardrailPolicyMermaidSubtitle, resolveGuardrailsConfig } from '@/lib/guardrails-summary';
 import { DESIGNER_DOM_SECTION_IDS } from '@/lib/designer-section-anchors';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
-import { generatePipelineHighlights, generatePipelineSummary } from '@/lib/generators/mermaidGenerator';
+import {
+  generatePipelineHighlights,
+  generatePipelineSummary,
+} from '@/lib/generators/mermaidGenerator';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 
@@ -43,13 +46,13 @@ function SummaryCard({
   return (
     <div
       className={cn(
-        'rounded-lg border border-neutral-200 bg-card p-4 shadow-sm dark:border-neutral-700',
-        className
+        'bg-card rounded-lg border border-neutral-200 p-4 shadow-sm dark:border-neutral-700',
+        className,
       )}
     >
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{title}</p>
-      <p className="mt-1.5 break-words text-sm font-semibold text-foreground">{value}</p>
-      {sub ? <p className="mt-1 text-xs text-muted-foreground">{sub}</p> : null}
+      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">{title}</p>
+      <p className="text-foreground mt-1.5 break-words text-sm font-semibold">{value}</p>
+      {sub ? <p className="text-muted-foreground mt-1 text-xs">{sub}</p> : null}
     </div>
   );
 }
@@ -63,7 +66,9 @@ export function DesignerReviewPage({
   const draft = useDesignerStore((s) => s.draft);
   const resetDraft = useDesignerStore((s) => s.resetDraft);
   const autopilotImportSnapshot = useDesignerStore((s) => s.autopilotImportSnapshot);
-  const syncAutopilotSnapshotFromStores = useDesignerStore((s) => s.syncAutopilotSnapshotFromStores);
+  const syncAutopilotSnapshotFromStores = useDesignerStore(
+    (s) => s.syncAutopilotSnapshotFromStores,
+  );
   const [copiedSummary, setCopiedSummary] = useState(false);
   const [copiedJson, setCopiedJson] = useState(false);
   /** Avoid hydration mismatch: server vs client differ on `new Date().toLocaleString()` and default draft timestamps. */
@@ -98,11 +103,17 @@ export function DesignerReviewPage({
 
   const oneLine = useMemo(
     () => generatePipelineSummary(draft.stages, fullStageIndex),
-    [draft.stages]
+    [draft.stages, fullStageIndex],
   );
   const bullets = useMemo(
-    () => generatePipelineHighlights(draft.stages, draft.cloudProvider, fullStageIndex, draft.guardrails),
-    [draft.stages, draft.cloudProvider, draft.guardrails]
+    () =>
+      generatePipelineHighlights(
+        draft.stages,
+        draft.cloudProvider,
+        fullStageIndex,
+        draft.guardrails,
+      ),
+    [draft.stages, draft.cloudProvider, draft.guardrails, fullStageIndex],
   );
 
   const copySummary = useCallback(async () => {
@@ -130,7 +141,7 @@ export function DesignerReviewPage({
     if (
       typeof window !== 'undefined' &&
       window.confirm(
-        'Reset the pipeline draft to defaults? This clears local designer state (persisted in this browser).'
+        'Reset the pipeline draft to defaults? This clears local designer state (persisted in this browser).',
       )
     ) {
       resetDraft();
@@ -160,18 +171,21 @@ export function DesignerReviewPage({
 
   return (
     <div className={cn('mx-auto w-full max-w-4xl px-4 py-8 sm:px-6 lg:py-10', className)}>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
         Stage {index + 1} of {DESIGNER_STAGES.length}
       </p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
         {meta.label}
       </h1>
       <p className="mt-3 text-neutral-600 dark:text-neutral-400">
-        Confirm your RAG pipeline draft before export or handoff. Use the links below to jump to the live diagram, cost
-        model, and generated artefacts — each strip stays in sync with your Zustand draft (local storage).
+        Confirm your RAG pipeline draft before export or handoff. Use the links below to jump to the
+        live diagram, cost model, and generated artefacts — each strip stays in sync with your
+        Zustand draft (local storage).
       </p>
 
-      {showAutopilotBanner ? <AutopilotDesignerImportBanner className="mt-8" snapshot={autopilotImportSnapshot} /> : null}
+      {showAutopilotBanner ? (
+        <AutopilotDesignerImportBanner className="mt-8" snapshot={autopilotImportSnapshot} />
+      ) : null}
 
       <DesignerToAutopilotHandoff className="mt-8" />
 
@@ -179,27 +193,27 @@ export function DesignerReviewPage({
         <button
           type="button"
           onClick={() => scrollToSection(DESIGNER_DOM_SECTION_IDS.cost)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+          className="bg-background hover:bg-muted inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition-colors dark:border-neutral-600"
         >
-          <Calculator className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <Calculator className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
           Cost estimate
           <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
         </button>
         <button
           type="button"
           onClick={() => scrollToSection(DESIGNER_DOM_SECTION_IDS.export)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+          className="bg-background hover:bg-muted inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition-colors dark:border-neutral-600"
         >
-          <Package className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <Package className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
           Code export
           <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
         </button>
         <button
           type="button"
           onClick={() => scrollToSection(DESIGNER_DOM_SECTION_IDS.pipeline)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+          className="bg-background hover:bg-muted inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition-colors dark:border-neutral-600"
         >
-          <LayoutDashboard className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <LayoutDashboard className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
           Pipeline graph
           <ArrowDown className="h-3.5 w-3.5 shrink-0 opacity-60" aria-hidden />
         </button>
@@ -209,43 +223,45 @@ export function DesignerReviewPage({
         <button
           type="button"
           onClick={() => void copySummary()}
-          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+          className="bg-background hover:bg-muted inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition-colors dark:border-neutral-600"
         >
-          <ClipboardCopy className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <ClipboardCopy className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
           {copiedSummary ? 'Summary copied' : 'Copy text summary'}
         </button>
         <button
           type="button"
           onClick={() => void copyJson()}
-          className="inline-flex items-center gap-1.5 rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+          className="bg-background hover:bg-muted inline-flex items-center gap-1.5 rounded-md border border-neutral-200 px-3 py-2 text-sm font-medium shadow-sm transition-colors dark:border-neutral-600"
         >
-          <FileJson2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+          <FileJson2 className="text-muted-foreground h-4 w-4 shrink-0" aria-hidden />
           {copiedJson ? 'JSON copied' : 'Copy draft JSON'}
         </button>
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-background px-3 py-2 text-sm font-medium text-destructive shadow-sm transition-colors hover:bg-destructive/10"
+          className="border-destructive/30 bg-background text-destructive hover:bg-destructive/10 inline-flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium shadow-sm transition-colors"
         >
           Reset draft…
         </button>
       </div>
 
-      <div className="mt-8 rounded-lg border border-neutral-200 bg-muted/20 p-4 dark:border-neutral-700">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Draft</p>
-        <p className="mt-1 text-lg font-semibold text-foreground">{draft.name || 'Untitled pipeline'}</p>
-        {draft.description ? (
-          <p className="mt-2 text-sm text-muted-foreground">{draft.description}</p>
-        ) : null}
-        <p className="mt-3 text-xs text-muted-foreground">
-          Last updated: {lastUpdatedLabel}
+      <div className="bg-muted/20 mt-8 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
+        <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">Draft</p>
+        <p className="text-foreground mt-1 text-lg font-semibold">
+          {draft.name || 'Untitled pipeline'}
         </p>
+        {draft.description ? (
+          <p className="text-muted-foreground mt-2 text-sm">{draft.description}</p>
+        ) : null}
+        <p className="text-muted-foreground mt-3 text-xs">Last updated: {lastUpdatedLabel}</p>
       </div>
 
       <div className="mt-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Flow summary</p>
-        <p className="mt-2 text-sm leading-relaxed text-foreground">{oneLine}</p>
-        <ul className="mt-3 space-y-1 border-l-2 border-primary-600/30 pl-3 text-sm text-muted-foreground dark:border-primary-400/30">
+        <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+          Flow summary
+        </p>
+        <p className="text-foreground mt-2 text-sm leading-relaxed">{oneLine}</p>
+        <ul className="border-primary-600/30 text-muted-foreground dark:border-primary-400/30 mt-3 space-y-1 border-l-2 pl-3 text-sm">
           {bullets.map((line) => (
             <li key={line}>{line}</li>
           ))}
@@ -254,11 +270,7 @@ export function DesignerReviewPage({
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <SummaryCard title="Cloud" value={draft.cloudProvider.toUpperCase()} />
-        <SummaryCard
-          title="Ingestion"
-          value={ingestionCard.value}
-          sub={ingestionCard.sub}
-        />
+        <SummaryCard title="Ingestion" value={ingestionCard.value} sub={ingestionCard.sub} />
         <SummaryCard
           title="Chunking"
           value={stages.chunking.strategy}
@@ -292,11 +304,7 @@ export function DesignerReviewPage({
         <SummaryCard
           title="Routing"
           value={stages.routing?.enabled ? 'On' : 'Off'}
-          sub={
-            stages.routing?.enabled
-              ? `${stages.routing.rules?.length ?? 0} rule(s)`
-              : undefined
-          }
+          sub={stages.routing?.enabled ? `${stages.routing.rules?.length ?? 0} rule(s)` : undefined}
         />
         <SummaryCard title="Memory" value={stages.memory?.type?.replace(/-/g, ' ') ?? 'none'} />
         <SummaryCard
@@ -311,7 +319,11 @@ export function DesignerReviewPage({
         <SummaryCard
           title="Guardrails"
           value={
-            [gr.input.enabled && 'Input', gr.retrieval.enabled && 'Retrieval', gr.output.enabled && 'Output']
+            [
+              gr.input.enabled && 'Input',
+              gr.retrieval.enabled && 'Retrieval',
+              gr.output.enabled && 'Output',
+            ]
               .filter(Boolean)
               .join(' · ') || 'All layers off'
           }
@@ -325,17 +337,20 @@ export function DesignerReviewPage({
       </div>
 
       <div className="mt-10">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
-          <ListChecks className="h-4 w-4 text-muted-foreground" aria-hidden />
+        <div className="text-foreground mb-3 flex items-center gap-2 text-sm font-semibold">
+          <ListChecks className="text-muted-foreground h-4 w-4" aria-hidden />
           Stage checklist
         </div>
         <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-700 dark:border-neutral-700">
           {DESIGNER_STAGES.filter((s) => s.id !== 'review').map((s) => (
-            <li key={s.id} className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm">
+            <li
+              key={s.id}
+              className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm"
+            >
               <span className="text-foreground">{s.label}</span>
               <Link
                 href={s.path}
-                className="shrink-0 font-medium text-primary-600 hover:underline dark:text-primary-400"
+                className="text-primary-600 dark:text-primary-400 shrink-0 font-medium hover:underline"
               >
                 Edit →
               </Link>
@@ -349,30 +364,33 @@ export function DesignerReviewPage({
           {prev ? (
             <Link
               href={prev.path}
-              className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+              className="text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline"
             >
               ← {prev.label}
             </Link>
           ) : (
-            <span className="text-sm text-muted-foreground">First stage</span>
+            <span className="text-muted-foreground text-sm">First stage</span>
           )}
         </div>
         <div>
           {next ? (
             <Link
               href={next.path}
-              className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+              className="text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline"
             >
               {next.label} →
             </Link>
           ) : (
-            <span className="text-sm text-muted-foreground">Last stage</span>
+            <span className="text-muted-foreground text-sm">Last stage</span>
           )}
         </div>
       </div>
 
       <div className="mt-10 flex flex-wrap gap-4 text-sm">
-        <Link href={ROUTES.home} className="text-muted-foreground hover:text-foreground hover:underline">
+        <Link
+          href={ROUTES.home}
+          className="text-muted-foreground hover:text-foreground hover:underline"
+        >
           ← Back to home
         </Link>
         <Link
@@ -381,7 +399,10 @@ export function DesignerReviewPage({
         >
           Browse templates
         </Link>
-        <Link href={ROUTES.projects} className="text-muted-foreground hover:text-foreground hover:underline">
+        <Link
+          href={ROUTES.projects}
+          className="text-muted-foreground hover:text-foreground hover:underline"
+        >
           Projects
         </Link>
       </div>

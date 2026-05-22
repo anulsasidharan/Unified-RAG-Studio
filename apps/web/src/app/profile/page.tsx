@@ -31,13 +31,16 @@ export default function ProfilePage() {
       apiClient.get<UserProfile>('/api/users/me'),
       apiClient.get<{ plans: SubscriptionPlan[] }>('/api/subscriptions/plans'),
       apiClient.get<UsageResponse>('/api/users/me/usage'),
-    ]).then(([prof, plansRes, usageRes]) => {
-      setProfile(prof);
-      setPlans(plansRes.plans);
-      setUsage(usageRes);
-    }).catch(() => {
-      // errors are handled gracefully — loading stops and profile stays null
-    }).finally(() => setLoading(false));
+    ])
+      .then(([prof, plansRes, usageRes]) => {
+        setProfile(prof);
+        setPlans(plansRes.plans);
+        setUsage(usageRes);
+      })
+      .catch(() => {
+        // errors are handled gracefully — loading stops and profile stays null
+      })
+      .finally(() => setLoading(false));
   }, [isAuthenticated]);
 
   if (!hasInitialized || loading) {
@@ -62,16 +65,13 @@ export default function ProfilePage() {
       </div>
 
       <div className="space-y-6">
-        <ProfileCard
-          profile={profile}
-          onUpdated={(updated) => setProfile(updated)}
-        />
+        <ProfileCard profile={profile} onUpdated={(updated) => setProfile(updated)} />
 
         <PlanCard
           currentTier={profile.subscription_tier}
           plans={plans}
           usage={usage}
-          onUpgraded={(tier) => setProfile((p) => p ? { ...p, subscription_tier: tier } : p)}
+          onUpgraded={(tier) => setProfile((p) => (p ? { ...p, subscription_tier: tier } : p))}
         />
 
         <SecuritySettings />

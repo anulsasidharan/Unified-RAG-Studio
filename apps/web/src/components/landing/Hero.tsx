@@ -13,14 +13,13 @@ export function Hero() {
       </div>
 
       {/* Dot grid overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-40" />
+      <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-40" />
 
       {/* Content */}
       <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-36 sm:px-6 sm:pt-44 lg:px-8">
         <div className="flex flex-col items-center text-center">
-
           {/* Beta badge */}
-          <div className="animate-fade-in-up mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm">
+          <div className="animate-fade-in-up bg-white/8 mb-8 inline-flex items-center gap-2 rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/80 backdrop-blur-sm">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-400" />
@@ -30,15 +29,14 @@ export function Hero() {
           </div>
 
           {/* Headline */}
-          <h1 className="animate-fade-in-up-delay-1 mb-6 font-display text-5xl font-bold leading-tight tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
-            Build RAG Systems{' '}
-            <span className="gradient-text-animated">Your Way</span>
+          <h1 className="animate-fade-in-up-delay-1 font-display mb-6 text-5xl font-bold leading-tight tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl">
+            Build RAG Systems <span className="gradient-text-animated">Your Way</span>
           </h1>
 
           {/* Sub-headline */}
           <p className="animate-fade-in-up-delay-2 mx-auto mb-10 max-w-2xl text-xl leading-relaxed text-white/60 sm:text-2xl">
-            Design step-by-step with our visual pipeline builder, or let AI agents
-            build and optimize automatically. Both modes ship{' '}
+            Design step-by-step with our visual pipeline builder, or let AI agents build and
+            optimize automatically. Both modes ship{' '}
             <span className="font-semibold text-white/90">production-ready RAG systems.</span>
           </p>
 
@@ -53,7 +51,7 @@ export function Hero() {
             </Link>
             <Link
               href="/login"
-              className="group inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/8 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/30 hover:bg-white/12 active:scale-[0.98]"
+              className="bg-white/8 hover:bg-white/12 group inline-flex items-center gap-2 rounded-xl border border-white/20 px-8 py-4 text-base font-semibold text-white backdrop-blur-sm transition-all hover:border-white/30 active:scale-[0.98]"
             >
               Log in
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -67,20 +65,19 @@ export function Hero() {
 
           {/* Demo frame */}
           <div className="mt-16 w-full max-w-5xl">
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/80 shadow-2xl shadow-black/60 backdrop-blur-sm ring-1 ring-white/5">
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-neutral-900/80 shadow-2xl shadow-black/60 ring-1 ring-white/5 backdrop-blur-sm">
               {/* Browser chrome bar */}
-              <div className="flex items-center gap-2 border-b border-white/8 bg-neutral-900/60 px-4 py-3">
+              <div className="border-white/8 flex items-center gap-2 border-b bg-neutral-900/60 px-4 py-3">
                 <span className="h-3 w-3 rounded-full bg-red-500/70" />
                 <span className="h-3 w-3 rounded-full bg-yellow-500/70" />
                 <span className="h-3 w-3 rounded-full bg-green-500/70" />
-                <div className="ml-3 flex-1 rounded-md bg-white/6 px-3 py-1 text-center text-xs text-white/30">
+                <div className="bg-white/6 ml-3 flex-1 rounded-md px-3 py-1 text-center text-xs text-white/30">
                   ragstudio.dev/designer
                 </div>
               </div>
               <HeroProductDemo />
             </div>
           </div>
-
         </div>
       </div>
 

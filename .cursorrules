@@ -1,0 +1,50 @@
+# RAG Studio — Cursor AI Rules
+
+## Mandatory quality gates
+Every file you create or edit MUST pass its linter/formatter before you consider
+the task done. Do not mark work complete if lint errors remain.
+
+---
+
+## Python (apps/api)
+
+- Formatter: `ruff format` (double quotes, 100-char lines, space indent)
+- Linter:    `ruff check --fix` (rule sets: E W F I B C4 UP N S T20)
+- Types:     `mypy` — every public function MUST have type annotations
+- Run after edits: `cd apps/api && uv run ruff check --fix <file> && uv run ruff format <file>`
+- NEVER use `pip` — always `uv pip install` or add to `requirements.txt`/`requirements-dev.txt`
+- NEVER use `python -m venv` — `uv` manages the virtual environment
+- Import order: stdlib → third-party → first-party (`app`) — `isort` via ruff `I` rules enforces this
+
+### Common ruff fixes to apply proactively
+- Remove unused imports (F401)
+- Replace `Union[X, Y]` with `X | Y`, `Optional[X]` with `X | None` (UP007)
+- Use f-strings instead of `.format()` (UP032)
+- Remove `print()` statements; use `structlog` (T201)
+- Use comprehensions instead of map/filter (C4)
+
+---
+
+## TypeScript / React (apps/web)
+
+- Formatter: Prettier (`printWidth: 100, singleQuote: true, trailingComma: "all"`)
+- Linter:    ESLint `next/core-web-vitals` + `prettier` (zero warnings allowed in CI)
+- Types:     TypeScript strict — no `any` unless unavoidable; use `unknown` + type-guard instead
+- Run after edits: `cd apps/web && npx prettier --write <file> && npx next lint --fix`
+
+### React patterns to enforce
+- Always use `const` arrow functions for components: `const MyComp = () => ...`
+- Props interfaces: `interface MyCompProps { ... }` above the component
+- No inline `style={{}}` — use Tailwind utility classes
+- Memoize expensive renders: `useMemo`/`useCallback` when deps are stable
+- Always handle loading/error states in async components
+- `useSearchParams()` MUST be inside a component wrapped with `<Suspense>`
+
+---
+
+## Both languages
+- No debug/stray `console.log` or `print()` in committed code
+- No hardcoded secrets, API keys, or credentials — use env vars
+- No `// TODO` comments without a linked task reference
+- Commit messages: imperative mood, ≤72 chars subject line
+- Line endings: LF only (enforced by `.gitattributes`)

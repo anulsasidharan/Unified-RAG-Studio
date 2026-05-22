@@ -13,13 +13,13 @@ describe('deployHintCommand', () => {
 
   it('returns docker compose up', () => {
     expect(deployHintCommand('docker-compose', 'docker-compose.yml')).toBe(
-      'docker compose -f docker-compose.yml up -d --build'
+      'docker compose -f docker-compose.yml up -d --build',
     );
   });
 
   it('returns kubectl apply for k8s', () => {
     expect(deployHintCommand('k8s', 'stack-k8s-manifests.yaml')).toBe(
-      'kubectl apply -f stack-k8s-manifests.yaml'
+      'kubectl apply -f stack-k8s-manifests.yaml',
     );
   });
 

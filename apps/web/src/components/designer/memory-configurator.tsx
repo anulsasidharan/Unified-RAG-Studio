@@ -11,7 +11,10 @@ import type { MemoryConfig, MemoryType } from '@/types/pipeline';
 
 const DEFAULT_MEMORY = createDefaultPipelineConfiguration().stages.memory!;
 
-function mergeMemory(current: MemoryConfig | undefined, patch: Partial<MemoryConfig>): MemoryConfig {
+function mergeMemory(
+  current: MemoryConfig | undefined,
+  patch: Partial<MemoryConfig>,
+): MemoryConfig {
   const base = current ?? DEFAULT_MEMORY;
   return { ...base, ...patch };
 }
@@ -40,12 +43,14 @@ const MEMORY_OPTIONS: { id: MemoryType; title: string; description: string }[] =
   {
     id: 'entity-memory',
     title: 'Entity memory',
-    description: 'Track entities (people, products, accounts) across turns for grounded follow-ups.',
+    description:
+      'Track entities (people, products, accounts) across turns for grounded follow-ups.',
   },
   {
     id: 'episodic-memory',
     title: 'Episodic memory',
-    description: 'Recall past sessions or events as structured episodes when supported by your runtime.',
+    description:
+      'Recall past sessions or events as structured episodes when supported by your runtime.',
   },
 ];
 
@@ -63,14 +68,14 @@ export function MemoryConfigurator({
     (next: MemoryConfig) => {
       updateStages({ memory: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchMemory = useCallback(
     (patch: Partial<MemoryConfig>) => {
       setMemory(mergeMemory(draft.stages.memory, patch));
     },
-    [draft.stages.memory, setMemory]
+    [draft.stages.memory, setMemory],
   );
 
   const validation = useMemo(() => MemoryConfigSchema.safeParse(cfg), [cfg]);
@@ -80,19 +85,22 @@ export function MemoryConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="memory-main-heading"
       >
         <div className="flex items-start gap-3">
-          <Database className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <Database
+            className="text-primary-600 dark:text-primary-400 mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0 flex-1">
-            <h2 id="memory-main-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="memory-main-heading" className="text-foreground text-lg font-semibold">
               Conversation memory
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Choose how multi-turn context is retained. Updates{' '}
-              <strong className="font-medium text-foreground">draft.stages.memory</strong> for exports (e.g. LangChain
-              memory in Python codegen).
+              <strong className="text-foreground font-medium">draft.stages.memory</strong> for
+              exports (e.g. LangChain memory in Python codegen).
             </p>
           </div>
         </div>
@@ -108,27 +116,30 @@ export function MemoryConfigurator({
                 className={cn(
                   'rounded-lg border p-4 text-left text-sm transition-colors',
                   selected
-                    ? 'border-primary-600 bg-primary-600/10 ring-2 ring-primary-600/30 dark:border-primary-500'
-                    : 'border-neutral-200 bg-background hover:bg-accent dark:border-neutral-700'
+                    ? 'border-primary-600 bg-primary-600/10 ring-primary-600/30 dark:border-primary-500 ring-2'
+                    : 'bg-background hover:bg-accent border-neutral-200 dark:border-neutral-700',
                 )}
               >
-                <span className="font-semibold text-foreground">{opt.title}</span>
-                <span className="mt-1 block text-muted-foreground">{opt.description}</span>
+                <span className="text-foreground font-semibold">{opt.title}</span>
+                <span className="text-muted-foreground mt-1 block">{opt.description}</span>
               </button>
             );
           })}
         </div>
 
         {showAdvanced ? (
-          <div className="mt-8 space-y-4 rounded-lg border border-neutral-200 bg-muted/15 p-4 dark:border-neutral-700">
-            <h3 className="text-sm font-semibold text-foreground">Parameters</h3>
+          <div className="bg-muted/15 mt-8 space-y-4 rounded-lg border border-neutral-200 p-4 dark:border-neutral-700">
+            <h3 className="text-foreground text-sm font-semibold">Parameters</h3>
 
             {(cfg.type === 'conversation-buffer' ||
               cfg.type === 'summary-buffer' ||
               cfg.type === 'entity-memory' ||
               cfg.type === 'episodic-memory') && (
               <div>
-                <label htmlFor="memory-window" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <label
+                  htmlFor="memory-window"
+                  className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+                >
                   Window size (messages)
                 </label>
                 <input
@@ -136,7 +147,7 @@ export function MemoryConfigurator({
                   type="number"
                   min={1}
                   max={100}
-                  className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="border-input bg-background mt-1 w-full max-w-xs rounded-md border px-3 py-2 text-sm"
                   value={cfg.windowSize ?? 10}
                   onChange={(e) => patchMemory({ windowSize: Number(e.target.value) })}
                 />
@@ -148,7 +159,10 @@ export function MemoryConfigurator({
               cfg.type === 'entity-memory' ||
               cfg.type === 'episodic-memory') && (
               <div>
-                <label htmlFor="memory-max-tokens" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <label
+                  htmlFor="memory-max-tokens"
+                  className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+                >
                   Max memory tokens (optional cap)
                 </label>
                 <input
@@ -156,7 +170,7 @@ export function MemoryConfigurator({
                   type="number"
                   min={1}
                   max={1000000}
-                  className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="border-input bg-background mt-1 w-full max-w-xs rounded-md border px-3 py-2 text-sm"
                   value={cfg.maxTokens ?? ''}
                   placeholder="e.g. 2000"
                   onChange={(e) =>
@@ -173,7 +187,7 @@ export function MemoryConfigurator({
                 type="checkbox"
                 checked={cfg.sessionPersistence ?? false}
                 onChange={(e) => patchMemory({ sessionPersistence: e.target.checked })}
-                className="h-4 w-4 rounded border-input"
+                className="border-input h-4 w-4 rounded"
               />
               Persist session across server restarts (when backend supports it)
             </label>
@@ -182,12 +196,12 @@ export function MemoryConfigurator({
       </section>
 
       {!validation.success ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           Invalid memory configuration — adjust window or token limits.
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Validated with <code className="rounded bg-muted px-1">MemoryConfigSchema</code>.
+        <p className="text-muted-foreground text-sm">
+          Validated with <code className="bg-muted rounded px-1">MemoryConfigSchema</code>.
         </p>
       )}
     </div>

@@ -44,9 +44,7 @@ type ProjectState = {
   }) => Project;
   updateProject: (
     id: string,
-    patch: Partial<
-      Pick<Project, 'name' | 'description' | 'linkedPipelineId' | 'designerSnapshot'>
-    >
+    patch: Partial<Pick<Project, 'name' | 'description' | 'linkedPipelineId' | 'designerSnapshot'>>,
   ) => void;
   removeProject: (id: string) => void;
   setActiveProject: (id: string | null) => void;
@@ -54,7 +52,10 @@ type ProjectState = {
 
   syncFromServer: () => Promise<void>;
   createProjectOnServer: (input: { name: string; description?: string | null }) => Promise<Project>;
-  renameProjectOnServer: (id: string, patch: { name?: string; description?: string | null }) => Promise<void>;
+  renameProjectOnServer: (
+    id: string,
+    patch: { name?: string; description?: string | null },
+  ) => Promise<void>;
   deleteProjectOnServer: (id: string) => Promise<void>;
 };
 
@@ -72,7 +73,7 @@ export const useProjectStore = create<ProjectState>()(
             projects: s.projects.map((p) =>
               p.id === prevActive
                 ? { ...p, designerSnapshot: snap, updatedAt: new Date().toISOString() }
-                : p
+                : p,
             ),
           }));
         }
@@ -98,7 +99,7 @@ export const useProjectStore = create<ProjectState>()(
       updateProject: (id, patch) =>
         set((s) => ({
           projects: s.projects.map((p) =>
-            p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p
+            p.id === id ? { ...p, ...patch, updatedAt: new Date().toISOString() } : p,
           ),
         })),
 
@@ -107,7 +108,7 @@ export const useProjectStore = create<ProjectState>()(
         const wasActive = s.activeProjectId === id;
         const nextProjects = s.projects.filter((p) => p.id !== id);
         const nextActive =
-          s.activeProjectId === id ? nextProjects[0]?.id ?? null : s.activeProjectId;
+          s.activeProjectId === id ? (nextProjects[0]?.id ?? null) : s.activeProjectId;
         set({ projects: nextProjects, activeProjectId: nextActive });
         if (wasActive) {
           const nextProject = get().projects.find((p) => p.id === nextActive);
@@ -125,7 +126,7 @@ export const useProjectStore = create<ProjectState>()(
             projects: s.projects.map((p) =>
               p.id === prev
                 ? { ...p, designerSnapshot: snap, updatedAt: new Date().toISOString() }
-                : p
+                : p,
             ),
           }));
         }
@@ -142,9 +143,7 @@ export const useProjectStore = create<ProjectState>()(
       },
 
       syncFromServer: async () => {
-        const res = await apiClient.get<PaginatedProjects>(
-          '/api/projects?page=1&page_size=100'
-        );
+        const res = await apiClient.get<PaginatedProjects>('/api/projects?page=1&page_size=100');
 
         const prevById = new Map(get().projects.map((p) => [p.id, p.designerSnapshot]));
 
@@ -161,7 +160,7 @@ export const useProjectStore = create<ProjectState>()(
           const nextActive =
             s.activeProjectId && nextProjects.some((p) => p.id === s.activeProjectId)
               ? s.activeProjectId
-              : nextProjects[0]?.id ?? null;
+              : (nextProjects[0]?.id ?? null);
 
           return { projects: nextProjects, activeProjectId: nextActive };
         });
@@ -209,7 +208,7 @@ export const useProjectStore = create<ProjectState>()(
                   description: updated.description ?? undefined,
                   updatedAt: updated.updatedAt,
                 }
-              : p
+              : p,
           ),
         }));
       },
@@ -232,6 +231,6 @@ export const useProjectStore = create<ProjectState>()(
         activeProjectId: s.activeProjectId,
       }),
       skipHydration: true,
-    }
-  )
+    },
+  ),
 );

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
  * Used to defer heavy work (API calls, mermaid) until panels are actually needed.
  */
 export function useWhenVisible<T extends HTMLElement = HTMLElement>(
-  rootMargin = '240px 0px'
+  rootMargin = '240px 0px',
 ): [RefObject<T>, boolean] {
   const ref = useRef<T>(null);
   const [visible, setVisible] = useState(false);
@@ -24,7 +24,7 @@ export function useWhenVisible<T extends HTMLElement = HTMLElement>(
           observer.disconnect();
         }
       },
-      { rootMargin, threshold: 0 }
+      { rootMargin, threshold: 0 },
     );
 
     observer.observe(el);

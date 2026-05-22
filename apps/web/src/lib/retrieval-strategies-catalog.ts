@@ -46,7 +46,7 @@ export function getRetrievalStrategyMeta(id: RetrievalStrategy): RetrievalStrate
  */
 export function retrievalDefaultsFromCatalog(
   strategy: RetrievalStrategy,
-  opts?: { fallbackLlmModel?: string }
+  opts?: { fallbackLlmModel?: string },
 ): Partial<RetrievalConfig> {
   const meta = getRetrievalStrategyMeta(strategy);
   const fallbackLlm = opts?.fallbackLlmModel ?? 'gpt-4o-mini';
@@ -81,7 +81,9 @@ export function retrievalDefaultsFromCatalog(
       typeof d.fetchK === 'number' && Number.isFinite(d.fetchK) ? Math.round(d.fetchK) : 20;
     const fetchK = Math.min(200, Math.max(5, rawFetch));
     const rawLambda =
-      typeof d.lambdaMult === 'number' && Number.isFinite(d.lambdaMult) ? Number(d.lambdaMult) : 0.5;
+      typeof d.lambdaMult === 'number' && Number.isFinite(d.lambdaMult)
+        ? Number(d.lambdaMult)
+        : 0.5;
     const lambdaMult = Math.min(1, Math.max(0, rawLambda));
     out.mmrFetchK = fetchK;
     out.mmrLambdaMult = lambdaMult;
@@ -101,7 +103,9 @@ export function retrievalDefaultsFromCatalog(
     ]);
     const ensembleStrategies = rawList
       .map((x) => (String(x) === 'bm25' ? 'hybrid' : String(x)))
-      .filter((x): x is EnsembleMemberStrategy => allowed.has(x as EnsembleMemberStrategy)) as EnsembleMemberStrategy[];
+      .filter((x): x is EnsembleMemberStrategy =>
+        allowed.has(x as EnsembleMemberStrategy),
+      ) as EnsembleMemberStrategy[];
     out.ensembleStrategies =
       ensembleStrategies.length > 0 ? ensembleStrategies : ['similarity', 'hybrid'];
     const rawRrf =
@@ -133,7 +137,9 @@ export function retrievalDefaultsFromCatalog(
 
   if (strategy === 'multi-query') {
     const rawN =
-      typeof d.numQueries === 'number' && Number.isFinite(d.numQueries) ? Math.round(d.numQueries) : 3;
+      typeof d.numQueries === 'number' && Number.isFinite(d.numQueries)
+        ? Math.round(d.numQueries)
+        : 3;
     const numVariants = Math.min(10, Math.max(2, rawN));
     out.multiQueryConfig = {
       numVariants,

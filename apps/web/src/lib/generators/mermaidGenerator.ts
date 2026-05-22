@@ -1,7 +1,10 @@
 import { designerStageIndex, type DesignerStageId } from '@/lib/constants';
 import { getEnabledIngestionSourceTypes } from '@/lib/data-ingestion-sources';
 import { hitlHighlightBullet, hitlPlacementMermaidSubtitle } from '@/lib/hitl-summary';
-import { guardrailPolicyMermaidSubtitle, guardrailsHighlightBullet } from '@/lib/guardrails-summary';
+import {
+  guardrailPolicyMermaidSubtitle,
+  guardrailsHighlightBullet,
+} from '@/lib/guardrails-summary';
 import type { DataIngestionConfig, GuardrailsConfig, PipelineStages } from '@/types/pipeline';
 
 function stageReached(maxVisitedStageIndex: number, id: DesignerStageId): boolean {
@@ -31,7 +34,10 @@ function ingestionSourcesMermaidLabel(di: DataIngestionConfig): string {
  * Renders a minimal flowchart when the user has not yet advanced past the start (-1).
  */
 function emptyDiagram(): string {
-  return ['flowchart LR', '  EMPTY["Start designing — graph blocks appear as you complete each stage."]'].join('\n');
+  return [
+    'flowchart LR',
+    '  EMPTY["Start designing — graph blocks appear as you complete each stage."]',
+  ].join('\n');
 }
 
 /**
@@ -44,7 +50,7 @@ export function generateMermaidDiagram(
   stages: PipelineStages,
   cloudProvider: string,
   maxVisitedStageIndex: number = FULL_DIAGRAM,
-  guardrails?: GuardrailsConfig | null
+  guardrails?: GuardrailsConfig | null,
 ): string {
   if (maxVisitedStageIndex < 0) {
     return emptyDiagram();
@@ -65,7 +71,8 @@ export function generateMermaidDiagram(
     vectorstore: stageReached(maxVisitedStageIndex, 'vectorstore'),
     query: stageReached(maxVisitedStageIndex, 'queryTransform'),
     queryProcessing:
-      stageReached(maxVisitedStageIndex, 'queryTransform') && Boolean(stages.queryProcessing?.enabled),
+      stageReached(maxVisitedStageIndex, 'queryTransform') &&
+      Boolean(stages.queryProcessing?.enabled),
     contextCompression:
       stageReached(maxVisitedStageIndex, 'contextCompression') &&
       Boolean(stages.contextCompression?.enabled && stages.contextCompression.mode !== 'none'),
@@ -76,13 +83,26 @@ export function generateMermaidDiagram(
     memory:
       stageReached(maxVisitedStageIndex, 'memory') &&
       Boolean(stages.memory && stages.memory.type !== 'none'),
-    evaluation: stageReached(maxVisitedStageIndex, 'evaluation') && Boolean(stages.evaluation?.enabled),
+    evaluation:
+      stageReached(maxVisitedStageIndex, 'evaluation') && Boolean(stages.evaluation?.enabled),
     guardrails: stageReached(maxVisitedStageIndex, 'guardrails'),
     hitl: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn,
-    hitlPreIng: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.preIngestionValidation),
-    hitlRetrieval: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.retrievalTime),
-    hitlGeneration: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.generationTime),
-    hitlFeedback: stageReached(maxVisitedStageIndex, 'hitl') && hitlOn && Boolean(hitl?.placement.postResponseFeedback),
+    hitlPreIng:
+      stageReached(maxVisitedStageIndex, 'hitl') &&
+      hitlOn &&
+      Boolean(hitl?.placement.preIngestionValidation),
+    hitlRetrieval:
+      stageReached(maxVisitedStageIndex, 'hitl') &&
+      hitlOn &&
+      Boolean(hitl?.placement.retrievalTime),
+    hitlGeneration:
+      stageReached(maxVisitedStageIndex, 'hitl') &&
+      hitlOn &&
+      Boolean(hitl?.placement.generationTime),
+    hitlFeedback:
+      stageReached(maxVisitedStageIndex, 'hitl') &&
+      hitlOn &&
+      Boolean(hitl?.placement.postResponseFeedback),
   };
 
   lines.push('flowchart LR');
@@ -282,7 +302,7 @@ export function generateMermaidDiagram(
  */
 export function generatePipelineSummary(
   stages: PipelineStages,
-  maxVisitedStageIndex: number = FULL_DIAGRAM
+  maxVisitedStageIndex: number = FULL_DIAGRAM,
 ): string {
   if (!stageReached(maxVisitedStageIndex, 'chunking')) {
     return 'Configure chunking and later stages to see a pipeline summary here.';
@@ -314,7 +334,7 @@ export function generatePipelineHighlights(
   stages: PipelineStages,
   cloudProvider: string,
   maxVisitedStageIndex: number = FULL_DIAGRAM,
-  guardrails?: GuardrailsConfig | null
+  guardrails?: GuardrailsConfig | null,
 ): string[] {
   const cloud = PROVIDER_LABEL[cloudProvider] ?? cloudProvider;
   const lines: string[] = [];
@@ -331,7 +351,7 @@ export function generatePipelineHighlights(
 
   if (stageReached(maxVisitedStageIndex, 'chunking')) {
     lines.push(
-      `Chunking: ${stages.chunking.strategy} · ${stages.chunking.chunkSize} tok / ${stages.chunking.chunkOverlap} overlap`
+      `Chunking: ${stages.chunking.strategy} · ${stages.chunking.chunkSize} tok / ${stages.chunking.chunkOverlap} overlap`,
     );
   }
   if (stageReached(maxVisitedStageIndex, 'embedding')) {
@@ -351,14 +371,14 @@ export function generatePipelineHighlights(
     lines.push(
       cc?.enabled && cc.mode !== 'none'
         ? `Context compression: ${cc.mode}`
-        : 'Context compression: off'
+        : 'Context compression: off',
     );
   }
   if (stageReached(maxVisitedStageIndex, 'reranking')) {
     lines.push(
       stages.reranking?.enabled
         ? `Reranking: on${stages.reranking.model ? ` · ${stages.reranking.model}` : ''}`
-        : 'Reranking: off'
+        : 'Reranking: off',
     );
   }
   if (stageReached(maxVisitedStageIndex, 'generation')) {
@@ -368,7 +388,7 @@ export function generatePipelineHighlights(
     lines.push(
       stages.routing?.enabled
         ? `Routing: on · ${stages.routing.rules?.length ?? 0} rule(s)`
-        : 'Routing: off'
+        : 'Routing: off',
     );
   }
   if (stageReached(maxVisitedStageIndex, 'memory')) {
@@ -378,7 +398,7 @@ export function generatePipelineHighlights(
     lines.push(
       stages.evaluation?.enabled
         ? `Evaluation: on · ${stages.evaluation.metrics?.length ?? 0} metric(s)`
-        : 'Evaluation: off'
+        : 'Evaluation: off',
     );
   }
   if (stageReached(maxVisitedStageIndex, 'guardrails')) {

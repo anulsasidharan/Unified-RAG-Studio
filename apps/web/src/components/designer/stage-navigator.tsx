@@ -165,7 +165,7 @@ export function StageNavigator() {
     >
       <div className="hidden px-2 lg:block">
         <div className="flex items-center gap-2">
-          <div className="h-5 w-1 rounded-full bg-gradient-to-b from-primary-600 to-indigo-600" />
+          <div className="from-primary-600 h-5 w-1 rounded-full bg-gradient-to-b to-indigo-600" />
           <p className="font-display text-xs font-bold uppercase tracking-widest text-neutral-700 dark:text-neutral-300">
             Pipeline builder
           </p>
@@ -181,7 +181,7 @@ export function StageNavigator() {
         </label>
         <select
           id="designer-stage-select"
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+          className="border-input bg-background ring-offset-background focus-visible:ring-ring w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
           value={normalized}
           onChange={(e) => {
             const href = e.target.value;
@@ -199,35 +199,41 @@ export function StageNavigator() {
       <ol className="hidden max-h-none flex-1 list-none space-y-0.5 overflow-y-auto lg:block">
         {DESIGNER_STAGES.map((stage, idx) => {
           const isActive = stage.path === normalized;
-          const isPast =
-            DESIGNER_STAGES.findIndex((x) => x.path === normalized) > idx;
+          const isPast = DESIGNER_STAGES.findIndex((x) => x.path === normalized) > idx;
 
           return (
             <li key={stage.id} className="relative">
               {isActive && (
-                <span className="absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-primary-600 to-indigo-600" aria-hidden />
+                <span
+                  className="from-primary-600 absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b to-indigo-600"
+                  aria-hidden
+                />
               )}
               <Link
                 href={stage.path}
                 className={cn(
                   'group flex items-start gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-all',
                   isActive &&
-                    'bg-primary-50 font-semibold text-primary-800 dark:bg-primary-950/40 dark:text-primary-200',
-                  !isActive && isPast && 'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300',
-                  !isActive && !isPast && 'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/60 dark:hover:text-neutral-200'
+                    'bg-primary-50 text-primary-800 dark:bg-primary-950/40 dark:text-primary-200 font-semibold',
+                  !isActive &&
+                    isPast &&
+                    'text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300',
+                  !isActive &&
+                    !isPast &&
+                    'text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800/60 dark:hover:text-neutral-200',
                 )}
               >
                 <span
                   className={cn(
                     'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-bold',
                     isActive &&
-                      'bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-sm shadow-primary-200',
+                      'from-primary-600 shadow-primary-200 bg-gradient-to-br to-indigo-600 text-white shadow-sm',
                     !isActive &&
                       isPast &&
                       'bg-emerald-500 text-white shadow-sm shadow-emerald-200 dark:shadow-emerald-900',
                     !isActive &&
                       !isPast &&
-                      'border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-500'
+                      'border border-neutral-200 bg-neutral-50 text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-500',
                   )}
                   aria-hidden
                 >
@@ -236,75 +242,93 @@ export function StageNavigator() {
                 <span className="min-w-0 flex-1">
                   <span className="block leading-snug">{stage.label}</span>
                   {stage.id === 'cloud' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {String(draft.cloudProvider).toUpperCase()}
                     </span>
                   ) : stage.id === 'ingestion' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {ingestionSourceHint(draft.stages.dataIngestion)}
                     </span>
                   ) : stage.id === 'chunking' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {chunkingHint(
                         draft.stages.chunking?.strategy,
                         draft.stages.chunking?.chunkSize,
-                        draft.stages.chunking?.chunkOverlap
+                        draft.stages.chunking?.chunkOverlap,
                       )}
                     </span>
                   ) : stage.id === 'embedding' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {embeddingHint(draft.stages.embedding?.model, draft.stages.embedding?.dimensions)}
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
+                      {embeddingHint(
+                        draft.stages.embedding?.model,
+                        draft.stages.embedding?.dimensions,
+                      )}
                     </span>
                   ) : stage.id === 'vectorstore' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {vectorStoreHint(draft.stages.vectorStore?.provider, draft.stages.vectorStore?.indexName)}
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
+                      {vectorStoreHint(
+                        draft.stages.vectorStore?.provider,
+                        draft.stages.vectorStore?.indexName,
+                      )}
                     </span>
                   ) : stage.id === 'queryTransform' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {queryTransformHint(draft.stages.queryProcessing)}
                     </span>
                   ) : stage.id === 'retrieval' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {retrievalHint(draft.stages.retrieval?.strategy, draft.stages.retrieval?.topK)}
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
+                      {retrievalHint(
+                        draft.stages.retrieval?.strategy,
+                        draft.stages.retrieval?.topK,
+                      )}
                     </span>
                   ) : stage.id === 'contextCompression' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {contextCompressionHint(draft.stages.contextCompression)}
                     </span>
                   ) : stage.id === 'reranking' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {rerankingHint(draft.stages.reranking?.enabled, draft.stages.reranking?.model)}
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
+                      {rerankingHint(
+                        draft.stages.reranking?.enabled,
+                        draft.stages.reranking?.model,
+                      )}
                     </span>
                   ) : stage.id === 'generation' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {generationHint(
                         draft.stages.generation?.model,
                         draft.stages.generation?.temperature,
-                        draft.stages.generation?.maxTokens
+                        draft.stages.generation?.maxTokens,
                       )}
                     </span>
                   ) : stage.id === 'routing' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {routingHint(draft.stages.routing?.enabled, draft.stages.routing?.rules?.length)}
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
+                      {routingHint(
+                        draft.stages.routing?.enabled,
+                        draft.stages.routing?.rules?.length,
+                      )}
                     </span>
                   ) : stage.id === 'memory' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {memoryHint(draft.stages.memory?.type)}
                     </span>
                   ) : stage.id === 'evaluation' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
-                      {evaluationHint(draft.stages.evaluation?.enabled, draft.stages.evaluation?.metrics?.length)}
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
+                      {evaluationHint(
+                        draft.stages.evaluation?.enabled,
+                        draft.stages.evaluation?.metrics?.length,
+                      )}
                     </span>
                   ) : stage.id === 'observability' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {observabilityHint(draft.observability ?? undefined)}
                     </span>
                   ) : stage.id === 'guardrails' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {guardrailsNavigatorHint(draft.guardrails)}
                     </span>
                   ) : stage.id === 'hitl' ? (
-                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                    <span className="text-muted-foreground mt-0.5 block text-xs">
                       {hitlNavigatorHint(draft.stages.humanInTheLoop)}
                     </span>
                   ) : null}

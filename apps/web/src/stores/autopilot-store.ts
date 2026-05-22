@@ -166,6 +166,6 @@ export const useAutopilotStore = create<AutopilotState>()(
         builds: s.builds,
       }),
       skipHydration: true,
-    }
-  )
+    },
+  ),
 );

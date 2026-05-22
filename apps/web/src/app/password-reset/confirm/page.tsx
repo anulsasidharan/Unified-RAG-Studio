@@ -59,29 +59,35 @@ function PasswordResetConfirmContent() {
         <div className="w-full max-w-md">
           {res ? (
             <div className="flex flex-col items-center gap-5 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success-100">
-                <CheckCircle2 className="h-8 w-8 text-success-600" />
+              <div className="bg-success-100 flex h-16 w-16 items-center justify-center rounded-full">
+                <CheckCircle2 className="text-success-600 h-8 w-8" />
               </div>
               <div>
-                <h1 className="font-display text-2xl font-bold text-neutral-900">Password reset!</h1>
+                <h1 className="font-display text-2xl font-bold text-neutral-900">
+                  Password reset!
+                </h1>
                 <p className="mt-2 text-sm text-neutral-500">{res.message}</p>
               </div>
               <button
                 type="button"
                 onClick={() => router.replace('/login')}
-                className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:from-primary-700 hover:to-indigo-700 active:scale-[0.98]"
+                className="from-primary-600 hover:from-primary-700 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 active:scale-[0.98]"
               >
                 Back to sign in
               </button>
             </div>
           ) : (
             <>
-              <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-                <KeyRound className="h-6 w-6 text-primary-600" />
+              <div className="bg-primary-100 mb-2 flex h-12 w-12 items-center justify-center rounded-xl">
+                <KeyRound className="text-primary-600 h-6 w-6" />
               </div>
               <div className="mb-8 mt-4">
-                <h1 className="font-display text-3xl font-bold text-neutral-900">Set new password</h1>
-                <p className="mt-2 text-sm text-neutral-500">Use the token you received to reset your password.</p>
+                <h1 className="font-display text-3xl font-bold text-neutral-900">
+                  Set new password
+                </h1>
+                <p className="mt-2 text-sm text-neutral-500">
+                  Use the token you received to reset your password.
+                </p>
               </div>
 
               <form className="space-y-5" onSubmit={onSubmit}>
@@ -94,14 +100,17 @@ function PasswordResetConfirmContent() {
                     id="token"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-xs text-neutral-700 outline-none transition-all hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                    className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 font-mono text-xs text-neutral-700 outline-none transition-all hover:border-neutral-300 focus:bg-white focus:ring-2"
                     placeholder="Paste reset token here"
                   />
                 </div>
 
                 {/* New password */}
                 <div className="space-y-1.5">
-                  <label htmlFor="new-password" className="block text-sm font-medium text-neutral-700">
+                  <label
+                    htmlFor="new-password"
+                    className="block text-sm font-medium text-neutral-700"
+                  >
                     New password
                   </label>
                   <div className="relative">
@@ -113,7 +122,7 @@ function PasswordResetConfirmContent() {
                       autoComplete="new-password"
                       minLength={6}
                       required
-                      className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                      className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                       placeholder="At least 6 characters"
                     />
                     <button
@@ -128,7 +137,7 @@ function PasswordResetConfirmContent() {
                 </div>
 
                 {error ? (
-                  <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+                  <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-3 text-sm">
                     {error}
                   </div>
                 ) : null}
@@ -136,14 +145,17 @@ function PasswordResetConfirmContent() {
                 <button
                   type="submit"
                   disabled={loading || !token.trim() || !newPassword.trim()}
-                  className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
+                  className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
                 >
                   {loading ? 'Resetting…' : 'Reset password'}
                 </button>
               </form>
 
               <p className="mt-6 text-center text-sm text-neutral-500">
-                <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700">
+                <Link
+                  href="/login"
+                  className="text-primary-600 hover:text-primary-700 font-semibold"
+                >
                   ← Back to sign in
                 </Link>
               </p>

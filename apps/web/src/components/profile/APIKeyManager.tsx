@@ -27,7 +27,9 @@ export function APIKeyManager() {
     }
   };
 
-  useEffect(() => { void fetchKeys(); }, []);
+  useEffect(() => {
+    void fetchKeys();
+  }, []);
 
   const handleCreate = async () => {
     if (!newKeyName.trim()) return;
@@ -72,7 +74,7 @@ export function APIKeyManager() {
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Key className="h-5 w-5 text-primary-500" />
+          <Key className="text-primary-500 h-5 w-5" />
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">API Keys</h3>
         </div>
         <button
@@ -90,7 +92,7 @@ export function APIKeyManager() {
             Copy your key now — it won&apos;t be shown again.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 overflow-auto rounded-lg bg-amber-100 px-3 py-2 text-xs font-mono text-amber-900">
+            <code className="flex-1 overflow-auto rounded-lg bg-amber-100 px-3 py-2 font-mono text-xs text-amber-900">
               {newKeyValue}
             </code>
             <button
@@ -116,12 +118,12 @@ export function APIKeyManager() {
             onChange={(e) => setNewKeyName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
             placeholder="Key name (e.g. Production)"
-            className="flex-1 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+            className="focus:border-primary-500 focus:ring-primary-500/20 flex-1 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none transition-all focus:bg-white focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
           />
           <button
             onClick={handleCreate}
             disabled={creating || !newKeyName.trim()}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="from-primary-600 flex items-center gap-2 rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Create
@@ -130,7 +132,7 @@ export function APIKeyManager() {
       ) : null}
 
       {error ? (
-        <div className="mb-4 rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+        <div className="border-destructive/20 bg-destructive/8 text-destructive mb-4 rounded-xl border px-4 py-3 text-sm">
           {error}
         </div>
       ) : null}
@@ -159,9 +161,7 @@ export function APIKeyManager() {
                   {k.last_used
                     ? ` · Last used ${new Date(k.last_used).toLocaleDateString()}`
                     : ' · Never used'}
-                  {k.expires_at
-                    ? ` · Expires ${new Date(k.expires_at).toLocaleDateString()}`
-                    : ''}
+                  {k.expires_at ? ` · Expires ${new Date(k.expires_at).toLocaleDateString()}` : ''}
                 </p>
               </div>
               <button

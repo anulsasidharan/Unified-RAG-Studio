@@ -3,29 +3,29 @@ import { ArrowRight } from 'lucide-react';
 
 export function CTA() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-primary-700 via-indigo-700 to-purple-700 py-24">
+    <section className="from-primary-700 relative overflow-hidden bg-gradient-to-br via-indigo-700 to-purple-700 py-24">
       {/* Grid overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-line-grid opacity-20" />
+      <div className="bg-line-grid pointer-events-none absolute inset-0 opacity-20" />
 
       {/* Decorative blobs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-24 -top-24 h-72 w-72 rounded-full bg-white/8 blur-3xl" />
+        <div className="bg-white/8 absolute -left-24 -top-24 h-72 w-72 rounded-full blur-3xl" />
         <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-purple-400/15 blur-3xl" />
       </div>
 
       <div className="relative mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-        <h2 className="mb-4 font-display text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
+        <h2 className="font-display mb-4 text-3xl font-bold text-white sm:text-4xl lg:text-5xl">
           Ready to Build Your First RAG Pipeline?
         </h2>
         <p className="mx-auto mb-10 max-w-2xl text-lg text-white/70">
-          Start with Designer Mode to learn RAG hands-on, or let Autopilot build and
-          optimize a production-ready system in minutes.
+          Start with Designer Mode to learn RAG hands-on, or let Autopilot build and optimize a
+          production-ready system in minutes.
         </p>
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
             href="/register"
-            className="group inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold text-primary-700 shadow-lg shadow-black/20 transition-all hover:bg-neutral-50 hover:shadow-xl active:scale-[0.98]"
+            className="text-primary-700 group inline-flex items-center gap-2 rounded-xl bg-white px-8 py-4 text-base font-semibold shadow-lg shadow-black/20 transition-all hover:bg-neutral-50 hover:shadow-xl active:scale-[0.98]"
           >
             Sign up free
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />

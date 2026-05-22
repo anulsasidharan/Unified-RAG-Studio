@@ -18,7 +18,7 @@ export default function GlobalError({
 
   return (
     <main className="flex min-h-[calc(100vh-8rem)] flex-col items-center justify-center px-4 py-16">
-      <p className="text-sm font-semibold uppercase tracking-wide text-danger-600">Error</p>
+      <p className="text-danger-600 text-sm font-semibold uppercase tracking-wide">Error</p>
       <h1 className="mt-2 text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
         Something went wrong
       </h1>
@@ -26,13 +26,13 @@ export default function GlobalError({
         An unexpected error occurred. You can try again or go back to a safe page.
       </p>
       {error.digest ? (
-        <p className="mt-2 font-mono text-xs text-muted-foreground">Ref: {error.digest}</p>
+        <p className="text-muted-foreground mt-2 font-mono text-xs">Ref: {error.digest}</p>
       ) : null}
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <button
           type="button"
           onClick={() => reset()}
-          className="inline-flex rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-700"
+          className="bg-primary-600 hover:bg-primary-700 inline-flex rounded-lg px-5 py-2.5 text-sm font-semibold text-white shadow-sm"
         >
           Try again
         </button>

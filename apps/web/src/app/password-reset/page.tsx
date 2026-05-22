@@ -22,7 +22,9 @@ export default function PasswordResetRequestPage() {
     setError(null);
     setLoading(true);
     try {
-      const out = await apiClient.post<PasswordResetResponse>('/api/auth/password-reset/request', { email });
+      const out = await apiClient.post<PasswordResetResponse>('/api/auth/password-reset/request', {
+        email,
+      });
       setRes(out);
     } catch (err) {
       const msg =
@@ -47,8 +49,8 @@ export default function PasswordResetRequestPage() {
 
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-12 lg:px-12 xl:px-20">
         <div className="w-full max-w-md">
-          <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100">
-            <Mail className="h-6 w-6 text-primary-600" />
+          <div className="bg-primary-100 mb-2 flex h-12 w-12 items-center justify-center rounded-xl">
+            <Mail className="text-primary-600 h-6 w-6" />
           </div>
           <div className="mb-8 mt-4">
             <h1 className="font-display text-3xl font-bold text-neutral-900">Reset password</h1>
@@ -69,13 +71,13 @@ export default function PasswordResetRequestPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                 placeholder="you@company.com"
               />
             </div>
 
             {error ? (
-              <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+              <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-3 text-sm">
                 {error}
               </div>
             ) : null}
@@ -83,7 +85,7 @@ export default function PasswordResetRequestPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
+              className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
             >
               {loading ? 'Sending…' : 'Send reset link'}
             </button>
@@ -102,8 +104,10 @@ export default function PasswordResetRequestPage() {
                   </code>
                   <button
                     type="button"
-                    onClick={() => router.push(`/password-reset/confirm?token=${encodeURIComponent(token)}`)}
-                    className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:from-primary-700 hover:to-indigo-700 active:scale-[0.98]"
+                    onClick={() =>
+                      router.push(`/password-reset/confirm?token=${encodeURIComponent(token)}`)
+                    }
+                    className="from-primary-600 hover:from-primary-700 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:to-indigo-700 active:scale-[0.98]"
                   >
                     Reset using this token
                   </button>
@@ -114,7 +118,7 @@ export default function PasswordResetRequestPage() {
 
           <p className="mt-6 text-center text-sm text-neutral-500">
             Remember your password?{' '}
-            <Link href="/login" className="font-semibold text-primary-600 hover:text-primary-700">
+            <Link href="/login" className="text-primary-600 hover:text-primary-700 font-semibold">
               Sign in
             </Link>
           </p>

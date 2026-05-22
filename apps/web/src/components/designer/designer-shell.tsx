@@ -33,10 +33,7 @@ export function DesignerShell({
     let lastDiagramIdx = useDesignerStore.getState().diagramMaxVisitedStageIndex;
 
     const unsub = useDesignerStore.subscribe((state) => {
-      if (
-        state.draft === lastDraft &&
-        state.diagramMaxVisitedStageIndex === lastDiagramIdx
-      ) {
+      if (state.draft === lastDraft && state.diagramMaxVisitedStageIndex === lastDiagramIdx) {
         return;
       }
       lastDraft = state.draft;
@@ -69,13 +66,13 @@ export function DesignerShell({
   }, [pathname, setActiveStage, expandDiagramReach]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-background lg:min-h-[calc(100vh-3.5rem)]">
+    <div className="bg-background flex min-h-0 flex-1 flex-col lg:min-h-[calc(100vh-3.5rem)]">
       {/* Stage nav + builder share the upper pane; graph preview is full-width below */}
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row lg:min-h-0">
-        <div className="flex min-h-0 shrink-0 flex-col lg:h-full lg:w-[min(280px,calc((100vw-14rem)*0.28))] lg:overflow-y-auto lg:border-r lg:border-neutral-200 lg:dark:border-neutral-800 xl:w-72">
+      <div className="flex min-h-0 flex-1 flex-col lg:min-h-0 lg:flex-row">
+        <div className="flex min-h-0 shrink-0 flex-col lg:h-full lg:w-[min(280px,calc((100vw-14rem)*0.28))] lg:overflow-y-auto lg:border-r lg:border-neutral-200 xl:w-72 lg:dark:border-neutral-800">
           <StageNavigator />
         </div>
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col border-neutral-200 dark:border-neutral-800 lg:border-l">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col border-neutral-200 lg:border-l dark:border-neutral-800">
           <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
         </div>
       </div>

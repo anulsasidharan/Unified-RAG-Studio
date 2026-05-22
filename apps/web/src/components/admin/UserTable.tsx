@@ -2,11 +2,24 @@
 
 import { useState } from 'react';
 import {
-  Search, ChevronLeft, ChevronRight, Trash2, UserCheck, UserX, Loader2, Plus, Shield,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  UserCheck,
+  UserX,
+  Loader2,
+  Plus,
+  Shield,
 } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
-import type { AdminUser, AdminUsersListResponse, CreateUserRequest, UpdateUserRequest } from '@/types/user-management';
+import type {
+  AdminUser,
+  AdminUsersListResponse,
+  CreateUserRequest,
+  UpdateUserRequest,
+} from '@/types/user-management';
 
 type Props = {
   data: AdminUsersListResponse;
@@ -19,32 +32,37 @@ type Props = {
 
 function RoleBadge({ role }: { role: string }) {
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-      role === 'admin'
-        ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
-        : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
-    }`}>
+    <span
+      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+        role === 'admin'
+          ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/30 dark:text-rose-300'
+          : 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400'
+      }`}
+    >
       {role}
     </span>
   );
 }
 
 function TierBadge({ tier }: { tier: string }) {
-  const cls = {
-    free: 'bg-neutral-100 text-neutral-600',
-    pro: 'bg-primary-50 text-primary-700',
-    enterprise: 'bg-amber-50 text-amber-700',
-  }[tier] ?? 'bg-neutral-100 text-neutral-600';
+  const cls =
+    {
+      free: 'bg-neutral-100 text-neutral-600',
+      pro: 'bg-primary-50 text-primary-700',
+      enterprise: 'bg-amber-50 text-amber-700',
+    }[tier] ?? 'bg-neutral-100 text-neutral-600';
   return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}>
-      {tier}
-    </span>
+    <span className={`rounded-full px-2 py-0.5 text-xs font-medium capitalize ${cls}`}>{tier}</span>
   );
 }
 
 function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
   const [form, setForm] = useState<CreateUserRequest>({
-    email: '', name: '', password: '', role: 'user', subscription_tier: 'free',
+    email: '',
+    name: '',
+    password: '',
+    role: 'user',
+    subscription_tier: 'free',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,14 +95,14 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
               placeholder={field.charAt(0).toUpperCase() + field.slice(1)}
               value={form[field]}
               onChange={(e) => setForm((f) => ({ ...f, [field]: e.target.value }))}
-              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             />
           ))}
           <div className="grid grid-cols-2 gap-3">
             <select
               value={form.role}
               onChange={(e) => setForm((f) => ({ ...f, role: e.target.value }))}
-              className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-primary-500 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             >
               <option value="user">User</option>
               <option value="admin">Admin</option>
@@ -92,7 +110,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
             <select
               value={form.subscription_tier}
               onChange={(e) => setForm((f) => ({ ...f, subscription_tier: e.target.value }))}
-              className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-primary-500 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             >
               <option value="free">Free</option>
               <option value="pro">Pro</option>
@@ -100,7 +118,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
             </select>
           </div>
           {error ? (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-2.5 text-sm text-destructive">
+            <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-2.5 text-sm">
               {error}
             </div>
           ) : null}
@@ -109,7 +127,7 @@ function CreateUserModal({ onClose, onCreated }: { onClose: () => void; onCreate
           <button
             onClick={handleCreate}
             disabled={saving || !form.email || !form.name || !form.password}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="from-primary-600 flex items-center gap-2 rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             Create
@@ -182,20 +200,23 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
 
       <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
         <div className="flex items-center justify-between border-b border-neutral-100 px-5 py-4 dark:border-neutral-800">
-          <div className="relative flex-1 max-w-xs">
+          <div className="relative max-w-xs flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
             <input
               value={search}
-              onChange={(e) => { onSearchChange(e.target.value); onPageChange(1); }}
+              onChange={(e) => {
+                onSearchChange(e.target.value);
+                onPageChange(1);
+              }}
               placeholder="Search users…"
-              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 py-2 pl-9 pr-4 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 py-2 pl-9 pr-4 text-sm outline-none focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             />
           </div>
           <div className="ml-3 flex items-center gap-2">
             <span className="text-sm text-neutral-500">{data.total} users</span>
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white"
+              className="from-primary-600 flex items-center gap-1.5 rounded-xl bg-gradient-to-r to-indigo-600 px-3 py-2 text-sm font-semibold text-white"
             >
               <Plus className="h-4 w-4" />
               Add user
@@ -208,7 +229,10 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
             <thead>
               <tr className="border-b border-neutral-100 text-left dark:border-neutral-800">
                 {['Name', 'Access', 'Plan', 'Status', 'Last Login', 'Actions'].map((h) => (
-                  <th key={h} className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-400">
+                  <th
+                    key={h}
+                    className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-400"
+                  >
                     {h}
                   </th>
                 ))}
@@ -216,13 +240,12 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
             </thead>
             <tbody className="divide-y divide-neutral-50 dark:divide-neutral-800/50">
               {data.users.map((user) => (
-                <tr
-                  key={user.id}
-                  className="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30"
-                >
+                <tr key={user.id} className="hover:bg-neutral-50/70 dark:hover:bg-neutral-800/30">
                   <td className="px-5 py-3">
                     <div>
-                      <p className="font-medium text-neutral-800 dark:text-neutral-100">{user.name}</p>
+                      <p className="font-medium text-neutral-800 dark:text-neutral-100">
+                        {user.name}
+                      </p>
                       <p className="text-xs text-neutral-400">{user.email}</p>
                     </div>
                   </td>
@@ -258,13 +281,16 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
                               const v = e.target.value;
                               if (v === 'admin' || v === 'user') void handleRoleChange(user, v);
                             }}
-                            className="w-full min-w-[120px] max-w-[160px] rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs outline-none focus:border-primary-500 dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
+                            className="focus:border-primary-500 w-full min-w-[120px] max-w-[160px] rounded-lg border border-neutral-200 bg-neutral-50 px-2 py-1.5 text-xs outline-none dark:border-neutral-600 dark:bg-neutral-800 dark:text-neutral-100"
                           >
                             <option value="user">Standard user</option>
                             <option value="admin">Admin</option>
                           </select>
                           {roleSaving === user.id ? (
-                            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-400" aria-hidden />
+                            <Loader2
+                              className="h-3.5 w-3.5 shrink-0 animate-spin text-neutral-400"
+                              aria-hidden
+                            />
                           ) : null}
                         </div>
                       </div>
@@ -274,18 +300,16 @@ export function UserTable({ data, onRefresh, search, onSearchChange, page, onPag
                     <TierBadge tier={user.subscription_tier} />
                   </td>
                   <td className="px-5 py-3">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      user.is_active
-                        ? 'bg-green-50 text-green-700'
-                        : 'bg-red-50 text-red-700'
-                    }`}>
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                        user.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+                      }`}
+                    >
                       {user.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
                   <td className="px-5 py-3 text-xs text-neutral-400">
-                    {user.last_login
-                      ? new Date(user.last_login).toLocaleDateString()
-                      : '—'}
+                    {user.last_login ? new Date(user.last_login).toLocaleDateString() : '—'}
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-1">
