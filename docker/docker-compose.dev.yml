@@ -8,7 +8,7 @@
 #   - Dev environment flags set
 #   - Reduced health-check intervals for faster startup feedback
 
-name: rag-studio
+name: unified-rag-studio
 
 services:
 

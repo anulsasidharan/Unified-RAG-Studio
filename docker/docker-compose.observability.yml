@@ -1,6 +1,6 @@
 # RAG Studio — Optional Prometheus + Grafana (Phase 11)
 #
-# Compose merge (same ``name: rag-studio`` as base files):
+# Compose merge (same ``name: unified-rag-studio`` as base files):
 #   docker compose \\
 #     -f docker/docker-compose.yml \\
 #     -f docker/docker-compose.build.yml \\
@@ -12,7 +12,7 @@
 #   - Prometheus http://localhost:9090 (or ``$PROMETHEUS_PORT``)
 #   - Grafana http://localhost:3100 (or ``$GF_SERVER_HTTP_PORT``); default login admin / admin
 
-name: rag-studio
+name: unified-rag-studio
 
 services:
 

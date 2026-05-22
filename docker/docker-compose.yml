@@ -4,7 +4,7 @@
 #   Prod (GHCR/pull): docker compose -f docker/docker-compose.yml -f docker/docker-compose.prod.yml up -d
 #   Local images:       add -f docker/docker-compose.build.yml and --build when needed
 
-name: rag-studio
+name: unified-rag-studio
 
 x-logging: &default-logging
   driver: json-file

@@ -9,7 +9,7 @@
 #   - No dev bind-mounts
 #   - Infra stays off the host except where prod explicitly publishes a port below
 
-name: rag-studio
+name: unified-rag-studio
 
 services:
 
