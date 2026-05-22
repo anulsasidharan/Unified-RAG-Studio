@@ -41,9 +41,7 @@ def test_run_stage_emits_check_and_stage_metrics() -> None:
 
     delta_stage = _sum_samples(
         after, "rag_guardrail_stage_results", stage="input", outcome="allowed"
-    ) - _sum_samples(
-        before, "rag_guardrail_stage_results", stage="input", outcome="allowed"
-    )
+    ) - _sum_samples(before, "rag_guardrail_stage_results", stage="input", outcome="allowed")
     assert delta_stage >= 1.0
 
 
@@ -56,9 +54,7 @@ def test_run_stage_block_emits_blocked_stage_result() -> None:
 
     delta_blocked = _sum_samples(
         after, "rag_guardrail_stage_results", stage="input", outcome="blocked"
-    ) - _sum_samples(
-        before, "rag_guardrail_stage_results", stage="input", outcome="blocked"
-    )
+    ) - _sum_samples(before, "rag_guardrail_stage_results", stage="input", outcome="blocked")
     assert delta_blocked >= 1.0
 
 

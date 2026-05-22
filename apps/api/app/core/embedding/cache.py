@@ -79,6 +79,7 @@ class EmbeddingCache:
         self._redis_checked = True
         try:
             import redis
+
             from app.config import get_settings
 
             client = redis.from_url(get_settings().redis_url, decode_responses=False)
@@ -97,10 +98,10 @@ class EmbeddingCache:
         if r is not None:
             try:
                 raw = r.get(key)
-                if isinstance(raw, (bytes, bytearray)):
+                if isinstance(raw, bytes | bytearray):
                     return _unpack(bytes(raw))
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("redis_cache_get_error", error=str(exc))
 
         return self._memory.get(key)
 
@@ -114,8 +115,8 @@ class EmbeddingCache:
             try:
                 r.setex(key, self._ttl, packed)
                 return
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.debug("redis_cache_set_error", error=str(exc))
 
         self._memory[key] = embedding
 
@@ -144,7 +145,7 @@ class EmbeddingCache:
 
         if miss_texts:
             fresh = embedder.embed_documents(miss_texts, config)
-            for idx, text, embedding in zip(miss_indices, miss_texts, fresh):
+            for idx, text, embedding in zip(miss_indices, miss_texts, fresh, strict=False):
                 self.set(text, config, embedding)
                 results[idx] = embedding
 

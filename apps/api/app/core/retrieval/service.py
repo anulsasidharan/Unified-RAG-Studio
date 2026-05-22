@@ -10,6 +10,7 @@ from __future__ import annotations
 from langchain_core.documents import Document
 import structlog
 
+from app.core.context_compression import ContextCompressionRuntimeConfig, apply_context_compression
 from app.core.embedding import EmbeddingConfig, EmbeddingService
 from app.core.vectorstore import (
     ScoredDoc,
@@ -19,8 +20,6 @@ from app.core.vectorstore import (
 
 from .bm25 import BM25Index, tokenize
 from .fusion import mmr_order, reciprocal_rank_fusion_keys, weighted_dense_sparse
-from app.core.context_compression import ContextCompressionRuntimeConfig, apply_context_compression
-
 from .rerankers import CohereReranker, PassthroughReranker
 from .strategies import RerankingRuntimeConfig, RetrievalRuntimeConfig
 

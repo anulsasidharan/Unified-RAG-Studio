@@ -4,11 +4,11 @@
       "Bash(npm config *)",
       "PowerShell(docker network inspect *)",
       "PowerShell(docker compose *)",
-      "PowerShell(docker exec rag-studio-vector-db-1 *)",
-      "PowerShell(docker exec rag-studio-mlflow-1 *)",
-      "PowerShell(docker exec rag-studio-web-1 *)",
-      "PowerShell(docker exec rag-studio-api-1 *)",
-      "PowerShell(docker exec rag-studio-nginx-1 *)",
+      "PowerShell(docker exec unified-rag-studio-vector-db-1 *)",
+      "PowerShell(docker exec unified-rag-studio-mlflow-1 *)",
+      "PowerShell(docker exec unified-rag-studio-web-1 *)",
+      "PowerShell(docker exec unified-rag-studio-api-1 *)",
+      "PowerShell(docker exec unified-rag-studio-nginx-1 *)",
       "PowerShell($json = Get-Content 'E:\\\\EURON_AI_PRODUCT_ENG-2\\\\Unified_RAG_Studio\\\\data\\\\templates.json' -Raw | ConvertFrom-Json; $templates = if \\($json.templates\\) { $json.templates } else { $json }; $templates | Select-Object id, name, description | Format-Table -AutoSize -Wrap)"
     ]
   }

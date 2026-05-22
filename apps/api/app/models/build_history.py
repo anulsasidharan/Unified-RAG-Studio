@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
+import uuid
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, JSON, String, Text, Uuid
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -64,6 +64,4 @@ class AutopilotBuild(Base, TimestampMixin):
         back_populates="build",
     )
 
-    __table_args__ = (
-        Index("ix_autopilot_builds_user_id_id", "user_id", "id"),
-    )
+    __table_args__ = (Index("ix_autopilot_builds_user_id_id", "user_id", "id"),)

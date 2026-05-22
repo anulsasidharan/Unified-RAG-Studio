@@ -31,7 +31,7 @@ def expand_retrieval_queries(user_query: str, qp: dict[str, Any] | None) -> list
     if on("hyde", "hyde"):
         out.append(
             f"Hypothetical passage that would answer the question:\n"
-            f"The documentation discusses {q[:120]} including methodology, results, and implications."
+            f"The documentation discusses {q[:120]} including methodology, results, and implications."  # noqa: E501
         )
 
     if on("multi_query_expansion", "multiQueryExpansion"):

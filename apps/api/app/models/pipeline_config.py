@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import uuid
 from typing import TYPE_CHECKING
+import uuid
 
-from sqlalchemy import ForeignKey, Index, JSON, String, Text, Uuid
+from sqlalchemy import JSON, ForeignKey, Index, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -56,6 +56,4 @@ class PipelineConfig(Base, TimestampMixin):
         cascade="all, delete-orphan",
     )
 
-    __table_args__ = (
-        Index("ix_pipeline_configs_user_id_id", "user_id", "id"),
-    )
+    __table_args__ = (Index("ix_pipeline_configs_user_id_id", "user_id", "id"),)

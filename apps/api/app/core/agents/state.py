@@ -24,8 +24,10 @@ class AutopilotGraphState(TypedDict):
     """Canonical graph state passed between Autopilot nodes and future specialist agents.
 
     ``messages`` uses LangGraph's ``add_messages`` reducer for LLM/tool turns.
-    ``agent_trace`` appends structured log lines suitable for persisting onto ``AutopilotBuild.messages``.
-    ``stage_outputs`` accumulates machine-readable outputs per stage key (e.g. ``chunking``, ``embedding``).
+    ``agent_trace`` appends structured log lines suitable for persisting onto
+    ``AutopilotBuild.messages``.
+    ``stage_outputs`` accumulates machine-readable outputs per stage key
+    (e.g. ``chunking``, ``embedding``).
     """
 
     messages: Annotated[list[AnyMessage], add_messages]
@@ -35,7 +37,7 @@ class AutopilotGraphState(TypedDict):
     requirements: dict[str, Any]
     pipeline_config: dict[str, Any] | None
     iteration: int
-    """0-based index of optimisation pass after an evaluation-triggered retry (incremented by the gate)."""
+    """0-based index of optimisation pass after an evaluation-triggered retry (incremented by the gate)."""  # noqa: E501
 
     evaluation_pass_index: int
     current_stage: str
@@ -63,7 +65,7 @@ def initial_autopilot_graph_state(
     requirements: dict[str, Any],
     pipeline_config: dict[str, Any] | None = None,
 ) -> AutopilotGraphState:
-    """Build a valid initial state for ``compile_autopilot_bootstrap_graph`` (through deployment agent)."""
+    """Build a valid initial state for ``compile_autopilot_bootstrap_graph`` (through deployment agent)."""  # noqa: E501
 
     return AutopilotGraphState(
         messages=[],

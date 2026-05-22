@@ -81,7 +81,12 @@ def test_build_dataset_empty_context_placeholder():
 @pytest.mark.unit
 def test_ragas_dict_to_metrics():
     m = ragas_dict_to_evaluation_metrics(
-        {"faithfulness": 0.9, "answer_relevancy": 0.8, "context_precision": 0.7, "context_recall": 0.6},
+        {
+            "faithfulness": 0.9,
+            "answer_relevancy": 0.8,
+            "context_precision": 0.7,
+            "context_recall": 0.6,
+        },
         avg_latency_ms=100.0,
     )
     assert m.faithfulness == 0.9

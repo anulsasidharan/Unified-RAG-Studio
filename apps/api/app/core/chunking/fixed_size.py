@@ -5,8 +5,8 @@ boundaries. Best suited for structured data (CSV rows, log lines) or when
 downstream token budgets must be tightly controlled.
 """
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
 

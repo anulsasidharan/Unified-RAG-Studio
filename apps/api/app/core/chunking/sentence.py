@@ -6,8 +6,8 @@ ParagraphChunker — splits on double-newline paragraph breaks
 
 import re
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
 
@@ -55,9 +55,7 @@ class SentenceChunker(TextChunker):
             total = len(raw_chunks)
             for i, text in enumerate(raw_chunks):
                 if text.strip():
-                    result.append(
-                        self._make_chunk(text, doc.metadata, i, total, "sentence-based")
-                    )
+                    result.append(self._make_chunk(text, doc.metadata, i, total, "sentence-based"))
 
         logger.info("sentence_chunked", input_docs=len(docs), output_chunks=len(result))
         return result
@@ -96,9 +94,7 @@ class ParagraphChunker(TextChunker):
             total = len(final_paras)
             for i, text in enumerate(final_paras):
                 if text.strip():
-                    result.append(
-                        self._make_chunk(text, doc.metadata, i, total, "paragraph-based")
-                    )
+                    result.append(self._make_chunk(text, doc.metadata, i, total, "paragraph-based"))
 
         logger.info("paragraph_chunked", input_docs=len(docs), output_chunks=len(result))
         return result

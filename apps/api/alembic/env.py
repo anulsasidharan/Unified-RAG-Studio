@@ -3,12 +3,19 @@
 import asyncio
 import logging
 from logging.config import fileConfig
+from pathlib import Path
+import sys
 
 from alembic import context
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from app.config import get_settings
-from app.models import Base  # registers all ORM models with Base.metadata
+# Ensure apps/api is on sys.path when Alembic runs from CI or repo root
+_PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
+from app.config import get_settings  # noqa: E402
+from app.models import Base  # noqa: E402  # registers all ORM models with Base.metadata
 
 alembic_config = context.config
 if alembic_config.config_file_name:

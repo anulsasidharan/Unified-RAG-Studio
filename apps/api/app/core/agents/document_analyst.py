@@ -8,7 +8,6 @@ runtime file dependency so unit tests stay hermetic.
 
 from __future__ import annotations
 
-import json
 from typing import Any
 
 import structlog
@@ -91,7 +90,9 @@ def build_corpus_summary(
     dominant = max(type_counts, key=lambda k: type_counts[k]) if type_counts else "unknown"
     notes: list[str] = []
     if "unknown" in type_counts and len(type_counts) == 1:
-        notes.append("File types unknown — refine profiles post-ingestion for tighter recommendations.")
+        notes.append(
+            "File types unknown — refine profiles post-ingestion for tighter recommendations."
+        )
 
     return {
         "document_count": len(profiles),
@@ -101,7 +102,9 @@ def build_corpus_summary(
         "languages": sorted(langs),
         "signals": {
             "markdown_structure": markdown_hits > 0 or dominant in ("md", "markdown"),
-            "code_heavy": max_code_ratio >= 0.2 or dominant in (
+            "code_heavy": max_code_ratio >= 0.2
+            or dominant
+            in (
                 "py",
                 "js",
                 "ts",
@@ -131,28 +134,30 @@ def recommend_chunking(
     doc_count = int(summary.get("document_count") or 0)
 
     primary = _STRATEGY_RECURSIVE
-    rationale = "General mixed or unknown corpus — recursive-character respects natural boundaries without embedding calls."
+    rationale = "General mixed or unknown corpus — recursive-character respects natural boundaries without embedding calls."  # noqa: E501
     alternates = [_STRATEGY_FIXED, _STRATEGY_PARAGRAPH]
     params: dict[str, Any] = {"strategyId": primary, "chunkSize": 1024, "chunkOverlap": 120}
 
     if signals.get("code_heavy"):
         primary = _STRATEGY_CODE
-        rationale = "Code-like extensions or high code_line_ratio — code-aware chunking keeps syntactic units intact."
+        rationale = "Code-like extensions or high code_line_ratio — code-aware chunking keeps syntactic units intact."  # noqa: E501
         alternates = [_STRATEGY_RECURSIVE, _STRATEGY_SEMANTIC]
         params = {"strategyId": primary, "chunkSize": 512, "chunkOverlap": 80}
     elif signals.get("markdown_structure"):
         primary = _STRATEGY_MARKDOWN
-        rationale = "Markdown headings detected — markdown-header preserves section boundaries for RAG citations."
+        rationale = "Markdown headings detected — markdown-header preserves section boundaries for RAG citations."  # noqa: E501
         alternates = [_STRATEGY_RECURSIVE, _STRATEGY_SEMANTIC]
         params = {"strategyId": primary, "chunkSize": 1200, "chunkOverlap": 100}
     elif signals.get("tabular") or dominant == "csv":
         primary = _STRATEGY_FIXED
-        rationale = "Tabular / CSV-heavy corpora benefit from uniform chunk sizes aligned with rows."
+        rationale = (
+            "Tabular / CSV-heavy corpora benefit from uniform chunk sizes aligned with rows."
+        )
         alternates = [_STRATEGY_RECURSIVE, _STRATEGY_PARAGRAPH]
         params = {"strategyId": primary, "chunkSize": 512, "chunkOverlap": 0}
     elif optimize == "quality" and doc_count > 1 and dominant not in ("unknown", "txt", "csv"):
         primary = _STRATEGY_SEMANTIC
-        rationale = "Quality-first goal with structured sources — semantic chunking clusters meaning (higher latency/cost)."
+        rationale = "Quality-first goal with structured sources — semantic chunking clusters meaning (higher latency/cost)."  # noqa: E501
         alternates = [_STRATEGY_RECURSIVE, _STRATEGY_MARKDOWN]
         params = {"strategyId": primary, "chunkSize": 512, "chunkOverlap": 64}
     elif optimize == "latency":
@@ -177,7 +182,9 @@ def run_document_analyst(
 ) -> dict[str, Any]:
     """Return machine-readable analyze payload for ``stage_outputs['analyze']``."""
 
-    profiles = corpus_profiles_from_state(document_ids=list(document_ids), requirements=requirements)
+    profiles = corpus_profiles_from_state(
+        document_ids=list(document_ids), requirements=requirements
+    )
     summary = build_corpus_summary(profiles, requirements=requirements)
     recommendation = recommend_chunking(summary, requirements=requirements)
     payload = {

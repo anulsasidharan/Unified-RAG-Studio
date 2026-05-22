@@ -16,7 +16,6 @@ from app.schemas.jobs import (
 from app.schemas.pipeline import RAGBaseModel
 from app.worker.tasks import run_deployment, run_evaluation, run_pipeline_build
 
-
 router = APIRouter(prefix="/api/jobs", tags=["jobs"])
 
 
@@ -37,7 +36,9 @@ class BuildBody(RAGBaseModel):
 
 
 @router.post("/build/{build_id}", response_model=SubmitBuildJobResponse)
-async def enqueue_pipeline_build(build_id: str, _body: BuildBody | None = None) -> SubmitBuildJobResponse:
+async def enqueue_pipeline_build(
+    build_id: str, _body: BuildBody | None = None
+) -> SubmitBuildJobResponse:
     async_result = _as_celery_task(run_pipeline_build).delay(build_id)
     return SubmitBuildJobResponse(task_id=async_result.id, build_id=build_id)
 
@@ -50,7 +51,9 @@ async def enqueue_evaluation(body: SubmitEvaluationJobRequest) -> SubmitEvaluati
         payloads,
         metric_names=body.metric_names,
     )
-    return SubmitEvaluationJobResponse(task_id=async_result.id, evaluation_run_id=body.evaluation_run_id)
+    return SubmitEvaluationJobResponse(
+        task_id=async_result.id, evaluation_run_id=body.evaluation_run_id
+    )
 
 
 @router.post("/deployment/{deployment_id}", response_model=SubmitDeploymentJobResponse)

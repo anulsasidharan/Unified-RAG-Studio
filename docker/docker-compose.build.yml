@@ -6,7 +6,7 @@
 #   docker compose -f docker/docker-compose.yml -f docker/docker-compose.build.yml up --build -d
 #
 
-name: rag-studio
+name: unified-rag-studio
 
 services:
 

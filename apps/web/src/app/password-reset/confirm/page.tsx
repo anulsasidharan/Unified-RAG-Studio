@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff, KeyRound, CheckCircle2 } from 'lucide-react';
@@ -10,7 +10,7 @@ import type { PasswordResetResponse } from '@/types/auth';
 import type { FormEvent } from 'react';
 import { AuthBrandPanel } from '@/components/auth/AuthBrandPanel';
 
-export default function PasswordResetConfirmPage() {
+function PasswordResetConfirmContent() {
   const router = useRouter();
   const sp = useSearchParams();
   const tokenFromQuery = sp.get('token') ?? '';
@@ -152,5 +152,13 @@ export default function PasswordResetConfirmPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PasswordResetConfirmPage() {
+  return (
+    <Suspense>
+      <PasswordResetConfirmContent />
+    </Suspense>
   );
 }

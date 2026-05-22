@@ -5,22 +5,7 @@ import type { DesignerStageId } from '@/lib/constants';
 import { DESIGNER_STAGES, ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
-import { ChunkingConfigurator } from './chunking-configurator';
-import { CloudProviderSelector } from './cloud-provider-selector';
-import { ContextCompressionConfigurator } from './context-compression-configurator';
-import { DataIngestionConfigurator } from './data-ingestion-configurator';
-import { EmbeddingConfigurator } from './embedding-configurator';
-import { EvaluationConfigurator } from './evaluation-configurator';
-import { MemoryConfigurator } from './memory-configurator';
-import { ObservabilityConfigurator } from './observability-configurator';
-import { QueryProcessingConfigurator } from './query-processing-configurator';
-import { RetrievalConfigurator } from './retrieval-configurator';
-import { GenerationConfigurator } from './generation-configurator';
-import { GuardrailsConfigurator } from './guardrails-configurator';
-import { HitlConfigurator } from './hitl-configurator';
-import { RoutingConfigurator } from './routing-configurator';
-import { VectorStoreConfigurator } from './vector-store-configurator';
-import { DesignerReviewPage } from './designer-review-page';
+import { DesignerReviewPage, STAGE_CONFIGURATORS } from './designer-stage-configurators';
 
 function phaseNoteFor(stageId: DesignerStageId): string {
   switch (stageId) {
@@ -74,6 +59,8 @@ export function DesignerStagePlaceholder({
   const index = DESIGNER_STAGES.findIndex((s) => s.id === stageId);
   const prev = index > 0 ? DESIGNER_STAGES[index - 1] : null;
   const next = index < DESIGNER_STAGES.length - 1 ? DESIGNER_STAGES[index + 1] : null;
+  const StageConfigurator =
+    stageId !== 'review' ? STAGE_CONFIGURATORS[stageId] : undefined;
 
   if (stageId === 'review') {
     return <DesignerReviewPage className={className} />;
@@ -89,42 +76,10 @@ export function DesignerStagePlaceholder({
       <h1 className="mt-3 font-display text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
         {meta.label}
       </h1>
-      <p className="mt-3 text-neutral-600 dark:text-neutral-400">
-        {phaseNoteFor(stageId)}
-      </p>
+      <p className="mt-3 text-neutral-600 dark:text-neutral-400">{phaseNoteFor(stageId)}</p>
 
-      {stageId === 'cloud' ? (
-        <CloudProviderSelector className="mt-8" />
-      ) : stageId === 'ingestion' ? (
-        <DataIngestionConfigurator className="mt-8" />
-      ) : stageId === 'chunking' ? (
-        <ChunkingConfigurator className="mt-8" />
-      ) : stageId === 'embedding' ? (
-        <EmbeddingConfigurator className="mt-8" />
-      ) : stageId === 'vectorstore' ? (
-        <VectorStoreConfigurator className="mt-8" />
-      ) : stageId === 'queryTransform' ? (
-        <QueryProcessingConfigurator className="mt-8" />
-      ) : stageId === 'retrieval' ? (
-        <RetrievalConfigurator className="mt-8" variant="full" />
-      ) : stageId === 'contextCompression' ? (
-        <ContextCompressionConfigurator className="mt-8" />
-      ) : stageId === 'reranking' ? (
-        <RetrievalConfigurator className="mt-8" variant="rerank-focus" />
-      ) : stageId === 'generation' ? (
-        <GenerationConfigurator className="mt-8" />
-      ) : stageId === 'routing' ? (
-        <RoutingConfigurator className="mt-8" />
-      ) : stageId === 'memory' ? (
-        <MemoryConfigurator className="mt-8" />
-      ) : stageId === 'evaluation' ? (
-        <EvaluationConfigurator className="mt-8" />
-      ) : stageId === 'observability' ? (
-        <ObservabilityConfigurator className="mt-8" />
-      ) : stageId === 'guardrails' ? (
-        <GuardrailsConfigurator className="mt-8" />
-      ) : stageId === 'hitl' ? (
-        <HitlConfigurator className="mt-8" />
+      {StageConfigurator ? (
+        <StageConfigurator className="mt-8" />
       ) : (
         <div className="mt-8 rounded-lg border border-dashed border-neutral-300 bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground dark:border-neutral-600">
           Configuration UI for “{meta.label}” will appear in the numbered Phase 5 task above.
@@ -136,6 +91,7 @@ export function DesignerStagePlaceholder({
           {prev ? (
             <Link
               href={prev.path}
+              prefetch={false}
               className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-primary-700 dark:hover:bg-primary-950/30 dark:hover:text-primary-300"
             >
               <span aria-hidden>←</span>
@@ -149,6 +105,7 @@ export function DesignerStagePlaceholder({
           {next ? (
             <Link
               href={next.path}
+              prefetch={false}
               className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700"
             >
               {next.label}
@@ -157,6 +114,7 @@ export function DesignerStagePlaceholder({
           ) : (
             <Link
               href={ROUTES.designer + '/review'}
+              prefetch={false}
               className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700"
             >
               Review pipeline

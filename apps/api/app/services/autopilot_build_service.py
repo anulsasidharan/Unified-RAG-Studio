@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -45,7 +45,9 @@ class AutopilotBuildService:
         )
         return (await self._session.execute(q)).scalar_one_or_none()
 
-    async def create_pending_build(self, user_id: uuid.UUID, body: StartBuildRequest) -> AutopilotBuild:
+    async def create_pending_build(
+        self, user_id: uuid.UUID, body: StartBuildRequest
+    ) -> AutopilotBuild:
         try:
             pid = uuid.UUID(body.project_id.strip())
         except ValueError as exc:

@@ -92,10 +92,10 @@ def analyze_failures(
     rate = failure_rows / total if total else 0.0
 
     rec: dict[FailureCategoryName, str] = {
-        "hallucination": "Review generation temperature and tighten prompts; verify contexts cover claims.",
-        "retrieval_quality": "Improve chunking, hybrid retrieval, or reranking; expand corpus coverage.",
-        "context_gap": "Context may be faithful but insufficient — add retrieval breadth or query expansion.",
-        "format_error": "Ensure the generator returns non-empty answers and handle tool/JSON modes.",
+        "hallucination": "Review generation temperature and tighten prompts; verify contexts cover claims.",  # noqa: E501
+        "retrieval_quality": "Improve chunking, hybrid retrieval, or reranking; expand corpus coverage.",  # noqa: E501
+        "context_gap": "Context may be faithful but insufficient — add retrieval breadth or query expansion.",  # noqa: E501
+        "format_error": "Ensure the generator returns non-empty answers and handle tool/JSON modes.",  # noqa: E501
     }
 
     out_cats: list[FailureCategory] = []

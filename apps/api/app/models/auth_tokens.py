@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
+import uuid
 
 from sqlalchemy import DateTime, ForeignKey, Index, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -31,9 +31,7 @@ class EmailVerificationToken(Base):
         nullable=False,
     )
 
-    __table_args__ = (
-        Index("ix_email_verification_tokens_user_id_id", "user_id", "id"),
-    )
+    __table_args__ = (Index("ix_email_verification_tokens_user_id_id", "user_id", "id"),)
 
 
 class PasswordResetToken(Base):
@@ -58,7 +56,4 @@ class PasswordResetToken(Base):
         nullable=False,
     )
 
-    __table_args__ = (
-        Index("ix_password_reset_tokens_user_id_id", "user_id", "id"),
-    )
-
+    __table_args__ = (Index("ix_password_reset_tokens_user_id_id", "user_id", "id"),)

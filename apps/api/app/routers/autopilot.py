@@ -1,4 +1,4 @@
-"""Autopilot Mode HTTP API — document upload (P7-1), build lifecycle (P6-9), SSE, cancel, artifacts."""
+"""Autopilot Mode HTTP API — document upload (P7-1), build lifecycle (P6-9), SSE, cancel, artifacts."""  # noqa: E501
 
 from __future__ import annotations
 
@@ -20,6 +20,8 @@ from app.core.agents.state import AUTOPILOT_STAGE_ORDER
 from app.dependencies import DbSession, RequestUserId, get_session_factory
 from app.models.build_history import AutopilotBuild
 from app.models.project import Project
+from app.observability.context import bind_build_context
+from app.observability.rag_metrics import record_autopilot_enqueued, record_autopilot_terminal
 from app.schemas.autopilot import (
     AutopilotBuildListItemSchema,
     AutopilotBuildListResponse,
@@ -43,8 +45,6 @@ from app.services.autopilot_object_storage import (
     upload_blobs_sync,
     validate_upload_candidate,
 )
-from app.observability.context import bind_build_context
-from app.observability.rag_metrics import record_autopilot_enqueued, record_autopilot_terminal
 from app.worker import celery_app
 from app.worker.tasks import run_pipeline_build
 
@@ -113,7 +113,9 @@ def _optional_typed_result(raw: dict[str, Any] | None) -> BuildResultSchema | No
         return None
 
 
-def _optional_dashboard_metrics(raw: dict[str, Any] | None) -> AutopilotDashboardMetricsSchema | None:
+def _optional_dashboard_metrics(
+    raw: dict[str, Any] | None,
+) -> AutopilotDashboardMetricsSchema | None:
     extracted = extract_dashboard_metrics(raw)
     if not extracted:
         return None

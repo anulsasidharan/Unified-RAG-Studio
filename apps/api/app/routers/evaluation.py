@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import uuid
 from typing import Annotated
+import uuid
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
@@ -24,8 +24,12 @@ router = APIRouter(prefix="/api/evaluation", tags=["evaluation"])
 class SyntheticDatasetJobRequest(BaseModel):
     """Stub request for synthetic QA generation (full job wiring is roadmap)."""
 
-    pipeline_config_id: str | None = Field(default=None, description="Optional pipeline UUID as string")
-    num_examples: int = Field(default=10, ge=1, le=500, description="Target number of synthetic QA pairs")
+    pipeline_config_id: str | None = Field(
+        default=None, description="Optional pipeline UUID as string"
+    )
+    num_examples: int = Field(
+        default=10, ge=1, le=500, description="Target number of synthetic QA pairs"
+    )
 
 
 def _svc(session: DbSession) -> EvaluationService:
@@ -65,7 +69,9 @@ async def get_evaluation_run(
 ) -> EvaluationRunResponse:
     out = await _svc(session).get_run(user_id, run_id)
     if out is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evaluation run not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Evaluation run not found"
+        )
     return out
 
 
@@ -104,7 +110,7 @@ async def compare_configurations(
     if out is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Comparison failed — verify configuration IDs, or use completed evaluation run IDs.",
+            detail="Comparison failed — verify configuration IDs, or use completed evaluation run IDs.",  # noqa: E501
         )
     return out
 
@@ -121,7 +127,7 @@ async def create_synthetic_dataset_job(
         "status": "planned",
         "message": (
             "Synthetic dataset generation is not executed in this build. "
-            "Use evaluation runs with a labeled set, or connect a worker job that reads your corpus."
+            "Use evaluation runs with a labeled set, or connect a worker job that reads your corpus."  # noqa: E501
         ),
         "requested_examples": body.num_examples,
         "pipeline_config_id": body.pipeline_config_id,

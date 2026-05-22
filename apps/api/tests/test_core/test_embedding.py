@@ -7,8 +7,8 @@ Provider SDKs are never called — embedders are faked or mocked.
 import time
 from unittest.mock import MagicMock, patch
 
-import pytest
 from langchain_core.documents import Document
+import pytest
 
 from app.core.embedding import (
     EmbedderFactory,
@@ -103,7 +103,7 @@ def test_embedding_service_embed_many_concatenates(_mock_from):
 @pytest.mark.unit
 @patch("app.core.embedding.EmbedderFactory.from_provider")
 def test_embedding_cache_second_batch_is_all_hits(mock_from_provider):
-    """Intra-batch duplicates are still misses once each; after persist, a repeat batch hits cache."""
+    """Intra-batch duplicates are still misses once each; after persist, a repeat batch hits cache."""  # noqa: E501
     embedder = MagicMock()
     embedder.embed_documents.side_effect = lambda texts, cfg: [
         [float(i)] * cfg.dimensions for i, _ in enumerate(texts)

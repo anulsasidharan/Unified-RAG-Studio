@@ -60,7 +60,7 @@ def _compose_system_prompt(cfg: GenerationRuntimeConfig) -> str:
     if (cfg.persona or "").strip():
         system = f"You are {(cfg.persona or '').strip()}.\n\n" + system
     if cfg.citation_grounding:
-        system += "\n\nGround answers in the provided context and cite supporting passages when you rely on them."
+        system += "\n\nGround answers in the provided context and cite supporting passages when you rely on them."  # noqa: E501
     return system
 
 
@@ -83,7 +83,7 @@ def _result_from_ai_message(
         raw_usage = meta.get("token_usage") or meta.get("usage")
         if isinstance(raw_usage, dict):
             for k, v in raw_usage.items():
-                if isinstance(v, (int, float)):
+                if isinstance(v, int | float):
                     usage[str(k)] = int(v)
     return GenerationResult(
         text=text,

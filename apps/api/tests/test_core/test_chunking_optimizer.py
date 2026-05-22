@@ -31,8 +31,12 @@ def test_build_optimizer_candidates_dedupes():
 
 
 def test_run_chunking_optimizer_end_to_end():
-    analyze = run_document_analyst(document_ids=["a", "b"], requirements={"optimize_for": "balanced"})
-    payload = run_chunking_optimizer(analyze_payload=analyze, requirements={"optimize_for": "balanced"})
+    analyze = run_document_analyst(
+        document_ids=["a", "b"], requirements={"optimize_for": "balanced"}
+    )
+    payload = run_chunking_optimizer(
+        analyze_payload=analyze, requirements={"optimize_for": "balanced"}
+    )
     assert payload["status"] == "complete"
     sel = payload["selected"]
     assert sel["strategy"]
@@ -68,12 +72,20 @@ def test_benchmark_with_minimal_docs():
         "chunking_recommendation": {
             "primary_strategy": "fixed-size",
             "alternate_strategies": ["recursive-character"],
-            "suggested_parameters": {"strategyId": "fixed-size", "chunkSize": 256, "chunkOverlap": 0},
+            "suggested_parameters": {
+                "strategyId": "fixed-size",
+                "chunkSize": 256,
+                "chunkOverlap": 0,
+            },
         },
     }
     docs = [Document(page_content="alpha beta gamma. " * 30, metadata={})]
     payload = run_chunking_optimizer(
         analyze_payload=analyze,
-        requirements={"chunking_sample_documents": [{"page_content": d.page_content, "metadata": {}} for d in docs]},
+        requirements={
+            "chunking_sample_documents": [
+                {"page_content": d.page_content, "metadata": {}} for d in docs
+            ]
+        },
     )
     assert payload["status"] == "complete"

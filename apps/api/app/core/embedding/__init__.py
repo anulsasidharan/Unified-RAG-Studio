@@ -25,17 +25,17 @@ Typical usage:
     query_vec = EmbeddingService().embed_query("What is RAG?", config)
 """
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
-from .strategies import Embedding, EmbeddingConfig, TextEmbedder
-from .openai import OpenAIEmbedder
+from .benchmarker import BenchmarkResult, EmbeddingBenchmarker
+from .cache import EmbeddingCache
 from .cohere import CohereEmbedder
 from .google import GoogleEmbedder
 from .huggingface import HuggingFaceEmbedder
 from .nomic import NomicEmbedder
-from .benchmarker import BenchmarkResult, EmbeddingBenchmarker
-from .cache import EmbeddingCache
+from .openai import OpenAIEmbedder
+from .strategies import Embedding, EmbeddingConfig, TextEmbedder
 
 logger = structlog.get_logger(__name__)
 
@@ -129,7 +129,7 @@ class EmbeddingService:
             vectors = embedder.embed_documents(texts, cfg)
 
         result: list[tuple[Document, Embedding]] = []
-        for chunk, vector in zip(chunks, vectors):
+        for chunk, vector in zip(chunks, vectors, strict=False):
             enriched_meta = {
                 **chunk.metadata,
                 "embedding_model": cfg.model,

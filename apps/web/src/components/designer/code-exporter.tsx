@@ -3,6 +3,7 @@
 import { Check, Copy, Download, Loader2, Package, RefreshCw, Rocket } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useWhenVisible } from '@/hooks/use-when-visible';
 import { ApiError, apiClient, formatApiErrorForUi } from '@/lib/api-client';
 import { deployHintCaption, deployHintCommand } from '@/lib/deploy-hints';
 import { cn } from '@/lib/utils';
@@ -29,9 +30,10 @@ export function CodeExporter({
 }>) {
   const draft = useDesignerStore((s) => s.draft);
   const accessToken = useAuthStore((s) => s.accessToken);
+  const [sectionRef, sectionVisible] = useWhenVisible<HTMLElement>();
   const [format, setFormat] = useState<DesignerExportFormat>('python');
   const [result, setResult] = useState<DesignerExportResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastOkAt, setLastOkAt] = useState<number | null>(null);
   const [copiedCode, setCopiedCode] = useState(false);
@@ -76,6 +78,7 @@ export function CodeExporter({
   );
 
   useEffect(() => {
+    if (!sectionVisible) return;
     if (!accessToken?.trim()) {
       setLoading(false);
       setError('Sign in to export pipeline code.');
@@ -95,7 +98,7 @@ export function CodeExporter({
       window.clearTimeout(tid);
       ctrl.abort();
     };
-  }, [draftDigest, format, draft, fetchExport, accessToken]);
+  }, [draftDigest, format, draft, fetchExport, accessToken, sectionVisible]);
 
   const deployCmd = useMemo(() => {
     if (!result) return '';
@@ -142,6 +145,7 @@ export function CodeExporter({
 
   return (
     <section
+      ref={sectionRef}
       id={id}
       className={cn(
         'w-full shrink-0 border-t border-neutral-200 bg-neutral-950 py-6 dark:border-neutral-800 scroll-mt-4',

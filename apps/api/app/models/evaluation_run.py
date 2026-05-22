@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
+import uuid
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, JSON, String, Text, Uuid
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin
@@ -60,8 +60,8 @@ class EvaluationRun(Base, TimestampMixin):
     )
 
     config: Mapped[PipelineConfig] = relationship("PipelineConfig", back_populates="evaluations")
-    build: Mapped[AutopilotBuild | None] = relationship("AutopilotBuild", back_populates="evaluations")
-
-    __table_args__ = (
-        Index("ix_evaluation_runs_user_id_id", "user_id", "id"),
+    build: Mapped[AutopilotBuild | None] = relationship(
+        "AutopilotBuild", back_populates="evaluations"
     )
+
+    __table_args__ = (Index("ix_evaluation_runs_user_id_id", "user_id", "id"),)

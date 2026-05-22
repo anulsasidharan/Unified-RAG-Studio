@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
+import uuid
+
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -22,4 +23,6 @@ class UserSubscription(Base, TimestampMixin):
     billing_cycle: Mapped[str | None] = mapped_column(String(20), nullable=True)
     current_period_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     current_period_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    cancel_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    cancel_at_period_end: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default="false"
+    )

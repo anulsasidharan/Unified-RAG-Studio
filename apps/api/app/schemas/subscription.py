@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -11,7 +10,7 @@ from pydantic import BaseModel, Field
 class SubscriptionPlanResponse(BaseModel):
     id: str
     name: str
-    description: Optional[str] = None
+    description: str | None = None
     price_monthly: float
     price_yearly: float
     features: dict
@@ -26,7 +25,7 @@ class UserSubscriptionResponse(BaseModel):
     id: str
     plan_id: str
     status: str
-    billing_cycle: Optional[str] = None
+    billing_cycle: str | None = None
     current_period_start: datetime
     current_period_end: datetime
     cancel_at_period_end: bool

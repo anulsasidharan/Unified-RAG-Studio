@@ -29,8 +29,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .extractors import (
     extract_docx_metadata,
@@ -185,46 +185,26 @@ class IngestionService:
 
         if source.source_type == "file":
             if source.path is None:
-                raise ValueError(
-                    "IngestionSource with source_type='file' requires path."
-                )
+                raise ValueError("IngestionSource with source_type='file' requires path.")
             loader = LoaderFactory.from_path(source.path)
             return loader.load(source.path)
 
         raise ValueError(f"Unsupported source_type: {source.source_type!r}")
 
-    def _extract_metadata(
-        self, source: IngestionSource, doc: Document
-    ) -> dict[str, Any]:
+    def _extract_metadata(self, source: IngestionSource, doc: Document) -> dict[str, Any]:
         """Run format-specific metadata extraction and return enriching fields."""
         extra: dict[str, Any] = {}
         file_type = doc.metadata.get("file_type", "")
 
         if file_type == "pdf":
-            raw = (
-                source.content
-                if source.source_type == "bytes"
-                else source.path
-            )
+            raw = source.content if source.source_type == "bytes" else source.path
             if raw is not None:
-                extra.update(
-                    extract_pdf_metadata(
-                        raw if isinstance(raw, bytes) else str(raw)
-                    )
-                )
+                extra.update(extract_pdf_metadata(raw if isinstance(raw, bytes) else str(raw)))
 
         elif file_type == "docx":
-            raw = (
-                source.content
-                if source.source_type == "bytes"
-                else source.path
-            )
+            raw = source.content if source.source_type == "bytes" else source.path
             if raw is not None:
-                extra.update(
-                    extract_docx_metadata(
-                        raw if isinstance(raw, bytes) else str(raw)
-                    )
-                )
+                extra.update(extract_docx_metadata(raw if isinstance(raw, bytes) else str(raw)))
 
         elif file_type in ("html", "htm"):
             extra.update(extract_html_metadata(doc.page_content))

@@ -13,8 +13,8 @@ Metrics collected per configuration:
   total_time_s     — wall-clock seconds for the full corpus
 """
 
-import time
 from dataclasses import dataclass
+import time
 from typing import cast
 
 import structlog
@@ -92,9 +92,7 @@ class EmbeddingBenchmarker:
             embedder = EmbedderFactory.from_provider(config.provider)
 
             start = time.perf_counter()
-            embeddings = cast(
-                list[list[float]], embedder.embed_documents(texts, config)
-            )
+            embeddings = cast(list[list[float]], embedder.embed_documents(texts, config))
             elapsed = time.perf_counter() - start
 
             n = len(texts)

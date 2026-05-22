@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
-from sqlalchemy import Boolean, DateTime, String, Uuid, func, Index
+import uuid
+
+from sqlalchemy import Boolean, DateTime, Index, String, Uuid, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
@@ -48,7 +49,4 @@ class User(Base):
     profile_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     last_login: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    __table_args__ = (
-        Index("ix_users_email_lower", "email"),
-    )
-
+    __table_args__ = (Index("ix_users_email_lower", "email"),)

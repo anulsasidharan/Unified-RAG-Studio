@@ -6,8 +6,8 @@ HTMLSectionChunker      — splits on HTML heading element (h1–h4) boundaries
 
 import importlib
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
 
@@ -21,10 +21,6 @@ _DEFAULT_HEADERS: list[tuple[str, str]] = [
 
 
 class MarkdownHeaderChunker(TextChunker):
-    
-    
-    
-    
     """Splits Markdown documents at header boundaries using LangChain.
 
     Each output chunk corresponds to a section demarcated by a Markdown ATX
@@ -34,7 +30,7 @@ class MarkdownHeaderChunker(TextChunker):
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
         lcts = importlib.import_module("langchain_text_splitters")
-        mhts = getattr(lcts, "MarkdownHeaderTextSplitter")
+        mhts = lcts.MarkdownHeaderTextSplitter
 
         headers = config.headers_to_split_on or _DEFAULT_HEADERS
         splitter = mhts(
@@ -60,9 +56,7 @@ class MarkdownHeaderChunker(TextChunker):
                     )
                 )
 
-        logger.info(
-            "markdown_header_chunked", input_docs=len(docs), output_chunks=len(result)
-        )
+        logger.info("markdown_header_chunked", input_docs=len(docs), output_chunks=len(result))
         return result
 
 
@@ -96,9 +90,7 @@ class HTMLSectionChunker(TextChunker):
                     self._make_chunk(section_text, doc.metadata, i, total, "html-section")
                 )
 
-        logger.info(
-            "html_section_chunked", input_docs=len(docs), output_chunks=len(result)
-        )
+        logger.info("html_section_chunked", input_docs=len(docs), output_chunks=len(result))
         return result
 
     def _extract_sections(self, html: str) -> list[str]:

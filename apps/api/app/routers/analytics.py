@@ -15,10 +15,12 @@ def _svc(session: DbSession) -> AnalyticsService:
     return AnalyticsService(session)
 
 
-@router.get("/summary", response_model=AnalyticsSummarySchema, summary="Portfolio usage & cost signals")
+@router.get(
+    "/summary", response_model=AnalyticsSummarySchema, summary="Portfolio usage & cost signals"
+)
 async def analytics_summary(
     session: DbSession,
     user_id: RequestUserId,
 ) -> AnalyticsSummarySchema:
-    """Aggregated counts for projects, configs, builds, evaluations, deployments, plus inferred cost."""
+    """Aggregated counts for projects, configs, builds, evaluations, deployments, plus inferred cost."""  # noqa: E501
     return await _svc(session).summary_for_user(user_id)

@@ -5,15 +5,12 @@ External I/O (pypdf, python-docx, trafilatura) is mocked to keep tests fast
 and deterministic.
 """
 
-import io
 import json
 import sys
-import textwrap
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 from langchain_core.documents import Document
+import pytest
 
 from app.core.ingestion import (
     IngestionConfig,
@@ -45,7 +42,6 @@ from app.core.ingestion.preprocessors import (
     remove_headers_footers,
     strip_html_tags,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -590,7 +586,9 @@ def test_extract_section_headers_title_case():
 
 @pytest.mark.unit
 def test_extract_section_headers_excludes_long_lines():
-    long_line = "This Is A Very Long Title That Exceeds One Hundred And Twenty Characters " + "X" * 60
+    long_line = (
+        "This Is A Very Long Title That Exceeds One Hundred And Twenty Characters " + "X" * 60
+    )
     headers = extract_section_headers(long_line)
     assert long_line.strip() not in headers
 
@@ -711,9 +709,7 @@ def test_ingestion_service_load_text_file(tmp_path):
 @pytest.mark.unit
 def test_ingestion_service_load_bytes_csv(csv_bytes):
     svc = IngestionService()
-    docs = svc.load(
-        IngestionSource(source_type="bytes", content=csv_bytes, filename="data.csv")
-    )
+    docs = svc.load(IngestionSource(source_type="bytes", content=csv_bytes, filename="data.csv"))
     assert len(docs) == 2
 
 
@@ -803,10 +799,12 @@ def test_ingestion_service_load_many(tmp_path):
     f2.write_text("Document B.", encoding="utf-8")
 
     svc = IngestionService()
-    docs = svc.load_many([
-        IngestionSource(source_type="file", path=str(f1)),
-        IngestionSource(source_type="file", path=str(f2)),
-    ])
+    docs = svc.load_many(
+        [
+            IngestionSource(source_type="file", path=str(f1)),
+            IngestionSource(source_type="file", path=str(f2)),
+        ]
+    )
 
     assert len(docs) == 2
     contents = {d.page_content for d in docs}
@@ -831,8 +829,6 @@ def test_ingestion_service_extract_metadata_disabled(tmp_path):
 @pytest.mark.unit
 def test_ingestion_service_html_bytes(html_bytes):
     svc = IngestionService()
-    docs = svc.load(
-        IngestionSource(source_type="bytes", content=html_bytes, filename="page.html")
-    )
+    docs = svc.load(IngestionSource(source_type="bytes", content=html_bytes, filename="page.html"))
     assert len(docs) == 1
     assert "Hello World" in docs[0].page_content

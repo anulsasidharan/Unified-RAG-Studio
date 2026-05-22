@@ -9,7 +9,6 @@ from langgraph.checkpoint.memory import MemorySaver
 
 from app.core.agents import (
     AUTOPILOT_STAGE_ORDER,
-    compile_autopilot_bootstrap_graph,
     compile_autopilot_orchestrator_graph,
     get_autopilot_bootstrap_tools,
     initial_autopilot_graph_state,
@@ -115,8 +114,10 @@ def test_bootstrap_graph_runs_without_checkpointer(mock_bench_cls):
     assert "failure_analysis" in out["stage_outputs"]["evaluation"]
     assert out["stage_outputs"]["deployment"]["status"] == "complete"
     assert "docker_compose" in (out["stage_outputs"]["deployment"].get("artefacts") or {})
-    assert (out["stage_outputs"]["deployment"].get("cloud_deployers") or {}).get("aws", {}).get(
-        "apply_gated"
+    assert (
+        (out["stage_outputs"]["deployment"].get("cloud_deployers") or {})
+        .get("aws", {})
+        .get("apply_gated")
     )
     assert len(out["messages"]) >= 7
     assert len(out["agent_trace"]) >= 9
@@ -391,7 +392,9 @@ def test_orchestrator_retries_when_targets_unmet(mock_bench_cls, mock_run_eval):
     ]
     assert len(eval_ok_traces) >= 2
     assert int(out.get("evaluation_pass_index") or 0) >= 1
-    decisions = [t.get("decision") for t in out["agent_trace"] if t.get("event") == "orchestration_gate"]
+    decisions = [
+        t.get("decision") for t in out["agent_trace"] if t.get("event") == "orchestration_gate"
+    ]
     assert "retry" in decisions
     assert decisions[-1] == "deploy"
 

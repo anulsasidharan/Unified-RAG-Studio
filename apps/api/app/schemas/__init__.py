@@ -5,6 +5,75 @@ Import pattern inside the app:
 """
 
 # ── Pipeline (core types shared by all modules) ───────────────────────────────
+# ── Autopilot ─────────────────────────────────────────────────────────────────
+from app.schemas.autopilot import (
+    AgentDecisionSchema,
+    AutopilotUploadResponse,
+    BuildArtifactResultResponse,
+    BuildMessageSchema,
+    BuildRequirementsSchema,
+    BuildResultSchema,
+    BuildStatusResponse,
+    CancelBuildResponse,
+    ChunkingDecisionSchema,
+    DeploymentInfoSchema,
+    EmbeddingBenchmarkResultSchema,
+    EmbeddingDecisionSchema,
+    FinalMetricsSchema,
+    GenerationDecisionSchema,
+    RetrievalDecisionSchema,
+    StageStatusSchema,
+    StartBuildRequest,
+    StartBuildResponse,
+    TargetMetricsSchema,
+    UploadedDocumentItem,
+)
+
+# ── Deployment ────────────────────────────────────────────────────────────────
+from app.schemas.deployment import (
+    DeploymentListItem,
+    DeploymentListResponse,
+    DeploymentStatusResponse,
+    DeployRequest,
+    DeployResponse,
+)
+
+# ── Designer ──────────────────────────────────────────────────────────────────
+from app.schemas.designer import (
+    ConfigListItem,
+    ConfigListResponse,
+    CostRequest,
+    CostResponse,
+    ExportFormat,
+    ExportRequest,
+    ExportResponse,
+    SaveConfigRequest,
+    SaveConfigResponse,
+    UpdateDesignerConfigRequest,
+)
+
+# ── Evaluation ────────────────────────────────────────────────────────────────
+from app.schemas.evaluation import (
+    CompareConfigsRequest,
+    CompareConfigsResponse,
+    EvaluationMetrics,
+    EvaluationRunListResponse,
+    EvaluationRunRequest,
+    EvaluationRunResponse,
+    FailureAnalysisResult,
+    FailureCategory,
+    MetricDelta,
+    TestSetEntry,
+)
+
+# ── Guardrails (P4.5) ─────────────────────────────────────────────────────────
+from app.schemas.guardrails import (
+    GuardrailsConfigSchema,
+    GuardrailStageSettingsSchema,
+    InputStageGuardrailsSchema,
+    OutputStageGuardrailsSchema,
+    RetrievalStageGuardrailsSchema,
+)
 from app.schemas.pipeline import (
     ChunkingConfigSchema,
     ChunkingStrategy,
@@ -18,10 +87,10 @@ from app.schemas.pipeline import (
     EmbeddingConfigSchema,
     EmbeddingProvider,
     EvaluationConfigSchema,
-    HumanInTheLoopConfigSchema,
     FilterOperator,
     GenerationConfigSchema,
     GenerationProvider,
+    HumanInTheLoopConfigSchema,
     HybridSearchConfig,
     MemoryConfigSchema,
     MemoryType,
@@ -56,76 +125,6 @@ from app.schemas.project import (
     ProjectDetailResponse,
     ProjectSummary,
     ProjectUpdateRequest,
-)
-
-# ── Designer ──────────────────────────────────────────────────────────────────
-from app.schemas.designer import (
-    ConfigListItem,
-    ConfigListResponse,
-    CostRequest,
-    CostResponse,
-    ExportFormat,
-    ExportRequest,
-    ExportResponse,
-    SaveConfigRequest,
-    SaveConfigResponse,
-    UpdateDesignerConfigRequest,
-)
-
-# ── Autopilot ─────────────────────────────────────────────────────────────────
-from app.schemas.autopilot import (
-    AgentDecisionSchema,
-    AutopilotUploadResponse,
-    BuildArtifactResultResponse,
-    BuildMessageSchema,
-    BuildRequirementsSchema,
-    BuildResultSchema,
-    BuildStatusResponse,
-    CancelBuildResponse,
-    ChunkingDecisionSchema,
-    DeploymentInfoSchema,
-    EmbeddingBenchmarkResultSchema,
-    EmbeddingDecisionSchema,
-    FinalMetricsSchema,
-    GenerationDecisionSchema,
-    RetrievalDecisionSchema,
-    StageStatusSchema,
-    StartBuildRequest,
-    StartBuildResponse,
-    TargetMetricsSchema,
-    UploadedDocumentItem,
-)
-
-# ── Evaluation ────────────────────────────────────────────────────────────────
-from app.schemas.evaluation import (
-    CompareConfigsRequest,
-    CompareConfigsResponse,
-    EvaluationMetrics,
-    EvaluationRunListResponse,
-    EvaluationRunRequest,
-    EvaluationRunResponse,
-    FailureAnalysisResult,
-    FailureCategory,
-    MetricDelta,
-    TestSetEntry,
-)
-
-# ── Deployment ────────────────────────────────────────────────────────────────
-from app.schemas.deployment import (
-    DeploymentListItem,
-    DeploymentListResponse,
-    DeploymentStatusResponse,
-    DeployRequest,
-    DeployResponse,
-)
-
-# ── Guardrails (P4.5) ─────────────────────────────────────────────────────────
-from app.schemas.guardrails import (
-    GuardrailsConfigSchema,
-    GuardrailStageSettingsSchema,
-    InputStageGuardrailsSchema,
-    OutputStageGuardrailsSchema,
-    RetrievalStageGuardrailsSchema,
 )
 
 __all__ = [

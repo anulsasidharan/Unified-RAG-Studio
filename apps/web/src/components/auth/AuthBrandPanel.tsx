@@ -53,7 +53,7 @@ export function AuthBrandPanel() {
       {/* Bottom quote */}
       <div className="relative rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
         <p className="text-sm italic text-white/60">
-          "We had a working, evaluated RAG system in production in under an hour."
+          &ldquo;We had a working, evaluated RAG system in production in under an hour.&rdquo;
         </p>
         <p className="mt-2 text-xs font-medium text-white/40">— Time-Strapped Startup</p>
       </div>

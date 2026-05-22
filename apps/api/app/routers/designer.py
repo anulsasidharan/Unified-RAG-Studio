@@ -139,9 +139,7 @@ async def delete_config(
 @router.post(
     "/export",
     response_model=ExportResponse,
-    summary=(
-        "Export pipeline as Python, YAML, Terraform, Docker Compose, or Kubernetes YAML"
-    ),
+    summary=("Export pipeline as Python, YAML, Terraform, Docker Compose, or Kubernetes YAML"),
 )
 async def export_pipeline(body: ExportRequest) -> ExportResponse:
     """Return generated file content and a suggested download filename."""

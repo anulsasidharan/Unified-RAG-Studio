@@ -61,6 +61,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "S105", "S106", "T20"]  # Allow assert + hardcoded test credentials
+"app/core/agents/prompts.py" = ["E501"]  # Prompt strings are intentionally long natural language
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]

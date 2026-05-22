@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.schemas.pipeline import PipelineConfigurationSchema
 from app.worker import tasks
@@ -149,4 +149,7 @@ def test_deployment_404_wrong_user(sync_client: TestClient):
         )
     did = dep.json()["deploymentId"]
 
-    assert sync_client.get(f"/api/deployment/{did}/status", headers={"X-User-ID": other}).status_code == 404
+    assert (
+        sync_client.get(f"/api/deployment/{did}/status", headers={"X-User-ID": other}).status_code
+        == 404
+    )

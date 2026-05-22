@@ -54,7 +54,9 @@ def configure_logging(log_level: str) -> None:
     logging.getLogger("uvicorn.error").setLevel(level)
 
 
-def _inject_service_identity(_logger: Any, _method_name: str, event_dict: dict[str, Any]) -> dict[str, Any]:
+def _inject_service_identity(
+    _logger: Any, _method_name: str, event_dict: dict[str, Any]
+) -> dict[str, Any]:
     event_dict.setdefault("service", "rag-studio-api")
     event_dict.setdefault("service_version", API_SEMVER)
     return event_dict

@@ -14,8 +14,8 @@ import importlib
 import re
 from typing import Any
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
 
@@ -46,10 +46,10 @@ class SemanticChunker(TextChunker):
                 st_mod = importlib.import_module("sentence_transformers")
             except ImportError as exc:
                 raise ImportError(
-                    "SemanticChunker requires sentence-transformers (pin: sentence-transformers==3.0.0). "
+                    "SemanticChunker requires sentence-transformers (pin: sentence-transformers==3.0.0). "  # noqa: E501
                     "Install dependencies: pip install -r requirements.txt"
                 ) from exc
-            transformer_cls = getattr(st_mod, "SentenceTransformer")
+            transformer_cls = st_mod.SentenceTransformer
             self._model_cache[model_name] = transformer_cls(model_name)
         return self._model_cache[model_name]
 
@@ -80,8 +80,7 @@ class SemanticChunker(TextChunker):
             # Build context windows around each sentence
             buf = config.buffer_size
             windows = [
-                " ".join(sentences[max(0, i - buf) : i + buf + 1])
-                for i in range(len(sentences))
+                " ".join(sentences[max(0, i - buf) : i + buf + 1]) for i in range(len(sentences))
             ]
 
             # Embed all windows in a single batch
@@ -106,7 +105,7 @@ class SemanticChunker(TextChunker):
             for chunk_text in raw_chunks:
                 if len(chunk_text) > config.chunk_size * 4:
                     lcts = importlib.import_module("langchain_text_splitters")
-                    RCTS = getattr(lcts, "RecursiveCharacterTextSplitter")
+                    RCTS = lcts.RecursiveCharacterTextSplitter  # noqa: N806
                     splitter = RCTS(
                         chunk_size=config.chunk_size,
                         chunk_overlap=config.chunk_overlap,
@@ -118,9 +117,7 @@ class SemanticChunker(TextChunker):
             total = len(final_chunks)
             for i, chunk_text in enumerate(final_chunks):
                 if chunk_text.strip():
-                    result.append(
-                        self._make_chunk(chunk_text, doc.metadata, i, total, "semantic")
-                    )
+                    result.append(self._make_chunk(chunk_text, doc.metadata, i, total, "semantic"))
 
         logger.info("semantic_chunked", input_docs=len(docs), output_chunks=len(result))
         return result

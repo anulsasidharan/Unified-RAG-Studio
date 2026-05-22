@@ -15,8 +15,8 @@ from __future__ import annotations
 import json
 from typing import Any
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from app.core.chunking import ChunkingConfig, ChunkingService
 from app.core.chunking.optimizers import ChunkQualityScorer
@@ -137,7 +137,9 @@ def build_optimizer_candidates(
     if isinstance(primary, str) and primary.strip():
         p = primary.strip()
         if p != base.strategy:
-            cfg = ChunkingConfig(strategy=p, chunk_size=base.chunk_size, chunk_overlap=base.chunk_overlap)
+            cfg = ChunkingConfig(
+                strategy=p, chunk_size=base.chunk_size, chunk_overlap=base.chunk_overlap
+            )
             key = (cfg.strategy, cfg.chunk_size, cfg.chunk_overlap)
             if key not in seen and len(candidates) < max_n:
                 seen.add(key)
@@ -212,7 +214,9 @@ def benchmark_chunking_configs(
             err = f"{type(exc).__name__}: {exc}"
             logger.warning("chunking_benchmark_failed", strategy=cfg.strategy, error=err)
 
-        score = _composite_score(chunks, config=cfg, optimize_for=optimize_for) if err is None else -1.0
+        score = (
+            _composite_score(chunks, config=cfg, optimize_for=optimize_for) if err is None else -1.0
+        )
         row = {
             "strategy": cfg.strategy,
             "chunk_size": cfg.chunk_size,
@@ -243,7 +247,9 @@ def run_chunking_optimizer(
 
     docs = _synthetic_corpus_from_summary(summary, requirements=requirements)
     candidates = build_optimizer_candidates(rec, requirements=requirements)
-    rows, winner, best_score = benchmark_chunking_configs(docs, candidates, requirements=requirements)
+    rows, winner, best_score = benchmark_chunking_configs(
+        docs, candidates, requirements=requirements
+    )
 
     if winner is None:
         payload = {
@@ -255,11 +261,13 @@ def run_chunking_optimizer(
         logger.error("chunking_optimizer_failed", candidates=len(rows))
         return payload
 
-    alts_tested = [r["strategy"] for r in rows if not r.get("error") and r["strategy"] != winner.strategy]
+    alts_tested = [
+        r["strategy"] for r in rows if not r.get("error") and r["strategy"] != winner.strategy
+    ]
     rationale = (
-        f"Benchmarked {len(rows)} configuration(s) on a synthetic corpus aligned to corpus signals. "
-        f"Selected **{winner.strategy}** (chunk_size={winner.chunk_size}, overlap={winner.chunk_overlap}) "
-        f"with composite score {best_score:.4f} under optimize_for={requirements.get('optimize_for', 'balanced')!r}."
+        f"Benchmarked {len(rows)} configuration(s) on a synthetic corpus aligned to corpus signals. "  # noqa: E501
+        f"Selected **{winner.strategy}** (chunk_size={winner.chunk_size}, overlap={winner.chunk_overlap}) "  # noqa: E501
+        f"with composite score {best_score:.4f} under optimize_for={requirements.get('optimize_for', 'balanced')!r}."  # noqa: E501
     )
 
     payload = {

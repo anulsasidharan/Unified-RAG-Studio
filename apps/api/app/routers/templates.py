@@ -14,7 +14,7 @@ from app.schemas.templates import (
     PipelineTemplate,
     TemplatesCatalogResponse,
 )
-from app.services.template_service import TemplateService, TemplatesCatalogError
+from app.services.template_service import TemplatesCatalogError, TemplateService
 
 router = APIRouter(prefix="/api/templates", tags=["templates"])
 
@@ -28,7 +28,9 @@ def _svc(session: DbSession) -> TemplateService:
     response_model=TemplatesCatalogResponse,
     summary="List pipeline templates",
 )
-async def list_templates(settings: Annotated[Settings, Depends(get_settings)]) -> TemplatesCatalogResponse:
+async def list_templates(
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> TemplatesCatalogResponse:
     try:
         return TemplateService.list_templates(settings)
     except TemplatesCatalogError as exc:

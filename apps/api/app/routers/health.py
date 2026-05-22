@@ -1,17 +1,16 @@
 """Kubernetes-style health endpoints (live vs ready probes)."""
 
 import asyncio
-import logging
 from collections.abc import Awaitable
+import logging
 from typing import Annotated, cast
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
+from qdrant_client import AsyncQdrantClient
 import redis.asyncio as aioredis
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from qdrant_client import AsyncQdrantClient
 
 from app.config import Settings, get_settings
 from app.dependencies import get_db_session

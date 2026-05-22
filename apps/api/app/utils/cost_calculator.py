@@ -11,12 +11,12 @@ Formulas align with ``costCalculatorFormulas`` in the pricing catalog:
 
 from __future__ import annotations
 
-import json
-import re
 from dataclasses import dataclass
 from functools import lru_cache
+import json
 from numbers import Real
 from pathlib import Path
+import re
 
 from app.config import Settings, get_settings
 from app.schemas.designer import CostRequest
@@ -168,22 +168,16 @@ class CostEstimator:
         max_out = float(stages.generation.max_tokens)
         eff_out = min(avg_out_ass, max_out) if max_out > 0 else avg_out_ass
         context_tokens_per_q = top_k * chunk_sz + avg_in_ass
-        generation_per_query = (
-            (context_tokens_per_q / 1_000_000.0) * in_gen + (eff_out / 1_000_000.0) * out_gen
-        )
+        generation_per_query = (context_tokens_per_q / 1_000_000.0) * in_gen + (
+            eff_out / 1_000_000.0
+        ) * out_gen
 
         rerank_per_query = 0.0
         if stages.reranking and stages.reranking.enabled and stages.reranking.model:
             rerank_per_query = self._rerank_per_query_cost(stages.reranking.model)
 
         total_doc_tokens = doc_n * doc_tokens
-        gb = (
-            total_doc_tokens
-            / max(chunk_sz, 1.0)
-            * emb_dims
-            * 4.0
-            / (1024.0**3)
-        )
+        gb = total_doc_tokens / max(chunk_sz, 1.0) * emb_dims * 4.0 / (1024.0**3)
         prov_key = stages.vector_store.provider
         vs_provider = prov_key.value if hasattr(prov_key, "value") else str(prov_key)
         storage_mo = self._storage_monthly(vs_provider, gb)
@@ -326,10 +320,16 @@ class CostEstimator:
         return 0.0
 
 
-def estimate_pipeline_cost(cfg: PipelineConfigurationSchema, pricing: dict[str, object]) -> CostEstimateSchema:
+def estimate_pipeline_cost(
+    cfg: PipelineConfigurationSchema,
+    pricing: dict[str, object],
+) -> CostEstimateSchema:
     return CostEstimator(pricing).estimate(CostRequest(config=cfg))
 
 
-def calculate_pipeline_cost(cfg: PipelineConfigurationSchema, pricing: dict[str, object]) -> CostEstimateSchema:
-    """Alias for :func:`estimate_pipeline_cost` (explicit verb used in task specs)."""
+def calculate_pipeline_cost(
+    cfg: PipelineConfigurationSchema,
+    pricing: dict[str, object],
+) -> CostEstimateSchema:
+    """Alias for :func:`estimate_pipeline_cost`."""
     return estimate_pipeline_cost(cfg, pricing)

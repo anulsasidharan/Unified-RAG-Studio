@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import uuid
 from collections.abc import Sequence
 from typing import Any
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -119,7 +119,7 @@ class AnalyticsService:
         for requirements, result, status in rows:
             if isinstance(requirements, dict):
                 raw_b = requirements.get("budget_constraint")
-                if isinstance(raw_b, (int, float)) and raw_b > 0:
+                if isinstance(raw_b, int | float) and raw_b > 0:
                     budget_samples.append(float(raw_b))
                     builds_with_budget += 1
 
@@ -146,7 +146,7 @@ def _extract_cost_per_query(result: dict[str, Any]) -> float | None:
     if not isinstance(metrics, dict):
         return None
     raw = metrics.get("cost_per_query")
-    if isinstance(raw, (int, float)) and raw >= 0:
+    if isinstance(raw, int | float) and raw >= 0:
         return float(raw)
     return None
 

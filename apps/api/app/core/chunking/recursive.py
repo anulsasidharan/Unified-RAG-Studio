@@ -7,8 +7,8 @@ document types (prose, PDFs, DOCX, HTML body text).
 
 import importlib
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
 
@@ -27,7 +27,7 @@ class RecursiveCharacterChunker(TextChunker):
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
         lcts = importlib.import_module("langchain_text_splitters")
-        rcts = getattr(lcts, "RecursiveCharacterTextSplitter")
+        rcts = lcts.RecursiveCharacterTextSplitter
         separators = config.separators or _DEFAULT_SEPARATORS
         splitter = rcts(
             chunk_size=config.chunk_size,

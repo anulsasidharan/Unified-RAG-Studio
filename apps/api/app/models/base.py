@@ -1,6 +1,5 @@
 """SQLAlchemy declarative base and shared mixins."""
 
-import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, func

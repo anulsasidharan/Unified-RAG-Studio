@@ -1,6 +1,5 @@
 'use client';
 
-import mermaid from 'mermaid';
 import {
   Loader2,
   Maximize2,
@@ -14,6 +13,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { useWhenVisible } from '@/hooks/use-when-visible';
 import {
   generateMermaidDiagram,
   generatePipelineHighlights,
@@ -57,33 +57,38 @@ function MermaidDiagram({
   definition,
   className,
   zoom = 1,
+  enabled = true,
 }: Readonly<{
   definition: string;
   className?: string;
   /** CSS zoom factor (layout + rendering); default 1. */
   zoom?: number;
+  /** When false, skip loading/rendering mermaid (deferred until panel is visible). */
+  enabled?: boolean;
 }>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const dark = useColorSchemeDark();
   const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     setBusy(true);
     setError(null);
-
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: 'loose',
-      theme: dark ? 'dark' : 'default',
-      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
-    });
 
     const id = `mmd-${Math.random().toString(36).slice(2, 11)}`;
 
     void (async () => {
       try {
+        const mermaid = (await import('mermaid')).default;
+        if (cancelled) return;
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'loose',
+          theme: dark ? 'dark' : 'default',
+          fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+        });
         const { svg } = await mermaid.render(id, definition);
         if (!cancelled && containerRef.current) {
           containerRef.current.innerHTML = svg;
@@ -100,7 +105,7 @@ function MermaidDiagram({
     return () => {
       cancelled = true;
     };
-  }, [definition, dark]);
+  }, [definition, dark, enabled]);
 
   return (
     <div className={cn('relative min-h-[120px]', className)}>
@@ -191,8 +196,9 @@ export function PipelineVisualizer({
 }>) {
   const draft = useDesignerStore((s) => s.draft);
   const diagramMaxVisitedStageIndex = useDesignerStore((s) => s.diagramMaxVisitedStageIndex);
-
   const [pipOpen, setPipOpen] = useState(false);
+  const [sectionRef, sectionVisible] = useWhenVisible<HTMLElement>();
+  const renderDiagram = sectionVisible || pipOpen;
   const [pipMaximized, setPipMaximized] = useState(false);
   const [inlineZoom, setInlineZoom] = useState(DEFAULT_INLINE_ZOOM);
   const [pipZoom, setPipZoom] = useState(DEFAULT_PIP_ZOOM);
@@ -226,10 +232,6 @@ export function PipelineVisualizer({
     [clampZoom]
   );
 
-  /** String fingerprint so nested draft edits always invalidate (same topology can still produce new labels). */
-  const stagesFingerprint = useMemo(() => JSON.stringify(draft.stages), [draft.stages]);
-  const guardrailsFingerprint = useMemo(() => JSON.stringify(draft.guardrails ?? null), [draft.guardrails]);
-
   const definition = useMemo(
     () =>
       generateMermaidDiagram(
@@ -238,7 +240,7 @@ export function PipelineVisualizer({
         diagramMaxVisitedStageIndex,
         draft.guardrails
       ),
-    [stagesFingerprint, guardrailsFingerprint, draft.cloudProvider, diagramMaxVisitedStageIndex, draft.guardrails]
+    [draft.stages, draft.cloudProvider, diagramMaxVisitedStageIndex, draft.guardrails]
   );
 
   const oneLine = useMemo(
@@ -346,7 +348,12 @@ export function PipelineVisualizer({
                 </div>
               </div>
               <div className="min-h-0 flex-1 overflow-auto p-3">
-                <MermaidDiagram key={definition} definition={definition} zoom={pipZoom} />
+                <MermaidDiagram
+                  key={definition}
+                  definition={definition}
+                  zoom={pipZoom}
+                  enabled={renderDiagram}
+                />
               </div>
             </div>
           </div>,
@@ -356,6 +363,7 @@ export function PipelineVisualizer({
 
   return (
     <section
+      ref={sectionRef}
       id={id}
       className={cn(
         'w-full shrink-0 border-t border-neutral-200 bg-card/40 py-4 dark:border-neutral-800 scroll-mt-4',
@@ -405,7 +413,12 @@ export function PipelineVisualizer({
             {summaryPanel}
           </div>
           <div className="min-h-0 min-w-0 border-t border-neutral-200 p-3 dark:border-neutral-700 lg:border-t-0 lg:overflow-auto">
-            <MermaidDiagram key={definition} definition={definition} zoom={inlineZoom} />
+            <MermaidDiagram
+              key={definition}
+              definition={definition}
+              zoom={inlineZoom}
+              enabled={renderDiagram}
+            />
           </div>
         </div>
       </div>

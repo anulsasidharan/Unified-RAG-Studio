@@ -10,8 +10,8 @@ Language is auto-detected from file extension metadata when config.language="aut
 
 import importlib
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
 
@@ -38,9 +38,9 @@ _EXTENSION_TO_LANG: dict[str, str] = {
 def _get_lc_language(lang: str):
     """Map an internal language name to a LangChain Language enum member."""
     lcts = importlib.import_module("langchain_text_splitters")
-    Language = getattr(lcts, "Language")
+    Language = lcts.Language  # noqa: N806
 
-    _MAP = {
+    _MAP = {  # noqa: N806
         "python": Language.PYTHON,
         "js": Language.JS,
         "ts": Language.TS,
@@ -77,7 +77,7 @@ class CodeAwareChunker(TextChunker):
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
         lcts = importlib.import_module("langchain_text_splitters")
-        rcts = getattr(lcts, "RecursiveCharacterTextSplitter")
+        rcts = lcts.RecursiveCharacterTextSplitter
 
         result: list[Chunk] = []
 
@@ -100,9 +100,7 @@ class CodeAwareChunker(TextChunker):
             for i, text in enumerate(splits):
                 if text.strip():
                     meta = {**doc.metadata, "detected_language": lang_str}
-                    result.append(
-                        self._make_chunk(text, meta, i, total, "code-aware")
-                    )
+                    result.append(self._make_chunk(text, meta, i, total, "code-aware"))
 
         logger.info("code_aware_chunked", input_docs=len(docs), output_chunks=len(result))
         return result

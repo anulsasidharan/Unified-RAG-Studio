@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
+import uuid
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,7 +61,9 @@ class DesignerService:
         )
         return (await self._session.execute(q)).scalar_one_or_none()
 
-    async def _owned_config(self, user_id: uuid.UUID, config_id: uuid.UUID) -> PipelineConfig | None:
+    async def _owned_config(
+        self, user_id: uuid.UUID, config_id: uuid.UUID
+    ) -> PipelineConfig | None:
         q = (
             select(PipelineConfig)
             .join(Project, PipelineConfig.project_id == Project.id)
@@ -72,7 +74,9 @@ class DesignerService:
         )
         return (await self._session.execute(q)).scalar_one_or_none()
 
-    def _prepare_new_config(self, body: SaveConfigRequest, row_id: uuid.UUID) -> PipelineConfigurationSchema:
+    def _prepare_new_config(
+        self, body: SaveConfigRequest, row_id: uuid.UUID
+    ) -> PipelineConfigurationSchema:
         desc = body.description if body.description is not None else body.config.description
         md = body.config.metadata.model_copy(
             update={
@@ -89,7 +93,9 @@ class DesignerService:
             }
         )
 
-    async def save_config(self, user_id: uuid.UUID, body: SaveConfigRequest) -> SaveConfigResponse | None:
+    async def save_config(
+        self, user_id: uuid.UUID, body: SaveConfigRequest
+    ) -> SaveConfigResponse | None:
         """Create a new ``PipelineConfig`` row scoped to an owned project."""
         if await self._owned_project(user_id, body.project_id) is None:
             return None
@@ -112,7 +118,9 @@ class DesignerService:
         await self._session.refresh(row)
         return row_to_save_response(row)
 
-    async def load_config(self, user_id: uuid.UUID, config_id: uuid.UUID) -> SaveConfigResponse | None:
+    async def load_config(
+        self, user_id: uuid.UUID, config_id: uuid.UUID
+    ) -> SaveConfigResponse | None:
         row = await self._owned_config(user_id, config_id)
         if row is None:
             return None
@@ -132,11 +140,7 @@ class DesignerService:
         current = PipelineConfigurationSchema.model_validate(cfg_dict)
 
         new_name = body.name if body.name is not None else row.name
-        new_desc = (
-            body.description
-            if body.description is not None
-            else current.description
-        )
+        new_desc = body.description if body.description is not None else current.description
 
         if body.config is not None:
             merged = body.config.model_copy(
@@ -190,9 +194,7 @@ class DesignerService:
         )
         total = int((await self._session.execute(count_q)).scalar_one())
         offset = (page - 1) * page_size
-        rows = (
-            await self._session.execute(base.offset(offset).limit(page_size))
-        ).scalars().all()
+        rows = (await self._session.execute(base.offset(offset).limit(page_size))).scalars().all()
 
         items: list[ConfigListItem] = []
         for r in rows:

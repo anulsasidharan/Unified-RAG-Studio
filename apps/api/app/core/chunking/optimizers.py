@@ -10,11 +10,11 @@ These metrics help the Autopilot agent identify and filter low-quality chunks
 before they reach the embedding step.
 """
 
-import re
 from dataclasses import dataclass
+import re
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -26,9 +26,9 @@ class ChunkQualityMetrics:
     """Quality metrics computed for a single chunk Document."""
 
     content_density: float  # 0.0–1.0 — proportion of non-whitespace characters
-    completeness: float     # 0.0 or 1.0 — ends with sentence-ending punctuation
-    size_score: float       # 0.0–1.0 — closeness to target_size (1.0 = exact match)
-    overall: float          # weighted average of the three dimensions
+    completeness: float  # 0.0 or 1.0 — ends with sentence-ending punctuation
+    size_score: float  # 0.0–1.0 — closeness to target_size (1.0 = exact match)
+    overall: float  # weighted average of the three dimensions
 
 
 class ChunkQualityScorer:

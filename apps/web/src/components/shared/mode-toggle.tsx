@@ -21,6 +21,7 @@ export function ModeToggle() {
     >
       <Link
         href={ROUTES.designer}
+        prefetch={false}
         className={cn(
           'rounded-full px-3 py-1 text-xs font-semibold transition-colors sm:px-4 sm:text-sm',
           designerActive
@@ -32,6 +33,7 @@ export function ModeToggle() {
       </Link>
       <Link
         href={ROUTES.autopilot}
+        prefetch={false}
         className={cn(
           'rounded-full px-3 py-1 text-xs font-semibold transition-colors sm:px-4 sm:text-sm',
           autopilotActive

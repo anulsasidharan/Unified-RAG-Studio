@@ -28,17 +28,17 @@ Typical usage:
     high_quality = scorer.filter_low_quality(chunks, min_score=0.5)
 """
 
-import structlog
 from langchain_core.documents import Document
+import structlog
 
-from .strategies import Chunk, ChunkingConfig, TextChunker
+from .code_aware import CodeAwareChunker
+from .document_based import HTMLSectionChunker, MarkdownHeaderChunker
 from .fixed_size import FixedSizeChunker
+from .optimizers import ChunkQualityMetrics, ChunkQualityScorer
 from .recursive import RecursiveCharacterChunker
 from .semantic import SemanticChunker
-from .document_based import HTMLSectionChunker, MarkdownHeaderChunker
-from .code_aware import CodeAwareChunker
 from .sentence import ParagraphChunker, SentenceChunker
-from .optimizers import ChunkQualityMetrics, ChunkQualityScorer
+from .strategies import Chunk, ChunkingConfig, TextChunker
 
 logger = structlog.get_logger(__name__)
 

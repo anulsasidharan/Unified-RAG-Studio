@@ -6,27 +6,28 @@ responsive by enqueueing work and exposing status via AsyncResult IDs.
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
 from typing import Any
-
-import structlog
+import uuid
 
 from langchain_core.messages import AIMessage
+import structlog
 
+from app.config import get_settings
 from app.core.agents.graph import invoke_autopilot_orchestrator
-from app.core.agents.state import AUTOPILOT_STAGE_ORDER, initial_autopilot_graph_state
+from app.core.agents.state import (
+    AUTOPILOT_STAGE_ORDER,
+    initial_autopilot_graph_state,
+)
 from app.core.evaluation.service import EvaluationEngine
 from app.core.evaluation.strategies import EvaluationExample
 from app.models import AutopilotBuild, Deployment, EvaluationRun
-from app.config import get_settings
 from app.observability.rag_metrics import (
     record_autopilot_terminal,
     record_evaluation_terminal,
 )
 from app.services.autopilot_build_result import compose_build_result_payload
 from app.services.mlflow_tracking import log_autopilot_build_to_mlflow
-
 from app.worker.celery_app import celery_app
 from app.worker.db_sync import sync_session_scope
 
@@ -64,7 +65,10 @@ def _stages_from_graph(stage_outputs: dict[str, Any] | None) -> dict[str, Any]:
                 "status": "complete",
                 "started_at": None,
                 "completed_at": _iso_now(),
-                "message": "Generation config remains Designer-led; graph runs analyze→deployment (P6-8).",
+                "message": (
+                    "Generation config remains Designer-led; "
+                    "graph runs analyze→deployment (P6-8)."
+                ),
             }
             continue
         payload = so.get(stage)
@@ -88,7 +92,8 @@ def _stages_from_graph(stage_outputs: dict[str, Any] | None) -> dict[str, Any]:
 
 @celery_app.task(bind=True, name="jobs.run_pipeline_build")
 def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
-    """Run the P6-8 LangGraph orchestrator and persist trace, stages, and progress onto the build row."""
+    """Run the P6-8 LangGraph orchestrator and persist trace, stages,
+    and progress onto the build row."""
     try:
         bid = uuid.UUID(build_id)
     except ValueError:
@@ -109,14 +114,21 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         row.current_stage = "orchestrate"
         row.messages = list(row.messages or [])
         row.messages.append(
-            {"timestamp": _iso_now(), "text": "Build job started", "type": "info", "agent": "orchestrator"},
+            {
+                "timestamp": _iso_now(),
+                "text": "Build job started",
+                "type": "info",
+                "agent": "orchestrator",
+            },
         )
         reqs = dict(row.requirements or {})
         snapshot = {
             "requirements": reqs,
             "project_id": str(row.project_id),
             "document_ids": [str(x) for x in (reqs.get("document_ids") or [])],
-            "pipeline_config": reqs.get("base_config") if isinstance(reqs.get("base_config"), dict) else None,
+            "pipeline_config": reqs.get("base_config")
+            if isinstance(reqs.get("base_config"), dict)
+            else None,
         }
 
     graph_state = initial_autopilot_graph_state(
@@ -152,7 +164,9 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         return {"build_id": build_id, "status": "failed", "error": str(exc)}
 
     traces: list[dict[str, Any]] = list(final.get("agent_trace") or [])
-    stage_outputs = final.get("stage_outputs") if isinstance(final.get("stage_outputs"), dict) else {}
+    stage_outputs = (
+        final.get("stage_outputs") if isinstance(final.get("stage_outputs"), dict) else {}
+    )
     progress_vals = [t["progress"] for t in traces if isinstance(t.get("progress"), int)]
     last_progress = max(progress_vals) if progress_vals else 0
 
@@ -192,7 +206,9 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
             return {"build_id": build_id, "status": "cancelled"}
         row.status = "complete"
         dep_ok = (stage_outputs.get("deployment") or {}).get("status") == "complete"
-        row.progress = 100 if final.get("current_stage") == "deployment_complete" or dep_ok else last_progress
+        row.progress = (
+            100 if final.get("current_stage") == "deployment_complete" or dep_ok else last_progress
+        )
         row.current_stage = str(final.get("current_stage") or "done")
         total_iter = int(final.get("evaluation_pass_index") or 0) + 1
         row.iteration = total_iter
@@ -206,7 +222,9 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
             {
                 "autopilot_graph": True,
                 "stub": False,
-                "pipeline_ready": (stage_outputs.get("deployment") or {}).get("status") == "complete",
+                "pipeline_ready": (
+                    (stage_outputs.get("deployment") or {}).get("status") == "complete"
+                ),
                 "final_stage": row.current_stage,
                 "stage_outputs": compact_outputs,
             },

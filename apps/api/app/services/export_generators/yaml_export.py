@@ -6,7 +6,6 @@ from datetime import UTC, datetime
 import re
 
 from app.schemas.pipeline import PipelineConfigurationSchema, PipelineStagesSchema
-
 from app.services.export_generators._compat import ev
 
 
@@ -43,11 +42,7 @@ def generate_yaml(config: PipelineConfigurationSchema, generated_at: str | None 
         if config.description
         else '  description: ""'
     )
-    updated = (
-        f"    updatedAt: {_yaml_string(md.updated_at)}"
-        if md.updated_at
-        else ""
-    )
+    updated = f"    updatedAt: {_yaml_string(md.updated_at)}" if md.updated_at else ""
     source_line = f"    source: {_yaml_string(md.source)}" if md.source else ""
 
     sections: list[str] = [
@@ -182,9 +177,7 @@ def _vector_store_section(stages: PipelineStagesSchema, lvl: int) -> str:
         lines.append(f"{_indent(lvl + 2)}cloud:")
         lines.append(f"{_indent(lvl + 3)}region: {_yaml_string(cfg.cloud.region)}")
         if cfg.cloud.instance_type:
-            lines.append(
-                f"{_indent(lvl + 3)}instanceType: {_yaml_string(cfg.cloud.instance_type)}"
-            )
+            lines.append(f"{_indent(lvl + 3)}instanceType: {_yaml_string(cfg.cloud.instance_type)}")
     return "\n".join(lines)
 
 
@@ -253,15 +246,11 @@ def _retrieval_section(stages: PipelineStagesSchema, lvl: int) -> str:
         lines.append(
             f"{_indent(lvl + 2)}parentChunkSize: {r.parent_child_config.parent_chunk_size}"
         )
-        lines.append(
-            f"{_indent(lvl + 2)}childChunkSize: {r.parent_child_config.child_chunk_size}"
-        )
+        lines.append(f"{_indent(lvl + 2)}childChunkSize: {r.parent_child_config.child_chunk_size}")
     if r.multi_query_config:
         lines.append(f"{_indent(lvl + 1)}multiQueryConfig:")
         lines.append(f"{_indent(lvl + 2)}numVariants: {r.multi_query_config.num_variants}")
-        lines.append(
-            f"{_indent(lvl + 2)}llmModel: {_yaml_string(r.multi_query_config.llm_model)}"
-        )
+        lines.append(f"{_indent(lvl + 2)}llmModel: {_yaml_string(r.multi_query_config.llm_model)}")
     return "\n".join(lines)
 
 
@@ -351,9 +340,7 @@ def _memory_section(stages: PipelineStagesSchema, lvl: int) -> str:
     if m.max_tokens is not None:
         lines.append(f"{_indent(lvl + 1)}maxTokens: {m.max_tokens}")
     if m.session_persistence is not None:
-        lines.append(
-            f"{_indent(lvl + 1)}sessionPersistence: {_yaml_bool(m.session_persistence)}"
-        )
+        lines.append(f"{_indent(lvl + 1)}sessionPersistence: {_yaml_bool(m.session_persistence)}")
     return "\n".join(lines)
 
 

@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import uuid
 from unittest.mock import AsyncMock, patch
+import uuid
 
-import pytest
 from fastapi.testclient import TestClient
+import pytest
 
 from app.schemas.evaluation import (
     CompareConfigsResponse,

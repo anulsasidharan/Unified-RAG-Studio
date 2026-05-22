@@ -6,8 +6,8 @@ and supports A/B comparison of two pipeline configurations.
 
 from __future__ import annotations
 
-import uuid
 from datetime import UTC, datetime
+import uuid
 
 from langchain_core.documents import Document
 from sqlalchemy import func, select
@@ -68,7 +68,9 @@ def _resolve_test_entries(body: EvaluationRunRequest) -> list[TestSetEntry]:
     return _synthetic_test_entries(body.test_set_size)
 
 
-def _metric_name_list(body: EvaluationRunRequest, pipeline: PipelineConfigurationSchema) -> list[str] | None:
+def _metric_name_list(
+    body: EvaluationRunRequest, pipeline: PipelineConfigurationSchema
+) -> list[str] | None:
     if body.metrics:
         return [m for m in body.metrics if m != "latency"]
     return metric_names_from_pipeline(pipeline.stages.evaluation)
@@ -133,7 +135,9 @@ class EvaluationService:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def _owned_config(self, user_id: uuid.UUID, config_id: uuid.UUID) -> PipelineConfig | None:
+    async def _owned_config(
+        self, user_id: uuid.UUID, config_id: uuid.UUID
+    ) -> PipelineConfig | None:
         q = (
             select(PipelineConfig)
             .join(Project, PipelineConfig.project_id == Project.id)
@@ -284,8 +288,8 @@ class EvaluationService:
         if has_a != has_b:
             raise ValueError("provide both run_id_a and run_id_b, or neither")
 
-        pipeline_a = self._parse_pipeline(row_a)
-        pipeline_b = self._parse_pipeline(row_b)
+        self._parse_pipeline(row_a)
+        self._parse_pipeline(row_b)
 
         if has_a and has_b:
             try:
@@ -351,7 +355,7 @@ def _compare_summary(
     short_a = id_a[:8]
     short_b = id_b[:8]
     lead = (
-        f"Overall winner: configuration {'A' if overall == 'a' else 'B' if overall == 'b' else 'tie'} "
+        f"Overall winner: configuration {'A' if overall == 'a' else 'B' if overall == 'b' else 'tie'} "  # noqa: E501
         f"(A={short_a}…, B={short_b}…)."
     )
     parts: list[str] = [lead]
@@ -360,7 +364,7 @@ def _compare_summary(
             parts.append(f"{d.metric}: tie.")
         elif d.metric == "avg_latency_ms":
             parts.append(
-                f"{d.metric}: {'A' if d.winner == 'a' else 'B'} (lower is better; Δ={d.delta:+.2f} ms)."
+                f"{d.metric}: {'A' if d.winner == 'a' else 'B'} (lower is better; Δ={d.delta:+.2f} ms)."  # noqa: E501
             )
         else:
             parts.append(f"{d.metric}: {'A' if d.winner == 'a' else 'B'} (Δ={d.delta:+.4f}).")

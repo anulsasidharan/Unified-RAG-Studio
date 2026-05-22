@@ -8,8 +8,8 @@ artifact of stage outputs. Tracking is best-effort: MLflow or network errors nev
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
+import tempfile
 from typing import Any
 
 import structlog
@@ -37,7 +37,7 @@ def _flatten(prefix: str, obj: Any, out: dict[str, str], *, depth: int = 0) -> N
         return
     if isinstance(obj, bool):
         out[prefix] = "true" if obj else "false"
-    elif isinstance(obj, (int, float)):
+    elif isinstance(obj, int | float):
         out[prefix] = str(obj)
     elif isinstance(obj, str):
         if prefix:
@@ -52,7 +52,7 @@ def _flatten(prefix: str, obj: Any, out: dict[str, str], *, depth: int = 0) -> N
         if not obj or len(out) >= _MAX_PARAMS:
             return
         head = obj[:12]
-        if all(isinstance(x, (str, int, float, bool)) or x is None for x in head):
+        if all(isinstance(x, str | int | float | bool) or x is None for x in head):
             out[prefix] = _clip(",".join("" if x is None else str(x) for x in head))
 
 
@@ -99,7 +99,7 @@ def _collect_metrics(stage_outputs: dict[str, Any]) -> dict[str, float]:
                 "avg_latency_ms",
             ):
                 v = m.get(key)
-                if isinstance(v, (int, float)):
+                if isinstance(v, int | float):
                     metrics[f"eval.{key}"] = float(v)
         if isinstance(ev.get("meets_targets"), bool):
             metrics["eval.meets_targets"] = 1.0 if ev["meets_targets"] else 0.0
@@ -112,9 +112,9 @@ def _collect_metrics(stage_outputs: dict[str, Any]) -> dict[str, float]:
                 if not isinstance(r, dict) or r.get("error"):
                     continue
                 label = f"cand_{i}"
-                if isinstance(r.get("composite_score"), (int, float)):
+                if isinstance(r.get("composite_score"), int | float):
                     metrics[f"embedding.{label}.composite_score"] = float(r["composite_score"])
-                if isinstance(r.get("avg_latency_ms"), (int, float)):
+                if isinstance(r.get("avg_latency_ms"), int | float):
                     metrics[f"embedding.{label}.avg_latency_ms"] = float(r["avg_latency_ms"])
 
     dep = stage_outputs.get("deployment")
@@ -202,13 +202,15 @@ def log_autopilot_build_to_mlflow(
                     break
                 try:
                     mlflow.log_param(pk, pv)
-                except Exception:
+                except Exception as exc:
+                    logger.debug("mlflow_log_param_error", key=pk, error=str(exc))
                     continue
 
             for mk, mv in metrics.items():
                 try:
                     mlflow.log_metric(mk, mv)
-                except Exception:
+                except Exception as exc:
+                    logger.debug("mlflow_log_metric_error", key=mk, error=str(exc))
                     continue
 
             with tempfile.NamedTemporaryFile(

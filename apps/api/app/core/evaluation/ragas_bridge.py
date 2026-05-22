@@ -48,10 +48,10 @@ def load_ragas_metrics(pipeline_names: list[str]) -> list[object]:
     metrics_mod = importlib.import_module("ragas.metrics")
 
     _map = {
-        "faithfulness": getattr(metrics_mod, "faithfulness"),
-        "answer_relevance": getattr(metrics_mod, "answer_relevancy"),
-        "context_precision": getattr(metrics_mod, "context_precision"),
-        "context_recall": getattr(metrics_mod, "context_recall"),
+        "faithfulness": metrics_mod.faithfulness,
+        "answer_relevance": metrics_mod.answer_relevancy,
+        "context_precision": metrics_mod.context_precision,
+        "context_recall": metrics_mod.context_recall,
     }
     return [_map[n] for n in pipeline_names]
 

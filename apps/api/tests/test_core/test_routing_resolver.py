@@ -30,8 +30,12 @@ def test_routing_keyword_selects_target_model() -> None:
         name="t",
         cloud_provider="aws",
         stages=PipelineStagesSchema(
-            chunking=ChunkingConfigSchema(strategy="recursive-character", chunk_size=512, chunk_overlap=50),
-            embedding=EmbeddingConfigSchema(model="text-embedding-3-small", provider="openai", dimensions=1536),
+            chunking=ChunkingConfigSchema(
+                strategy="recursive-character", chunk_size=512, chunk_overlap=50
+            ),
+            embedding=EmbeddingConfigSchema(
+                model="text-embedding-3-small", provider="openai", dimensions=1536
+            ),
             vector_store=VectorStoreConfigSchema(provider="qdrant", index_name="kb"),
             retrieval=RetrievalConfigSchema(strategy="similarity", top_k=5),
             generation=GenerationConfigSchema(
@@ -53,7 +57,9 @@ def test_routing_fallback_default_model() -> None:
         enabled=True,
         default_model="gpt-4o",
         rules=[
-            RoutingRuleSchema(condition="keyword", keywords=["zzzznotfound"], target_model="gpt-4o-mini"),
+            RoutingRuleSchema(
+                condition="keyword", keywords=["zzzznotfound"], target_model="gpt-4o-mini"
+            ),
         ],
     )
     p = PipelineConfigurationSchema(
@@ -61,8 +67,12 @@ def test_routing_fallback_default_model() -> None:
         name="t",
         cloud_provider="aws",
         stages=PipelineStagesSchema(
-            chunking=ChunkingConfigSchema(strategy="recursive-character", chunk_size=512, chunk_overlap=50),
-            embedding=EmbeddingConfigSchema(model="text-embedding-3-small", provider="openai", dimensions=1536),
+            chunking=ChunkingConfigSchema(
+                strategy="recursive-character", chunk_size=512, chunk_overlap=50
+            ),
+            embedding=EmbeddingConfigSchema(
+                model="text-embedding-3-small", provider="openai", dimensions=1536
+            ),
             vector_store=VectorStoreConfigSchema(provider="qdrant", index_name="kb"),
             retrieval=RetrievalConfigSchema(strategy="similarity", top_k=5),
             generation=GenerationConfigSchema(
@@ -86,8 +96,12 @@ def test_routing_disabled_returns_base() -> None:
         name="t",
         cloud_provider="aws",
         stages=PipelineStagesSchema(
-            chunking=ChunkingConfigSchema(strategy="recursive-character", chunk_size=512, chunk_overlap=50),
-            embedding=EmbeddingConfigSchema(model="text-embedding-3-small", provider="openai", dimensions=1536),
+            chunking=ChunkingConfigSchema(
+                strategy="recursive-character", chunk_size=512, chunk_overlap=50
+            ),
+            embedding=EmbeddingConfigSchema(
+                model="text-embedding-3-small", provider="openai", dimensions=1536
+            ),
             vector_store=VectorStoreConfigSchema(provider="qdrant", index_name="kb"),
             retrieval=RetrievalConfigSchema(strategy="similarity", top_k=5),
             generation=GenerationConfigSchema(

@@ -89,7 +89,12 @@ async def create_api_key(
     )
 
 
-@router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None, summary="Revoke an API key")
+@router.delete(
+    "/{key_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
+    summary="Revoke an API key",
+)
 async def revoke_api_key(
     key_id: str,
     principal: CurrentPrincipal,
@@ -97,8 +102,10 @@ async def revoke_api_key(
 ) -> Response:
     try:
         key_uuid = uuid_lib.UUID(key_id)
-    except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid key ID")
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid key ID"
+        ) from err  # noqa: E501
 
     api_key = await session.get(APIKey, key_uuid)
     if api_key is None or api_key.user_id != principal.user_id:
