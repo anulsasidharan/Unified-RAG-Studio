@@ -48,6 +48,7 @@ def _seed_test_user():
                 User(
                     id=TEST_USER_ID,
                     email="test-integration@ragstudio.test",
+                    name="Test Integration User",
                     password_hash=hash_password("test-password"),
                     email_verified=True,
                     subscription_tier="pro",

@@ -169,16 +169,16 @@ class QdrantVectorStore(VectorStoreClient):
         score_threshold: float | None = None,
     ) -> list[ScoredDoc]:
         qf = _build_qdrant_filter(filters)
-        hits = await cast(Any, self._client).search(
+        result = await cast(Any, self._client).query_points(
             collection_name=self._collection,
-            query_vector=query_vector,
+            query=query_vector,
             limit=top_k,
             query_filter=qf,
             with_payload=True,
             score_threshold=score_threshold,
         )
         out: list[ScoredDoc] = []
-        for hit in hits:
+        for hit in result.points:
             pl = hit.payload or {}
             meta = pl.get("metadata") if isinstance(pl.get("metadata"), dict) else {}
             content = pl.get("page_content")

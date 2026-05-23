@@ -27,9 +27,9 @@ def test_analytics_summary_shape(sync_client: TestClient) -> None:
     assert r.status_code == 200
     body = r.json()
     assert "projects" in body
-    assert "pipeline_configs" in body
-    assert "autopilot_builds" in body and "counts" in body["autopilot_builds"]
-    assert "cost_signals" in body
+    assert "pipelineConfigs" in body
+    assert "autopilotBuilds" in body and "counts" in body["autopilotBuilds"]
+    assert "costSignals" in body
 
 
 def test_x_correlation_id_echoed(sync_client: TestClient) -> None:

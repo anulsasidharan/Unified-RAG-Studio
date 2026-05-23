@@ -5,9 +5,8 @@ until chunks fit within chunk_size. Produces natural-sounding splits for most
 document types (prose, PDFs, DOCX, HTML body text).
 """
 
-import importlib
-
 from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
@@ -26,10 +25,8 @@ class RecursiveCharacterChunker(TextChunker):
     """
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
-        lcts = importlib.import_module("langchain_text_splitters")
-        rcts = lcts.RecursiveCharacterTextSplitter
         separators = config.separators or _DEFAULT_SEPARATORS
-        splitter = rcts(
+        splitter = RecursiveCharacterTextSplitter(
             chunk_size=config.chunk_size,
             chunk_overlap=config.chunk_overlap,
             separators=separators,

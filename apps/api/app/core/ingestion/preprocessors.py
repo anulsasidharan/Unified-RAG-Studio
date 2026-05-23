@@ -50,12 +50,16 @@ def remove_headers_footers(text: str, *, min_occurrences: int = 3) -> str:
     if len(pages) < min_occurrences:
         return text
 
-    # Count how often each short line appears at page boundaries
+    # Count how often each line appears exclusively at page boundaries.
+    # Lines that appear in both the top-3 and bottom-3 of the same page
+    # are body content on short pages, not headers/footers — exclude them.
     line_counts: dict[str, int] = {}
+    n = 3
     for page in pages:
         lines = [line.strip() for line in page.strip().splitlines()]
-        # Inspect only the first and last 3 lines of each page
-        candidates = lines[:3] + lines[-3:]
+        first_n = set(lines[:n])
+        last_n = set(lines[-n:])
+        candidates = (first_n | last_n) - (first_n & last_n)
         for line in candidates:
             if len(line) > 5:
                 line_counts[line] = line_counts.get(line, 0) + 1

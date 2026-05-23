@@ -32,7 +32,7 @@ def test_templates_get_unknown(sync_client: TestClient):
 @pytest.mark.integration
 def test_apply_template_creates_config(sync_client: TestClient):
     h = {"X-User-ID": USER}
-    pr = sync_client.post("/api/projects/", json={"name": "TplProj"}, headers=h)
+    pr = sync_client.post("/api/projects", json={"name": "TplProj"}, headers=h)
     assert pr.status_code == 201
     project_id = pr.json()["id"]
 
@@ -57,7 +57,7 @@ def test_apply_template_creates_config(sync_client: TestClient):
 @pytest.mark.integration
 def test_apply_template_unknown(sync_client: TestClient):
     h = {"X-User-ID": USER}
-    pr = sync_client.post("/api/projects/", json={"name": "Tpl2"}, headers=h)
+    pr = sync_client.post("/api/projects", json={"name": "Tpl2"}, headers=h)
     project_id = pr.json()["id"]
 
     r = sync_client.post(

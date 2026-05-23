@@ -12,7 +12,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+from bs4 import BeautifulSoup
+import docx
 from langchain_core.documents import Document
+from pypdf import PdfReader
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -37,8 +40,6 @@ class PDFLoader(DocumentLoader):
     """Loads PDF files using pypdf, one Document per page."""
 
     def load(self, source: "str | Path | bytes", **kwargs: Any) -> list[Document]:
-        from pypdf import PdfReader
-
         if isinstance(source, bytes):
             reader = PdfReader(io.BytesIO(source))
             source_path = kwargs.get("filename", "uploaded.pdf")
@@ -73,8 +74,6 @@ class DOCXLoader(DocumentLoader):
     """Loads Word (.docx) files as a single Document containing all paragraph text."""
 
     def load(self, source: "str | Path | bytes", **kwargs: Any) -> list[Document]:
-        import docx  # python-docx
-
         if isinstance(source, bytes):
             doc = docx.Document(io.BytesIO(source))
             source_path = kwargs.get("filename", "uploaded.docx")
@@ -132,8 +131,6 @@ class HTMLLoader(DocumentLoader):
     """Loads HTML files, extracting visible text via BeautifulSoup."""
 
     def load(self, source: "str | Path | bytes", **kwargs: Any) -> list[Document]:
-        from bs4 import BeautifulSoup
-
         if isinstance(source, bytes):
             raw = source.decode("utf-8", errors="replace")
             source_path = kwargs.get("filename", "uploaded.html")
@@ -142,11 +139,11 @@ class HTMLLoader(DocumentLoader):
             raw = Path(source).read_text(encoding="utf-8", errors="replace")
 
         soup = BeautifulSoup(raw, "html.parser")
+        title = soup.title.string if soup.title else None
         for tag in soup(["script", "style", "head", "meta"]):
             tag.decompose()
 
         text = soup.get_text(separator="\n")
-        title = soup.title.string if soup.title else None
 
         docs = [
             Document(
