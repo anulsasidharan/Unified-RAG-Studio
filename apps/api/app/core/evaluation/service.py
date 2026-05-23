@@ -12,7 +12,6 @@ import time
 from typing import Any
 
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
-from pydantic import SecretStr
 import structlog
 
 from app.config import Settings, get_settings
@@ -32,23 +31,41 @@ logger = structlog.get_logger(__name__)
 class EvaluationEngine:
     """RAGAS-backed evaluation with OpenAI chat + embeddings (configurable models)."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        *,
+        llm: Any | None = None,
+        embeddings: Any | None = None,
+    ) -> None:
         self._settings = settings or get_settings()
+        self._llm = llm
+        self._emb = embeddings
 
-    def _build_models(self) -> tuple[ChatOpenAI, OpenAIEmbeddings]:
-        key = SecretStr(self._settings.openai_api_key) if self._settings.openai_api_key else None
+    def _build_models(self) -> tuple[Any, Any]:
+        if self._llm is not None and self._emb is not None:
+            return self._llm, self._emb
+
+        api_key = self._settings.openai_api_key or None
+        if api_key == "":
+            api_key = None
+
         llm_kw: dict[str, Any] = {
             "model": self._settings.evaluation_llm_model,
             "temperature": 0.0,
-            "api_key": key,
         }
         emb_kw: dict[str, Any] = {
             "model": self._settings.evaluation_embedding_model,
-            "api_key": key,
         }
-        llm = ChatOpenAI(**llm_kw)
-        emb = OpenAIEmbeddings(**emb_kw)
-        return llm, emb
+        if api_key:
+            llm_kw["api_key"] = api_key
+            emb_kw["api_key"] = api_key
+
+        if self._llm is None:
+            self._llm = ChatOpenAI(**llm_kw)
+        if self._emb is None:
+            self._emb = OpenAIEmbeddings(**emb_kw)
+        return self._llm, self._emb
 
     def evaluate(
         self,
