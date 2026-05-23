@@ -68,9 +68,7 @@ export function probeDurationSec(ffmpegBin, filePath) {
   const text = `${r.stderr || ''}${r.stdout || ''}`;
   const m = text.match(/Duration:\s*(\d{2}):(\d{2}):(\d{2}\.\d+)/);
   if (!m) throw new Error(`Could not read duration for ${filePath}`);
-  return (
-    parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60 + parseFloat(m[3])
-  );
+  return parseInt(m[1], 10) * 3600 + parseInt(m[2], 10) * 60 + parseFloat(m[3]);
 }
 
 export function hasAudioStream(ffmpegBin, filePath) {
@@ -96,11 +94,9 @@ function synthesizeWindowsSapi(text, outWav) {
     `$s.Dispose()\r\n`;
   fs.writeFileSync(ps1, body, 'utf8');
   try {
-    execFileSync(
-      'powershell.exe',
-      ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1],
-      { stdio: 'inherit' },
-    );
+    execFileSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', ps1], {
+      stdio: 'inherit',
+    });
   } finally {
     try {
       fs.unlinkSync(ps1);
@@ -159,9 +155,7 @@ async function synthesizeSpeechFile(text, outBasePath) {
     return outMp3;
   } catch (e) {
     if (process.platform === 'win32') {
-      console.warn(
-        `[product-tour] Edge TTS failed (${e.message}). Falling back to Windows SAPI.`,
-      );
+      console.warn(`[product-tour] Edge TTS failed (${e.message}). Falling back to Windows SAPI.`);
       const outWav = `${outBasePath}.wav`;
       synthesizeWindowsSapi(text, outWav);
       return outWav;
@@ -182,11 +176,7 @@ function fitSegmentWav(ffmpegBin, inAudio, outWav, maxSec) {
     tempo === 1
       ? `aformat=sample_rates=44100:channel_layouts=stereo,atrim=0:${maxSec},asetpts=PTS-STARTPTS`
       : `atempo=${tempo},aformat=sample_rates=44100:channel_layouts=stereo,atrim=0:${maxSec},asetpts=PTS-STARTPTS`;
-  execFileSync(
-    ffmpegBin,
-    ['-y', '-i', inAudio, '-af', af, outWav],
-    { stdio: 'pipe' },
-  );
+  execFileSync(ffmpegBin, ['-y', '-i', inAudio, '-af', af, outWav], { stdio: 'pipe' });
 }
 
 /**
@@ -201,10 +191,7 @@ export async function buildVoiceoverMix(ffmpegBin, workDir, onProgress) {
     onProgress?.(`TTS segment ${i + 1}/${VO_SEGMENTS.length}`);
     const rawBase = path.join(workDir, `seg-${i}-raw`);
     const rawFile = await synthesizeSpeechFile(seg.text, rawBase);
-    const maxSec = slotDurationSec(
-      windows[i].scriptStartSec,
-      windows[i].scriptEndSec,
-    );
+    const maxSec = slotDurationSec(windows[i].scriptStartSec, windows[i].scriptEndSec);
     const wav = path.join(workDir, `seg-${i}.wav`);
     fitSegmentWav(ffmpegBin, rawFile, wav, maxSec);
     try {
@@ -216,14 +203,9 @@ export async function buildVoiceoverMix(ffmpegBin, workDir, onProgress) {
     i++;
   }
 
-  const delaysMs = windows.map((w, j) =>
-    Math.round(wallStartSec(w.scriptStartSec) * 1000),
-  );
+  const delaysMs = windows.map((w, j) => Math.round(wallStartSec(w.scriptStartSec) * 1000));
 
-  const inputs = VO_SEGMENTS.map((_, j) => [
-    '-i',
-    path.join(workDir, `seg-${j}.wav`),
-  ]).flat();
+  const inputs = VO_SEGMENTS.map((_, j) => ['-i', path.join(workDir, `seg-${j}.wav`)]).flat();
 
   const labeled = [];
   const parts = [];
@@ -250,12 +232,7 @@ export async function buildVoiceoverMix(ffmpegBin, workDir, onProgress) {
 /**
  * Trim or pad mixed narration to video duration and mux AAC into mp4 (-c:v copy).
  */
-export function muxVoiceoverToMp4(
-  ffmpegBin,
-  videoMp4Path,
-  rawMixWavPath,
-  outMp4Path,
-) {
+export function muxVoiceoverToMp4(ffmpegBin, videoMp4Path, rawMixWavPath, outMp4Path) {
   const videoDur = probeDurationSec(ffmpegBin, videoMp4Path);
   const narrDur = probeDurationSec(ffmpegBin, rawMixWavPath);
   const padSec = Math.max(0, videoDur - narrDur + 0.12);
@@ -264,29 +241,13 @@ export function muxVoiceoverToMp4(
   if (padSec > 0.02) {
     execFileSync(
       ffmpegBin,
-      [
-        '-y',
-        '-i',
-        rawMixWavPath,
-        '-af',
-        `apad=pad_dur=${padSec}`,
-        finalWav,
-      ],
+      ['-y', '-i', rawMixWavPath, '-af', `apad=pad_dur=${padSec}`, finalWav],
       { stdio: 'pipe' },
     );
   } else if (narrDur > videoDur + 0.05) {
-    execFileSync(
-      ffmpegBin,
-      [
-        '-y',
-        '-i',
-        rawMixWavPath,
-        '-t',
-        String(videoDur),
-        finalWav,
-      ],
-      { stdio: 'pipe' },
-    );
+    execFileSync(ffmpegBin, ['-y', '-i', rawMixWavPath, '-t', String(videoDur), finalWav], {
+      stdio: 'pipe',
+    });
   } else {
     fs.copyFileSync(rawMixWavPath, finalWav);
   }

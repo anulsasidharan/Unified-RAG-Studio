@@ -72,7 +72,7 @@ const config: Config = {
           600: 'hsl(0 74% 42%)',
         },
         purple: {
-          50:  'hsl(270 100% 98%)',
+          50: 'hsl(270 100% 98%)',
           100: 'hsl(269 100% 95%)',
           200: 'hsl(269 100% 92%)',
           300: 'hsl(269 97% 85%)',
@@ -84,7 +84,7 @@ const config: Config = {
           900: 'hsl(264 67% 35%)',
         },
         indigo: {
-          50:  'hsl(226 100% 97%)',
+          50: 'hsl(226 100% 97%)',
           100: 'hsl(226 100% 94%)',
           500: 'hsl(239 84% 67%)',
           600: 'hsl(243 75% 59%)',
@@ -131,7 +131,7 @@ const config: Config = {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'fade-in': 'fade-in 0.3s ease-out',
-        'shimmer': 'shimmer 2s linear infinite',
+        shimmer: 'shimmer 2s linear infinite',
         'slide-in': 'slide-in 0.3s ease-out',
       },
     },

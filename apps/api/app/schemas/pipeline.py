@@ -8,7 +8,7 @@ model IDs, strategies, and provider names must match the JSON catalog values.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Literal, cast
 
 if TYPE_CHECKING:
     from app.schemas.guardrails import GuardrailsConfigSchema
@@ -419,7 +419,7 @@ class HumanInTheLoopConfigSchema(RAGBaseModel):
 
     enabled: bool = False
     tier: HitlTier = "simple"
-    roles: list[HitlRole] = Field(default_factory=lambda: ["approver"])  # type: ignore[arg-type]
+    roles: list[HitlRole] = Field(default_factory=lambda: cast(list[HitlRole], ["approver"]))
     placement: HitlPlacementSchema = Field(default_factory=HitlPlacementSchema)
     confidence: HitlConfidenceSchema = Field(default_factory=HitlConfidenceSchema)
     workflow: HitlWorkflowSchema = Field(default_factory=HitlWorkflowSchema)

@@ -70,8 +70,9 @@ async def ready(
             decode_responses=True,
             max_connections=5,
         )
+        assert redis_client is not None
         pong = await asyncio.wait_for(
-            cast(Awaitable[bool], redis_client.ping()),  # type: ignore[union-attr]
+            cast(Awaitable[bool], redis_client.ping()),
             timeout=2.0,
         )
         checks["redis"] = {"ok": pong is True}
@@ -79,7 +80,7 @@ async def ready(
         checks["redis"] = {"ok": False, "detail": str(exc)}
     finally:
         if redis_client is not None:
-            await redis_client.aclose()
+            await redis_client.close()
 
     qc: AsyncQdrantClient | None = None
     try:
