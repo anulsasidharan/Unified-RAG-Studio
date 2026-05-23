@@ -46,7 +46,7 @@ class CohereEmbedder(TextEmbedder):
         emb_mod = importlib.import_module("langchain_community.embeddings")
         CohereEmbeddings = emb_mod.CohereEmbeddings  # noqa: N806
 
-        return CohereEmbeddings(
+        return CohereEmbeddings(  # type: ignore[no-any-return]
             model=self._resolve_model(config.model),
             cohere_api_key=get_settings().cohere_api_key,
         )

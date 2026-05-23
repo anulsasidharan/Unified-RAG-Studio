@@ -1,6 +1,5 @@
 import type { PipelineConfiguration, PipelineStages } from '@/types/pipeline';
 
-type CloudProvider = 'aws' | 'gcp' | 'azure' | 'multi-cloud';
 type SupportedCloud = 'aws' | 'gcp' | 'azure';
 
 // ─── Header helpers ───────────────────────────────────────────────────────────
@@ -37,7 +36,9 @@ variable "region" {
 }`;
 
   if (cloud === 'aws') {
-    return base + `
+    return (
+      base +
+      `
 
 variable "aws_account_id" {
   description = "AWS account ID for IAM policies"
@@ -49,20 +50,26 @@ variable "openai_api_key" {
   type        = string
   sensitive   = true
   default     = ""
-}`;
+}`
+    );
   }
 
   if (cloud === 'gcp') {
-    return base + `
+    return (
+      base +
+      `
 
 variable "gcp_project_id" {
   description = "Google Cloud project ID"
   type        = string
-}`;
+}`
+    );
   }
 
   if (cloud === 'azure') {
-    return base + `
+    return (
+      base +
+      `
 
 variable "subscription_id" {
   description = "Azure subscription ID"
@@ -73,7 +80,8 @@ variable "resource_group_name" {
   description = "Azure resource group for all RAG Studio resources"
   type        = string
   default     = "rg-rag-studio"
-}`;
+}`
+    );
   }
 
   return base;
@@ -411,16 +419,22 @@ resource "azurerm_container_app" "qdrant" {
 # The index is referenced by name in the application.
 
 # Optionally store API key in cloud secrets manager:
-${cloud === 'aws' ? `resource "aws_secretsmanager_secret" "pinecone" {
+${
+  cloud === 'aws'
+    ? `resource "aws_secretsmanager_secret" "pinecone" {
   name = "\${var.project_name}/pinecone-api-key"
-}` : cloud === 'gcp' ? `resource "google_secret_manager_secret" "pinecone" {
+}`
+    : cloud === 'gcp'
+      ? `resource "google_secret_manager_secret" "pinecone" {
   secret_id = "\${var.project_name}-pinecone-api-key"
   replication { auto {} }
-}` : `resource "azurerm_key_vault_secret" "pinecone" {
+}`
+      : `resource "azurerm_key_vault_secret" "pinecone" {
   name         = "pinecone-api-key"
   value        = "REPLACE_ME"
   key_vault_id = azurerm_key_vault.main.id
-}`}
+}`
+}
 
 # Index name used by the application: "${indexName}"`;
   }

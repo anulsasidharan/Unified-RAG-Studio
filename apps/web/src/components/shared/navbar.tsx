@@ -50,10 +50,7 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
 
   const handleDeleteActive = () => {
     if (!activeProject) return;
-    if (
-      !window.confirm(`Delete project "${activeProject.name}"? This cannot be undone.`)
-    )
-      return;
+    if (!window.confirm(`Delete project "${activeProject.name}"? This cannot be undone.`)) return;
     void deleteProjectOnServer(activeProject.id);
   };
 
@@ -85,13 +82,13 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
             <>
               <Link
                 href={ROUTES.analytics}
-                className="hidden text-sm font-medium text-neutral-600 hover:text-primary-600 md:inline dark:text-neutral-400 dark:hover:text-primary-400"
+                className="hover:text-primary-600 dark:hover:text-primary-400 hidden text-sm font-medium text-neutral-600 md:inline dark:text-neutral-400"
               >
                 Analytics
               </Link>
               <Link
                 href={ROUTES.templates}
-                className="hidden text-sm font-medium text-neutral-600 hover:text-primary-600 md:inline dark:text-neutral-400 dark:hover:text-primary-400"
+                className="hover:text-primary-600 dark:hover:text-primary-400 hidden text-sm font-medium text-neutral-600 md:inline dark:text-neutral-400"
               >
                 Templates
               </Link>
@@ -101,28 +98,26 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
                   <button
                     type="button"
                     className={cn(
-                      'inline-flex max-w-[200px] items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-left text-sm font-medium text-neutral-800 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800'
+                      'inline-flex max-w-[200px] items-center gap-1 rounded-md border border-neutral-200 bg-white px-2 py-1.5 text-left text-sm font-medium text-neutral-800 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800',
                     )}
                     aria-label="Select active project"
                   >
                     <FolderKanban className="h-4 w-4 shrink-0 text-neutral-500" />
-                    <span className="truncate">
-                      {activeProject?.name ?? 'No project'}
-                    </span>
+                    <span className="truncate">{activeProject?.name ?? 'No project'}</span>
                     <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
                   </button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Portal>
                   <DropdownMenu.Content
-                    className="z-50 min-w-[220px] rounded-md border border-neutral-200 bg-popover p-1 text-popover-foreground shadow-lg dark:border-neutral-700"
+                    className="bg-popover text-popover-foreground z-50 min-w-[220px] rounded-md border border-neutral-200 p-1 shadow-lg dark:border-neutral-700"
                     sideOffset={6}
                     align="end"
                   >
-                    <DropdownMenu.Label className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                    <DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                       Projects
                     </DropdownMenu.Label>
                     {projects.length === 0 ? (
-                      <div className="px-2 py-2 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground px-2 py-2 text-xs">
                         No projects yet — create one in the sidebar.
                       </div>
                     ) : (
@@ -130,8 +125,8 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
                         <DropdownMenu.Item
                           key={p.id}
                           className={cn(
-                            'cursor-pointer rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground',
-                            p.id === activeProjectId && 'bg-accent/60'
+                            'hover:bg-accent hover:text-accent-foreground cursor-pointer rounded-sm px-2 py-1.5 text-sm outline-none',
+                            p.id === activeProjectId && 'bg-accent/60',
                           )}
                           onSelect={() => setActiveProject(p.id)}
                         >
@@ -141,12 +136,12 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
                     )}
                     {activeProject ? (
                       <>
-                        <DropdownMenu.Separator className="my-1 h-px bg-border" />
-                        <DropdownMenu.Label className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+                        <DropdownMenu.Separator className="bg-border my-1 h-px" />
+                        <DropdownMenu.Label className="text-muted-foreground px-2 py-1.5 text-xs font-medium">
                           Active project
                         </DropdownMenu.Label>
                         <DropdownMenu.Item
-                          className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                          className="hover:bg-accent hover:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none"
                           onSelect={handleRenameActive}
                         >
                           <PencilLine className="h-4 w-4" />
@@ -161,11 +156,11 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
                         </DropdownMenu.Item>
                       </>
                     ) : null}
-                    <DropdownMenu.Separator className="my-1 h-px bg-border" />
+                    <DropdownMenu.Separator className="bg-border my-1 h-px" />
                     <DropdownMenu.Item asChild>
                       <Link
                         href={ROUTES.projects}
-                        className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+                        className="hover:bg-accent hover:text-accent-foreground flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none"
                       >
                         <LayoutGrid className="h-4 w-4" />
                         Manage projects
@@ -221,7 +216,7 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
               </Link>
               <Link
                 href="/register"
-                className="rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 hover:shadow active:scale-[0.97]"
+                className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 rounded-lg bg-gradient-to-r to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:to-indigo-700 hover:shadow active:scale-[0.97]"
               >
                 Sign up
               </Link>
@@ -234,13 +229,13 @@ export function Navbar({ showSidebarTrigger = true, onOpenSidebar }: NavbarProps
         <div className="flex flex-wrap items-center justify-center gap-3 border-t border-neutral-100 px-3 pb-2 pt-2 sm:hidden dark:border-neutral-800">
           <Link
             href={ROUTES.analytics}
-            className="text-xs font-medium text-neutral-600 hover:text-primary-600 dark:text-neutral-400"
+            className="hover:text-primary-600 text-xs font-medium text-neutral-600 dark:text-neutral-400"
           >
             Analytics
           </Link>
           <Link
             href={ROUTES.templates}
-            className="text-xs font-medium text-neutral-600 hover:text-primary-600 dark:text-neutral-400"
+            className="hover:text-primary-600 text-xs font-medium text-neutral-600 dark:text-neutral-400"
           >
             Templates
           </Link>

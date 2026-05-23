@@ -22,7 +22,9 @@ export default function AdminAnalyticsPage() {
     }
   };
 
-  useEffect(() => { void fetchData(); }, []);
+  useEffect(() => {
+    void fetchData();
+  }, []);
 
   return (
     <div>

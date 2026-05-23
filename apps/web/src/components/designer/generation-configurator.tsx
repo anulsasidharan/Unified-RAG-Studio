@@ -19,7 +19,7 @@ const DEFAULT_GEN = createDefaultPipelineConfiguration().stages.generation;
 
 function mergeGeneration(
   current: GenerationConfig | undefined,
-  patch: Partial<GenerationConfig>
+  patch: Partial<GenerationConfig>,
 ): GenerationConfig {
   const base = current ?? DEFAULT_GEN;
   return { ...base, ...patch };
@@ -66,14 +66,14 @@ export function GenerationConfigurator({
     (next: GenerationConfig) => {
       updateStages({ generation: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchGeneration = useCallback(
     (patch: Partial<GenerationConfig>) => {
       setGeneration(mergeGeneration(draft.stages.generation, patch));
     },
-    [draft.stages.generation, setGeneration]
+    [draft.stages.generation, setGeneration],
   );
 
   const validation = useMemo(() => GenerationConfigSchema.safeParse(cfg), [cfg]);
@@ -173,16 +173,17 @@ export function GenerationConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="gen-filter-heading"
       >
-        <h2 id="gen-filter-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="gen-filter-heading" className="text-foreground text-lg font-semibold">
           Discover & filter
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Search and narrow models from <code className="rounded bg-muted px-1">data/models/generation.json</code>. Your
-          choice updates <strong className="font-medium text-foreground">draft.stages.generation</strong> for exports and
-          APIs.
+        <p className="text-muted-foreground mt-1 text-sm">
+          Search and narrow models from{' '}
+          <code className="bg-muted rounded px-1">data/models/generation.json</code>. Your choice
+          updates <strong className="text-foreground font-medium">draft.stages.generation</strong>{' '}
+          for exports and APIs.
         </p>
 
         <div className="mt-4">
@@ -190,26 +191,32 @@ export function GenerationConfigurator({
             Search generation models
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Search
+              className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              aria-hidden
+            />
             <input
               id="gen-search"
               type="search"
               placeholder="Search by name, id, description, strengths…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring w-full rounded-md border py-2 pl-9 pr-3 text-sm shadow-sm outline-none focus-visible:ring-2"
             />
           </div>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label htmlFor="gen-filter-provider" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="gen-filter-provider"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Provider
             </label>
             <select
               id="gen-filter-provider"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={providerFilter}
               onChange={(e) => setProviderFilter(e.target.value)}
             >
@@ -222,12 +229,15 @@ export function GenerationConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="gen-filter-tier" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="gen-filter-tier"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Tier
             </label>
             <select
               id="gen-filter-tier"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
             >
@@ -238,12 +248,15 @@ export function GenerationConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="gen-filter-oss" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="gen-filter-oss"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Open source
             </label>
             <select
               id="gen-filter-oss"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={openSourceFilter}
               onChange={(e) => setOpenSourceFilter(e.target.value)}
             >
@@ -253,12 +266,15 @@ export function GenerationConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="gen-filter-json" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="gen-filter-json"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               JSON mode
             </label>
             <select
               id="gen-filter-json"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={jsonModeFilter}
               onChange={(e) => setJsonModeFilter(e.target.value)}
             >
@@ -268,12 +284,15 @@ export function GenerationConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="gen-filter-tools" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="gen-filter-tools"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Tool / function use
             </label>
             <select
               id="gen-filter-tools"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={toolUseFilter}
               onChange={(e) => setToolUseFilter(e.target.value)}
             >
@@ -284,13 +303,14 @@ export function GenerationConfigurator({
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground mt-3 text-xs" aria-live="polite">
           Showing {filteredModels.length} of {allModels.length} models
           {filteredModels.length === 0 ? ' — relax filters or clear search.' : '.'}
           {pinnedSelectionId ? (
             <>
               {' '}
-              Your current selection is pinned at the top because it does not match the active filters.
+              Your current selection is pinned at the top because it does not match the active
+              filters.
             </>
           ) : null}
         </p>
@@ -308,17 +328,19 @@ export function GenerationConfigurator({
               onClick={() => selectModel(m)}
               className={cn(
                 'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                 selected
-                  ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                  : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
+                  ? 'border-primary-600 bg-primary-600/[0.06] ring-primary-600 dark:bg-primary-500/10 ring-2'
+                  : 'bg-card hover:border-primary-400/60 hover:bg-accent/40 border-neutral-200 dark:border-neutral-700',
               )}
             >
               <div className="flex items-start gap-3">
                 <span
                   className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
-                    selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                    'bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border',
+                    selected
+                      ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                      : 'border-muted',
                   )}
                   aria-hidden
                 >
@@ -326,7 +348,7 @@ export function GenerationConfigurator({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-foreground">{m.name}</span>
+                    <span className="text-foreground font-semibold">{m.name}</span>
                     {m.id === pinnedSelectionId ? (
                       <span className="rounded-md border border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-100">
                         Current · outside filters
@@ -335,14 +357,14 @@ export function GenerationConfigurator({
                     <span
                       className={cn(
                         'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                        tierBadgeStyles(m.tier)
+                        tierBadgeStyles(m.tier),
                       )}
                     >
                       {m.tier}
                     </span>
                   </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{m.description}</p>
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{m.description}</p>
+                  <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
                     <span className="tabular-nums">{(m.contextWindow / 1000).toFixed(0)}k ctx</span>
                     <span>·</span>
                     <span>{PROVIDER_LABEL[m.provider] ?? m.provider}</span>
@@ -361,7 +383,7 @@ export function GenerationConfigurator({
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border',
                     selected
                       ? 'border-primary-600 bg-primary-600 text-primary-foreground'
-                      : 'border-muted bg-muted/50 text-transparent'
+                      : 'border-muted bg-muted/50 text-transparent',
                   )}
                   aria-hidden
                 >
@@ -375,39 +397,49 @@ export function GenerationConfigurator({
 
       {selectedMeta ? (
         <section
-          className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+          className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
           aria-labelledby="gen-detail-heading"
         >
-          <h2 id="gen-detail-heading" className="text-lg font-semibold text-foreground">
+          <h2 id="gen-detail-heading" className="text-foreground text-lg font-semibold">
             About this model
           </h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Strengths</h3>
-              <ul className="mt-2 list-inside list-disc text-sm text-foreground">
+              <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                Strengths
+              </h3>
+              <ul className="text-foreground mt-2 list-inside list-disc text-sm">
                 {selectedMeta.strengths.map((x) => (
                   <li key={x}>{x}</li>
                 ))}
               </ul>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Context window</span>
-                <span className="tabular-nums font-medium">{selectedMeta.contextWindow.toLocaleString()} tokens</span>
+                <span className="font-medium tabular-nums">
+                  {selectedMeta.contextWindow.toLocaleString()} tokens
+                </span>
               </div>
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Max output (catalog)</span>
-                <span className="tabular-nums font-medium">{selectedMeta.maxOutputTokens.toLocaleString()}</span>
+                <span className="font-medium tabular-nums">
+                  {selectedMeta.maxOutputTokens.toLocaleString()}
+                </span>
               </div>
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Cost / 1M input (USD)</span>
-                <span className="tabular-nums font-medium">{selectedMeta.costInput.toFixed(2)}</span>
+                <span className="font-medium tabular-nums">
+                  {selectedMeta.costInput.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Cost / 1M output (USD)</span>
-                <span className="tabular-nums font-medium">{selectedMeta.costOutput.toFixed(2)}</span>
+                <span className="font-medium tabular-nums">
+                  {selectedMeta.costOutput.toFixed(2)}
+                </span>
               </div>
-              <div className="flex flex-wrap justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex flex-wrap justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Capabilities</span>
                 <span className="max-w-[60%] text-right text-xs">
                   {selectedMeta.supportsStreaming ? 'Streaming · ' : ''}
@@ -417,7 +449,9 @@ export function GenerationConfigurator({
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">Best for</span>
-                <span className="max-w-[60%] text-right text-xs">{selectedMeta.bestFor.join(', ')}</span>
+                <span className="max-w-[60%] text-right text-xs">
+                  {selectedMeta.bestFor.join(', ')}
+                </span>
               </div>
             </div>
           </div>
@@ -425,26 +459,29 @@ export function GenerationConfigurator({
       ) : null}
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="gen-params-heading"
       >
-        <h2 id="gen-params-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="gen-params-heading" className="text-foreground text-lg font-semibold">
           Inference parameters
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Temperature, max tokens, optional top-p, system prompt, and output format are validated by{' '}
-          <strong className="font-medium text-foreground">GenerationConfigSchema</strong>. Max tokens cannot exceed the
-          selected model&apos;s catalog <strong className="font-medium text-foreground">maxOutputTokens</strong> (
+          <strong className="text-foreground font-medium">GenerationConfigSchema</strong>. Max
+          tokens cannot exceed the selected model&apos;s catalog{' '}
+          <strong className="text-foreground font-medium">maxOutputTokens</strong> (
           {maxOutCap.toLocaleString()}).
         </p>
 
         <div className="mt-6 space-y-6">
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <label htmlFor="gen-temp" className="text-sm font-medium text-foreground">
+              <label htmlFor="gen-temp" className="text-foreground text-sm font-medium">
                 Temperature
               </label>
-              <span className="tabular-nums text-sm text-muted-foreground">{temperature.toFixed(2)}</span>
+              <span className="text-muted-foreground text-sm tabular-nums">
+                {temperature.toFixed(2)}
+              </span>
             </div>
             <input
               id="gen-temp"
@@ -454,16 +491,16 @@ export function GenerationConfigurator({
               step={0.05}
               value={temperature}
               onChange={(e) => patchGeneration({ temperature: Number(e.target.value) })}
-              className="h-2 w-full cursor-pointer accent-primary-600"
+              className="accent-primary-600 h-2 w-full cursor-pointer"
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between gap-2">
-              <label htmlFor="gen-max-tok" className="text-sm font-medium text-foreground">
+              <label htmlFor="gen-max-tok" className="text-foreground text-sm font-medium">
                 Max output tokens
               </label>
-              <span className="tabular-nums text-sm text-muted-foreground">{clampedMaxTokens}</span>
+              <span className="text-muted-foreground text-sm tabular-nums">{clampedMaxTokens}</span>
             </div>
             <input
               id="gen-max-tok"
@@ -473,11 +510,11 @@ export function GenerationConfigurator({
               step={1}
               value={clampedMaxTokens}
               onChange={(e) => patchGeneration({ maxTokens: Number(e.target.value) })}
-              className="h-2 w-full cursor-pointer accent-primary-600"
+              className="accent-primary-600 h-2 w-full cursor-pointer"
             />
           </div>
 
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-3">
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-3">
             <label className="flex cursor-pointer items-start gap-3 text-sm">
               <input
                 type="checkbox"
@@ -489,11 +526,11 @@ export function GenerationConfigurator({
                     patchGeneration({ topP: undefined });
                   }
                 }}
-                className="mt-1 rounded border-input"
+                className="border-input mt-1 rounded"
               />
               <span>
-                <span className="font-medium text-foreground">Use nucleus sampling (top-p)</span>
-                <span className="mt-0.5 block text-xs text-muted-foreground">
+                <span className="text-foreground font-medium">Use nucleus sampling (top-p)</span>
+                <span className="text-muted-foreground mt-0.5 block text-xs">
                   When off, top-p is omitted so providers use their default nucleus behavior.
                 </span>
               </span>
@@ -501,10 +538,10 @@ export function GenerationConfigurator({
             {useTopP ? (
               <div className="mt-4 space-y-2 pl-7">
                 <div className="flex items-center justify-between gap-2">
-                  <label htmlFor="gen-topp" className="text-sm text-foreground">
+                  <label htmlFor="gen-topp" className="text-foreground text-sm">
                     Top-p
                   </label>
-                  <span className="tabular-nums text-sm text-muted-foreground">
+                  <span className="text-muted-foreground text-sm tabular-nums">
                     {(cfg.topP ?? 0.95).toFixed(2)}
                   </span>
                 </div>
@@ -516,23 +553,21 @@ export function GenerationConfigurator({
                   step={0.01}
                   value={cfg.topP ?? 0.95}
                   onChange={(e) => patchGeneration({ topP: Number(e.target.value) })}
-                  className="h-2 w-full cursor-pointer accent-primary-600"
+                  className="accent-primary-600 h-2 w-full cursor-pointer"
                 />
               </div>
             ) : null}
           </div>
 
           <div>
-            <label htmlFor="gen-format" className="text-sm font-medium text-foreground">
+            <label htmlFor="gen-format" className="text-foreground text-sm font-medium">
               Output format
             </label>
             <select
               id="gen-format"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring sm:max-w-xs"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2 sm:max-w-xs"
               value={cfg.outputFormat ?? 'markdown'}
-              onChange={(e) =>
-                patchGeneration({ outputFormat: e.target.value as OutputFormat })
-              }
+              onChange={(e) => patchGeneration({ outputFormat: e.target.value as OutputFormat })}
             >
               {(Object.keys(OUTPUT_LABEL) as OutputFormat[]).map((k) => (
                 <option key={k} value={k}>
@@ -543,7 +578,7 @@ export function GenerationConfigurator({
           </div>
 
           <div>
-            <label htmlFor="gen-system" className="text-sm font-medium text-foreground">
+            <label htmlFor="gen-system" className="text-foreground text-sm font-medium">
               System prompt (optional)
             </label>
             <textarea
@@ -556,39 +591,42 @@ export function GenerationConfigurator({
                   systemPrompt: e.target.value.trim() === '' ? undefined : e.target.value,
                 })
               }
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
             />
-            <p className="mt-1 text-xs text-muted-foreground">Max 10,000 characters per pipeline schema.</p>
+            <p className="text-muted-foreground mt-1 text-xs">
+              Max 10,000 characters per pipeline schema.
+            </p>
           </div>
         </div>
 
         <dl className="mt-6 grid gap-2 text-sm sm:grid-cols-2">
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Model id</dt>
-            <dd className="mt-1 font-mono text-xs text-foreground">{cfg.model}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">Model id</dt>
+            <dd className="text-foreground mt-1 font-mono text-xs">{cfg.model}</dd>
           </div>
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Provider</dt>
-            <dd className="mt-1 text-foreground">{PROVIDER_LABEL[cfg.provider] ?? cfg.provider}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">Provider</dt>
+            <dd className="text-foreground mt-1">{PROVIDER_LABEL[cfg.provider] ?? cfg.provider}</dd>
           </div>
         </dl>
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="gen-prompt-heading"
       >
-        <h2 id="gen-prompt-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="gen-prompt-heading" className="text-foreground text-lg font-semibold">
           Prompt engineering
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Persona, optional few-shot turns, and citation grounding are passed through to{' '}
-          <strong className="font-medium text-foreground">GenerationService</strong> on guarded RAG and exports.
+          <strong className="text-foreground font-medium">GenerationService</strong> on guarded RAG
+          and exports.
         </p>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label htmlFor="gen-persona" className="text-sm font-medium text-foreground">
+            <label htmlFor="gen-persona" className="text-foreground text-sm font-medium">
               Persona (optional)
             </label>
             <input
@@ -602,7 +640,7 @@ export function GenerationConfigurator({
                   persona: e.target.value.trim() === '' ? undefined : e.target.value,
                 })
               }
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
             />
           </div>
 
@@ -611,38 +649,44 @@ export function GenerationConfigurator({
               type="checkbox"
               checked={Boolean(cfg.citationGrounding)}
               onChange={(e) => patchGeneration({ citationGrounding: e.target.checked })}
-              className="mt-1 rounded border-input"
+              className="border-input mt-1 rounded"
             />
             <span>
-              <span className="font-medium text-foreground">Citation grounding</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                Adds instructions to ground answers in retrieved context (best-effort; depends on model compliance).
+              <span className="text-foreground font-medium">Citation grounding</span>
+              <span className="text-muted-foreground mt-0.5 block text-xs">
+                Adds instructions to ground answers in retrieved context (best-effort; depends on
+                model compliance).
               </span>
             </span>
           </label>
 
           <div>
             <div className="flex flex-wrap items-end justify-between gap-2">
-              <h3 className="text-sm font-semibold text-foreground">Few-shot examples</h3>
+              <h3 className="text-foreground text-sm font-semibold">Few-shot examples</h3>
               <button
                 type="button"
                 onClick={addFewShot}
                 disabled={fewShots.length >= 24}
-                className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs font-medium shadow-sm hover:bg-accent disabled:opacity-50"
+                className="border-input bg-background hover:bg-accent inline-flex items-center gap-1 rounded-md border px-2.5 py-1.5 text-xs font-medium shadow-sm disabled:opacity-50"
               >
                 <Plus className="h-3.5 w-3.5" aria-hidden />
                 Add turn
               </button>
             </div>
             {fewShots.length === 0 ? (
-              <p className="mt-2 text-xs text-muted-foreground">No few-shot messages — optional structured priming.</p>
+              <p className="text-muted-foreground mt-2 text-xs">
+                No few-shot messages — optional structured priming.
+              </p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {fewShots.map((shot, idx) => (
-                  <li key={`fs-${idx}-${shot.role}`} className="rounded-lg border border-border bg-muted/15 p-3">
+                  <li
+                    key={`fs-${idx}-${shot.role}`}
+                    className="border-border bg-muted/15 rounded-lg border p-3"
+                  >
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <select
-                        className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                        className="border-input bg-background rounded-md border px-2 py-1 text-xs"
                         value={shot.role}
                         onChange={(e) =>
                           updateFewShot(idx, { role: e.target.value as FewShotMessage['role'] })
@@ -655,7 +699,7 @@ export function GenerationConfigurator({
                       <button
                         type="button"
                         onClick={() => removeFewShot(idx)}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-destructive hover:underline"
+                        className="text-destructive inline-flex items-center gap-1 text-xs font-medium hover:underline"
                       >
                         <Trash2 className="h-3.5 w-3.5" aria-hidden />
                         Remove
@@ -665,7 +709,7 @@ export function GenerationConfigurator({
                       rows={3}
                       value={shot.content}
                       onChange={(e) => updateFewShot(idx, { content: e.target.value })}
-                      className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      className="border-input bg-background mt-2 w-full rounded-md border px-3 py-2 text-sm"
                     />
                   </li>
                 ))}
@@ -678,7 +722,7 @@ export function GenerationConfigurator({
       {!validation.success ? (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm"
         >
           <p className="font-medium">Configuration needs adjustment</p>
           <ul className="mt-2 list-inside list-disc text-xs">
@@ -688,11 +732,12 @@ export function GenerationConfigurator({
           </ul>
         </div>
       ) : (
-        <p className="flex items-start gap-2 text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground flex items-start gap-2 text-xs" aria-live="polite">
           <Layers className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
           <span>
-            Generation settings are valid and saved with your pipeline draft (local storage). Runtime calls use backend{' '}
-            <strong className="font-medium text-foreground">GenerationService</strong> (P2-6).
+            Generation settings are valid and saved with your pipeline draft (local storage).
+            Runtime calls use backend{' '}
+            <strong className="text-foreground font-medium">GenerationService</strong> (P2-6).
           </span>
         </p>
       )}

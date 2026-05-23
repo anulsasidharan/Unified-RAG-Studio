@@ -8,9 +8,10 @@ Supported languages: python, js, ts, java, go, rust, cpp.
 Language is auto-detected from file extension metadata when config.language="auto".
 """
 
-import importlib
+from typing import Any
 
 from langchain_core.documents import Document
+from langchain_text_splitters import Language, RecursiveCharacterTextSplitter
 import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
@@ -35,12 +36,9 @@ _EXTENSION_TO_LANG: dict[str, str] = {
 }
 
 
-def _get_lc_language(lang: str):
+def _get_lc_language(lang: str) -> Any:
     """Map an internal language name to a LangChain Language enum member."""
-    lcts = importlib.import_module("langchain_text_splitters")
-    Language = lcts.Language  # noqa: N806
-
-    _MAP = {  # noqa: N806
+    _map = {
         "python": Language.PYTHON,
         "js": Language.JS,
         "ts": Language.TS,
@@ -49,7 +47,7 @@ def _get_lc_language(lang: str):
         "rust": Language.RUST,
         "cpp": Language.CPP,
     }
-    return _MAP.get(lang, Language.PYTHON)
+    return _map.get(lang, Language.PYTHON)
 
 
 def _detect_language(doc: Document, explicit: str) -> str:
@@ -76,9 +74,6 @@ class CodeAwareChunker(TextChunker):
     """
 
     def chunk(self, docs: list[Document], config: ChunkingConfig) -> list[Chunk]:
-        lcts = importlib.import_module("langchain_text_splitters")
-        rcts = lcts.RecursiveCharacterTextSplitter
-
         result: list[Chunk] = []
 
         for doc in docs:
@@ -88,7 +83,7 @@ class CodeAwareChunker(TextChunker):
             lang_str = _detect_language(doc, config.language)
             lc_lang = _get_lc_language(lang_str)
 
-            splitter = rcts.from_language(
+            splitter = RecursiveCharacterTextSplitter.from_language(
                 language=lc_lang,
                 chunk_size=config.chunk_size,
                 chunk_overlap=config.chunk_overlap,

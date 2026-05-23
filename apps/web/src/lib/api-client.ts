@@ -33,7 +33,7 @@ class ApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly statusText: string,
-    public readonly data?: unknown
+    public readonly data?: unknown,
   ) {
     super(`API error ${status}: ${statusText}`);
     this.name = 'ApiError';
@@ -54,7 +54,7 @@ export function formatApiErrorForUi(e: ApiError): string {
 
 async function request<TResponse, TBody = unknown>(
   path: string,
-  options: RequestOptions<TBody> = {}
+  options: RequestOptions<TBody> = {},
 ): Promise<TResponse> {
   const { method = 'GET', body, headers = {}, signal } = options;
 
@@ -91,10 +91,9 @@ async function request<TResponse, TBody = unknown>(
     const head = trimmed.slice(0, 4000);
     const proxyUnreachable =
       /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND|socket hang up|ECONNRESET|ETIMEDOUT/i.test(
-        head
+        head,
       );
-    const noDetail =
-      typeof data !== 'object' || data === null || !('detail' in (data as object));
+    const noDetail = typeof data !== 'object' || data === null || !('detail' in (data as object));
     if (proxyUnreachable && noDetail) {
       data = {
         detail:
@@ -119,7 +118,7 @@ async function request<TResponse, TBody = unknown>(
 export async function postFormData<TResponse>(
   path: string,
   form: FormData,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<TResponse> {
   const url = `${API_BASE}${path}`;
   const response = await fetch(url, {
@@ -127,10 +126,10 @@ export async function postFormData<TResponse>(
     body: form,
     signal,
     headers: { Accept: 'application/json' },
-    ...((() => {
+    ...(() => {
       const auth = resolveAuthHeader();
       return Object.keys(auth).length ? { headers: { Accept: 'application/json', ...auth } } : {};
-    })()),
+    })(),
   });
 
   if (!response.ok) {
@@ -147,7 +146,7 @@ export async function postFormData<TResponse>(
     const head = trimmed.slice(0, 4000);
     const proxyUnreachable =
       /ECONNREFUSED|Failed to proxy|AggregateError|EHOSTUNREACH|ENOTFOUND|socket hang up|ECONNRESET|ETIMEDOUT/i.test(
-        head
+        head,
       );
     const noDetailForm =
       typeof data !== 'object' || data === null || !('detail' in (data as object));
@@ -177,8 +176,7 @@ export async function postFormData<TResponse>(
 }
 
 export const apiClient = {
-  get: <T>(path: string, signal?: AbortSignal) =>
-    request<T>(path, { method: 'GET', signal }),
+  get: <T>(path: string, signal?: AbortSignal) => request<T>(path, { method: 'GET', signal }),
 
   post: <T, B = unknown>(path: string, body: B, signal?: AbortSignal) =>
     request<T, B>(path, { method: 'POST', body, signal }),
@@ -189,8 +187,7 @@ export const apiClient = {
   patch: <T, B = unknown>(path: string, body: B, signal?: AbortSignal) =>
     request<T, B>(path, { method: 'PATCH', body, signal }),
 
-  delete: <T>(path: string, signal?: AbortSignal) =>
-    request<T>(path, { method: 'DELETE', signal }),
+  delete: <T>(path: string, signal?: AbortSignal) => request<T>(path, { method: 'DELETE', signal }),
 };
 
 export { ApiError };

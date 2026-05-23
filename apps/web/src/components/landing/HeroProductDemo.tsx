@@ -43,7 +43,7 @@ export function HeroProductDemo() {
   return (
     <div className="w-full max-w-xl lg:max-w-none">
       <div className="mb-4 text-center lg:text-left">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-600">
+        <p className="text-primary-600 text-xs font-semibold uppercase tracking-[0.2em]">
           See it live
         </p>
         <h2
@@ -52,12 +52,10 @@ export function HeroProductDemo() {
         >
           <span className="gradient-text">Pipeline Premiere</span>
         </h2>
-        <p className="mt-1.5 text-sm text-neutral-600 sm:text-base">
-          Product demo — {DEMO.blurb}
-        </p>
+        <p className="mt-1.5 text-sm text-neutral-600 sm:text-base">Product demo — {DEMO.blurb}</p>
       </div>
 
-      <div className="relative overflow-hidden rounded-2xl border border-primary-200/70 bg-neutral-950 shadow-2xl shadow-primary-900/20 ring-1 ring-black/10">
+      <div className="border-primary-200/70 shadow-primary-900/20 relative overflow-hidden rounded-2xl border bg-neutral-950 shadow-2xl ring-1 ring-black/10">
         <video
           key={DEMO.src}
           ref={videoRef}

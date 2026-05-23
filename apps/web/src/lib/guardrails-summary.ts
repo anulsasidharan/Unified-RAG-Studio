@@ -43,13 +43,17 @@ export function guardrailsHighlightBullet(policy?: GuardrailsConfig | null): str
   const c = resolveGuardrailsConfig(policy);
   const layer = (on: boolean) => (on ? 'on' : 'off');
   return `Guardrails: input ${layer(c.input.enabled)} · retrieval ${layer(c.retrieval.enabled)} · output ${layer(
-    c.output.enabled
+    c.output.enabled,
   )}`;
 }
 
 /** Short hint for stage navigator under “Guardrails”. */
 export function guardrailsNavigatorHint(policy?: GuardrailsConfig | null): string {
   const c = resolveGuardrailsConfig(policy);
-  const bits = [c.input.enabled && 'In', c.retrieval.enabled && 'Ret', c.output.enabled && 'Out'].filter(Boolean);
+  const bits = [
+    c.input.enabled && 'In',
+    c.retrieval.enabled && 'Ret',
+    c.output.enabled && 'Out',
+  ].filter(Boolean);
   return bits.length === 0 ? 'All off' : bits.join('/') + ' layers';
 }

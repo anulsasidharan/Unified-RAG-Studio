@@ -20,9 +20,9 @@ from .strategies import (
 logger = structlog.get_logger(__name__)
 
 
-def _pinecone_module():
+def _pinecone_module() -> Any:
     try:
-        from pinecone import Pinecone  # type: ignore[import-not-found]
+        from pinecone import Pinecone
     except ImportError as e:
         raise VectorStoreConfigurationError(
             "Install the Pinecone SDK: pip install pinecone>=5.0.0"
@@ -95,7 +95,7 @@ class PineconeVectorStore(VectorStoreClient):
         if not pairs:
             return
 
-        def _run():
+        def _run() -> None:
             idx = self._index_client()
             vectors = []
             for doc, vec in pairs:
@@ -131,7 +131,7 @@ class PineconeVectorStore(VectorStoreClient):
             if and_terms:
                 pine_filter = {"$and": and_terms} if len(and_terms) > 1 else and_terms[0]
 
-        def _run():
+        def _run() -> Any:
             idx = self._index_client()
             kwargs: dict[str, Any] = {
                 "vector": query_vector,

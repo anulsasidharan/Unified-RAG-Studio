@@ -18,10 +18,6 @@ function yamlBool(value: boolean): string {
   return value ? 'true' : 'false';
 }
 
-function yamlNumber(value: number | undefined | null, fallback: number): string {
-  return String(value ?? fallback);
-}
-
 function yamlArray(items: string[], lvl: number): string {
   if (items.length === 0) return '[]';
   return '\n' + items.map((item) => `${indent(lvl)}- ${yamlString(item)}`).join('\n');
@@ -44,7 +40,9 @@ function yamlIngestionSources(di: DataIngestionConfig, lvl: number): string[] {
   for (const s of di.sources) {
     lines.push(`${indent(lvl + 1)}- sourceType: ${yamlString(s.sourceType)}`);
     lines.push(`${indent(lvl + 2)}enabled: ${yamlBool(s.enabled)}`);
-    lines.push(...yamlConnectionMap(s.connectionConfig as Record<string, unknown> | undefined, lvl + 2));
+    lines.push(
+      ...yamlConnectionMap(s.connectionConfig as Record<string, unknown> | undefined, lvl + 2),
+    );
   }
   return lines;
 }
@@ -148,10 +146,7 @@ function retrievalSection(stages: PipelineStages, lvl: number): string {
 function rerankingSection(stages: PipelineStages, lvl: number): string {
   const rr = stages.reranking;
   if (!rr) return `${indent(lvl)}reranking:\n${indent(lvl + 1)}enabled: false`;
-  const lines = [
-    `${indent(lvl)}reranking:`,
-    `${indent(lvl + 1)}enabled: ${yamlBool(rr.enabled)}`,
-  ];
+  const lines = [`${indent(lvl)}reranking:`, `${indent(lvl + 1)}enabled: ${yamlBool(rr.enabled)}`];
   if (rr.enabled) {
     if (rr.model) lines.push(`${indent(lvl + 1)}model: ${yamlString(rr.model)}`);
     if (rr.topN != null) lines.push(`${indent(lvl + 1)}topN: ${rr.topN}`);
@@ -183,10 +178,7 @@ function generationSection(stages: PipelineStages, lvl: number): string {
 function routingSection(stages: PipelineStages, lvl: number): string {
   const rt = stages.routing;
   if (!rt) return `${indent(lvl)}routing:\n${indent(lvl + 1)}enabled: false`;
-  const lines = [
-    `${indent(lvl)}routing:`,
-    `${indent(lvl + 1)}enabled: ${yamlBool(rt.enabled)}`,
-  ];
+  const lines = [`${indent(lvl)}routing:`, `${indent(lvl + 1)}enabled: ${yamlBool(rt.enabled)}`];
   if (rt.defaultModel) lines.push(`${indent(lvl + 1)}defaultModel: ${yamlString(rt.defaultModel)}`);
   if (rt.rules && rt.rules.length > 0) {
     lines.push(`${indent(lvl + 1)}rules:`);
@@ -205,10 +197,7 @@ function routingSection(stages: PipelineStages, lvl: number): string {
 function memorySection(stages: PipelineStages, lvl: number): string {
   const m = stages.memory;
   if (!m) return `${indent(lvl)}memory:\n${indent(lvl + 1)}type: none`;
-  const lines = [
-    `${indent(lvl)}memory:`,
-    `${indent(lvl + 1)}type: ${yamlString(m.type)}`,
-  ];
+  const lines = [`${indent(lvl)}memory:`, `${indent(lvl + 1)}type: ${yamlString(m.type)}`];
   if (m.windowSize != null) lines.push(`${indent(lvl + 1)}windowSize: ${m.windowSize}`);
   if (m.maxTokens != null) lines.push(`${indent(lvl + 1)}maxTokens: ${m.maxTokens}`);
   if (m.sessionPersistence != null) {
@@ -220,10 +209,7 @@ function memorySection(stages: PipelineStages, lvl: number): string {
 function evaluationSection(stages: PipelineStages, lvl: number): string {
   const ev = stages.evaluation;
   if (!ev) return `${indent(lvl)}evaluation:\n${indent(lvl + 1)}enabled: false`;
-  const lines = [
-    `${indent(lvl)}evaluation:`,
-    `${indent(lvl + 1)}enabled: ${yamlBool(ev.enabled)}`,
-  ];
+  const lines = [`${indent(lvl)}evaluation:`, `${indent(lvl + 1)}enabled: ${yamlBool(ev.enabled)}`];
   if (ev.enabled) {
     if (ev.metrics && ev.metrics.length > 0) {
       lines.push(`${indent(lvl + 1)}metrics: ${yamlArray(ev.metrics, lvl + 2)}`);
@@ -275,7 +261,7 @@ function humanInTheLoopSection(stages: PipelineStages, lvl: number): string {
     `${indent(lvl + 2)}multiReviewerConsensus: ${yamlBool(a.multiReviewerConsensus)}`,
     `${indent(lvl + 2)}auditLoggingRequired: ${yamlBool(a.auditLoggingRequired)}`,
     `${indent(lvl + 2)}humanGuidedRetrieval: ${yamlBool(a.humanGuidedRetrieval)}`,
-    `${indent(lvl + 2)}activeLearningFeedback: ${yamlBool(a.activeLearningFeedback)}`
+    `${indent(lvl + 2)}activeLearningFeedback: ${yamlBool(a.activeLearningFeedback)}`,
   );
   return lines.join('\n');
 }

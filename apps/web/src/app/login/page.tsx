@@ -27,7 +27,13 @@ export default function LoginPage() {
       await login(email, password);
       router.replace('/projects');
     } catch (err) {
-      setError(err instanceof ApiError ? formatApiErrorForUi(err) : err instanceof Error ? err.message : String(err));
+      setError(
+        err instanceof ApiError
+          ? formatApiErrorForUi(err)
+          : err instanceof Error
+            ? err.message
+            : String(err),
+      );
     } finally {
       setLoading(false);
     }
@@ -60,7 +66,7 @@ export default function LoginPage() {
                 type="email"
                 autoComplete="email"
                 required
-                className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                 placeholder="you@company.com"
               />
             </div>
@@ -73,7 +79,7 @@ export default function LoginPage() {
                 </label>
                 <Link
                   href="/password-reset"
-                  className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                  className="text-primary-600 hover:text-primary-700 text-xs font-medium"
                 >
                   Forgot password?
                 </Link>
@@ -86,7 +92,7 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="current-password"
                   required
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20"
+                  className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-sm text-neutral-900 outline-none transition-all placeholder:text-neutral-400 hover:border-neutral-300 focus:bg-white focus:ring-2"
                   placeholder="••••••••"
                 />
                 <button
@@ -102,7 +108,7 @@ export default function LoginPage() {
 
             {/* Error */}
             {error ? (
-              <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+              <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-3 text-sm">
                 {error}
               </div>
             ) : null}
@@ -111,7 +117,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
+              className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 w-full rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60"
             >
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
@@ -119,7 +125,10 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-sm text-neutral-500">
             No account yet?{' '}
-            <Link href="/register" className="font-semibold text-primary-600 hover:text-primary-700">
+            <Link
+              href="/register"
+              className="text-primary-600 hover:text-primary-700 font-semibold"
+            >
               Create one free
             </Link>
           </p>

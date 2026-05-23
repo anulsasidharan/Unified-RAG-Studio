@@ -21,8 +21,12 @@ function MetricTile({
 }>) {
   return (
     <div className="rounded-lg border border-emerald-200/80 bg-white/90 px-3 py-2.5 shadow-sm dark:border-emerald-900/50 dark:bg-neutral-950/80">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-base font-semibold tabular-nums tracking-tight text-neutral-900 dark:text-neutral-50">{value}</p>
+      <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wide">
+        {label}
+      </p>
+      <p className="mt-1 text-base font-semibold tabular-nums tracking-tight text-neutral-900 dark:text-neutral-50">
+        {value}
+      </p>
     </div>
   );
 }
@@ -41,7 +45,7 @@ export function AutopilotDesignerImportBanner({
     <section
       className={cn(
         'rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/90 via-white to-white p-5 shadow-sm dark:border-emerald-900/60 dark:from-emerald-950/40 dark:via-neutral-950 dark:to-neutral-950',
-        className
+        className,
       )}
       aria-label="Autopilot import summary"
     >
@@ -56,9 +60,11 @@ export function AutopilotDesignerImportBanner({
             </h2>
             <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
               This draft was loaded from Autopilot build{' '}
-              <span className="font-mono text-xs text-neutral-800 dark:text-neutral-200">{snapshot.buildId.slice(0, 8)}…</span>.
-              The pipeline graph and cost strips below reflect this configuration. Scroll to the live diagram or jump back to
-              the build for full logs.
+              <span className="font-mono text-xs text-neutral-800 dark:text-neutral-200">
+                {snapshot.buildId.slice(0, 8)}…
+              </span>
+              . The pipeline graph and cost strips below reflect this configuration. Scroll to the
+              live diagram or jump back to the build for full logs.
             </p>
           </div>
         </div>
@@ -82,7 +88,9 @@ export function AutopilotDesignerImportBanner({
         <MetricTile
           label="Avg latency (eval proxy)"
           value={
-            m?.avgLatencyMs !== undefined && Number.isFinite(m.avgLatencyMs) ? `${m.avgLatencyMs.toFixed(0)} ms` : '—'
+            m?.avgLatencyMs !== undefined && Number.isFinite(m.avgLatencyMs)
+              ? `${m.avgLatencyMs.toFixed(0)} ms`
+              : '—'
           }
         />
         <MetricTile

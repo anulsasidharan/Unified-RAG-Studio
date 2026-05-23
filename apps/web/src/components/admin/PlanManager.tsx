@@ -66,27 +66,27 @@ function PlanForm({
           placeholder="Plan name"
           value={form.name}
           onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-          className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+          className="focus:border-primary-500 focus:ring-primary-500/20 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
         />
         <input
           placeholder="Description (optional)"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+          className="focus:border-primary-500 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
         />
         <input
           type="number"
           placeholder="Monthly price ($)"
           value={form.price_monthly}
           onChange={(e) => setForm((f) => ({ ...f, price_monthly: e.target.value }))}
-          className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+          className="focus:border-primary-500 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
         />
         <input
           type="number"
           placeholder="Yearly price ($)"
           value={form.price_yearly}
           onChange={(e) => setForm((f) => ({ ...f, price_yearly: e.target.value }))}
-          className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none focus:border-primary-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+          className="focus:border-primary-500 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
         />
       </div>
       <textarea
@@ -94,7 +94,7 @@ function PlanForm({
         value={form.features}
         onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
         rows={3}
-        className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-xs font-mono outline-none focus:border-primary-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+        className="focus:border-primary-500 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 font-mono text-xs outline-none dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
       />
       <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
         <input
@@ -106,7 +106,7 @@ function PlanForm({
         Active
       </label>
       {error ? (
-        <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-2.5 text-sm text-destructive">
+        <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-2.5 text-sm">
           {error}
         </div>
       ) : null}
@@ -114,7 +114,7 @@ function PlanForm({
         <button
           onClick={handleSave}
           disabled={saving || !form.name}
-          className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          className="from-primary-600 flex items-center gap-2 rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
           Save
@@ -181,7 +181,7 @@ export function PlanManager({ plans, onRefresh }: Props) {
         </h2>
         <button
           onClick={() => setShowCreate((s) => !s)}
-          className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-3 py-2 text-sm font-semibold text-white"
+          className="from-primary-600 flex items-center gap-1.5 rounded-xl bg-gradient-to-r to-indigo-600 px-3 py-2 text-sm font-semibold text-white"
         >
           <Plus className="h-4 w-4" />
           New plan
@@ -233,11 +233,13 @@ export function PlanManager({ plans, onRefresh }: Props) {
                         <h3 className="text-base font-semibold text-neutral-800 dark:text-neutral-100">
                           {plan.name}
                         </h3>
-                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                          plan.is_active
-                            ? 'bg-green-50 text-green-700'
-                            : 'bg-neutral-100 text-neutral-500'
-                        }`}>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                            plan.is_active
+                              ? 'bg-green-50 text-green-700'
+                              : 'bg-neutral-100 text-neutral-500'
+                          }`}
+                        >
                           {plan.is_active ? 'Active' : 'Inactive'}
                         </span>
                       </div>

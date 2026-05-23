@@ -42,7 +42,7 @@ class GoogleEmbedder(TextEmbedder):
         genai_mod = importlib.import_module("langchain_google_genai")
         GoogleGenerativeAIEmbeddings = genai_mod.GoogleGenerativeAIEmbeddings  # noqa: N806
 
-        return GoogleGenerativeAIEmbeddings(
+        return GoogleGenerativeAIEmbeddings(  # type: ignore[no-any-return]
             model=self._resolve_model(config.model),
             google_api_key=get_settings().google_api_key,
         )

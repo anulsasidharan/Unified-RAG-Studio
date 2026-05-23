@@ -33,13 +33,7 @@ export type RetrievalStrategy =
   | 'multi-query'
   | 'ensemble';
 
-export type EmbeddingProvider =
-  | 'openai'
-  | 'cohere'
-  | 'google'
-  | 'huggingface'
-  | 'nomic'
-  | 'custom';
+export type EmbeddingProvider = 'openai' | 'cohere' | 'google' | 'huggingface' | 'nomic' | 'custom';
 
 export type GenerationProvider =
   | 'openai'
@@ -62,16 +56,7 @@ export type OutputFormat = 'text' | 'json' | 'markdown';
 
 export type SimilarityMetric = 'cosine' | 'euclidean' | 'dot';
 
-export type FilterOperator =
-  | 'eq'
-  | 'ne'
-  | 'gt'
-  | 'gte'
-  | 'lt'
-  | 'lte'
-  | 'in'
-  | 'nin'
-  | 'contains';
+export type FilterOperator = 'eq' | 'ne' | 'gt' | 'gte' | 'lt' | 'lte' | 'in' | 'nin' | 'contains';
 
 // ─── Sub-Structures ──────────────────────────────────────────────────────────
 
@@ -208,7 +193,12 @@ export interface AgentToolsConfig {
 }
 
 /** Sub-strategies run in parallel for ensemble retrieval (RRF fusion). */
-export type EnsembleMemberStrategy = 'similarity' | 'mmr' | 'hybrid' | 'multi-query' | 'parent-child';
+export type EnsembleMemberStrategy =
+  | 'similarity'
+  | 'mmr'
+  | 'hybrid'
+  | 'multi-query'
+  | 'parent-child';
 
 export interface FewShotMessage {
   role: 'user' | 'assistant' | 'system';

@@ -2,15 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ArrowRight,
-  Check,
-  Filter,
-  GitMerge,
-  Layers,
-  Search,
-  Sparkles,
-} from 'lucide-react';
+import { ArrowRight, Check, Filter, GitMerge, Layers, Search, Sparkles } from 'lucide-react';
 
 import { createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
 import {
@@ -40,17 +32,7 @@ const DEFAULT_STAGES = createDefaultPipelineConfiguration().stages;
 const DEFAULT_RETRIEVAL = DEFAULT_STAGES.retrieval;
 const DEFAULT_RERANK = DEFAULT_STAGES.reranking ?? { enabled: false };
 
-const OPERATORS: FilterOperator[] = [
-  'eq',
-  'ne',
-  'gt',
-  'gte',
-  'lt',
-  'lte',
-  'in',
-  'nin',
-  'contains',
-];
+const OPERATORS: FilterOperator[] = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte', 'in', 'nin', 'contains'];
 
 const ENSEMBLE_MEMBERS: { id: EnsembleMemberStrategy; label: string }[] = [
   { id: 'similarity', label: 'Similarity' },
@@ -71,7 +53,10 @@ function complexityBadgeStyles(level: string): string {
   return 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-100';
 }
 
-function mergeRetrieval(current: RetrievalConfig | undefined, patch: Partial<RetrievalConfig>): RetrievalConfig {
+function mergeRetrieval(
+  current: RetrievalConfig | undefined,
+  patch: Partial<RetrievalConfig>,
+): RetrievalConfig {
   const base = current ?? DEFAULT_RETRIEVAL;
   const hybridSearch =
     patch.hybridSearch !== undefined
@@ -82,27 +67,33 @@ function mergeRetrieval(current: RetrievalConfig | undefined, patch: Partial<Ret
     ...patch,
     filters: patch.filters !== undefined ? patch.filters : base.filters,
     hybridSearch,
-    parentChildConfig: patch.parentChildConfig !== undefined ? patch.parentChildConfig : base.parentChildConfig,
-    multiQueryConfig: patch.multiQueryConfig !== undefined ? patch.multiQueryConfig : base.multiQueryConfig,
+    parentChildConfig:
+      patch.parentChildConfig !== undefined ? patch.parentChildConfig : base.parentChildConfig,
+    multiQueryConfig:
+      patch.multiQueryConfig !== undefined ? patch.multiQueryConfig : base.multiQueryConfig,
     scoreThreshold: patch.scoreThreshold !== undefined ? patch.scoreThreshold : base.scoreThreshold,
     mmrFetchK: patch.mmrFetchK !== undefined ? patch.mmrFetchK : base.mmrFetchK,
     mmrLambdaMult: patch.mmrLambdaMult !== undefined ? patch.mmrLambdaMult : base.mmrLambdaMult,
-    ensembleStrategies: patch.ensembleStrategies !== undefined ? patch.ensembleStrategies : base.ensembleStrategies,
+    ensembleStrategies:
+      patch.ensembleStrategies !== undefined ? patch.ensembleStrategies : base.ensembleStrategies,
     ensembleRrfK: patch.ensembleRrfK !== undefined ? patch.ensembleRrfK : base.ensembleRrfK,
   };
 }
 
 function mergeReranking(
   current: typeof DEFAULT_RERANK | undefined,
-  patch: Partial<typeof DEFAULT_RERANK>
+  patch: Partial<typeof DEFAULT_RERANK>,
 ): typeof DEFAULT_RERANK {
   const base = current ?? DEFAULT_RERANK;
   return {
     ...base,
     ...patch,
-    minRelevanceScore: patch.minRelevanceScore !== undefined ? patch.minRelevanceScore : base.minRelevanceScore,
+    minRelevanceScore:
+      patch.minRelevanceScore !== undefined ? patch.minRelevanceScore : base.minRelevanceScore,
     diversityMaxSimilarity:
-      patch.diversityMaxSimilarity !== undefined ? patch.diversityMaxSimilarity : base.diversityMaxSimilarity,
+      patch.diversityMaxSimilarity !== undefined
+        ? patch.diversityMaxSimilarity
+        : base.diversityMaxSimilarity,
   };
 }
 
@@ -147,28 +138,28 @@ export function RetrievalConfigurator({
     (next: RetrievalConfig) => {
       updateStages({ retrieval: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchRetrieval = useCallback(
     (patch: Partial<RetrievalConfig>) => {
       setRetrieval(mergeRetrieval(draft.stages.retrieval, patch));
     },
-    [draft.stages.retrieval, setRetrieval]
+    [draft.stages.retrieval, setRetrieval],
   );
 
   const setReranking = useCallback(
     (next: typeof DEFAULT_RERANK) => {
       updateStages({ reranking: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchReranking = useCallback(
     (patch: Partial<typeof DEFAULT_RERANK>) => {
       setReranking(mergeReranking(draft.stages.reranking, patch));
     },
-    [draft.stages.reranking, setReranking]
+    [draft.stages.reranking, setReranking],
   );
 
   useEffect(() => {
@@ -177,7 +168,7 @@ export function RetrievalConfigurator({
     patchRetrieval(
       retrievalDefaultsFromCatalog('ensemble', {
         fallbackLlmModel: draft.stages.generation?.model ?? 'gpt-4o-mini',
-      })
+      }),
     );
   }, [cfg.strategy, cfg.ensembleStrategies, draft.stages.generation?.model, patchRetrieval]);
 
@@ -193,7 +184,8 @@ export function RetrievalConfigurator({
   const filteredStrategies = useMemo(() => {
     const q = query.trim().toLowerCase();
     return strategies.filter((s) => {
-      if (complexityFilter !== 'all' && s.implementationComplexity !== complexityFilter) return false;
+      if (complexityFilter !== 'all' && s.implementationComplexity !== complexityFilter)
+        return false;
       if (!q) return true;
       const hay = [s.id, s.name, s.description, ...(s.bestFor ?? [])].join(' ').toLowerCase();
       return hay.includes(q);
@@ -225,7 +217,7 @@ export function RetrievalConfigurator({
         ...defaults,
         strategy: id,
         filters: draft.stages.retrieval?.filters,
-      })
+      }),
     );
   };
 
@@ -271,18 +263,19 @@ export function RetrievalConfigurator({
 
   const rerankingSection = (
     <section
-      className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+      className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
       aria-labelledby="rerank-heading"
       id="designer-reranking-panel"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 id="rerank-heading" className="text-lg font-semibold text-foreground">
+          <h2 id="rerank-heading" className="text-foreground text-lg font-semibold">
             Reranking
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             Optionally re-score retrieved chunks before generation. Uses{' '}
-            <code className="rounded bg-muted px-1">data/models/rerankers.json</code> for curated models.
+            <code className="bg-muted rounded px-1">data/models/rerankers.json</code> for curated
+            models.
           </p>
         </div>
         <button
@@ -294,21 +287,21 @@ export function RetrievalConfigurator({
             'flex shrink-0 items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors',
             rerankCfg.enabled
               ? 'border-primary-200 bg-primary-50/50 dark:border-primary-900 dark:bg-primary-950/30'
-              : 'border-border bg-muted/30'
+              : 'border-border bg-muted/30',
           )}
         >
           <span>{rerankCfg.enabled ? 'Enabled' : 'Disabled'}</span>
           <span
             className={cn(
               'relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-colors',
-              rerankCfg.enabled ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted'
+              rerankCfg.enabled ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted',
             )}
             aria-hidden
           >
             <span
               className={cn(
-                'pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full bg-background shadow transition',
-                rerankCfg.enabled ? 'translate-x-5' : 'translate-x-0.5'
+                'bg-background pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full shadow transition',
+                rerankCfg.enabled ? 'translate-x-5' : 'translate-x-0.5',
               )}
             />
           </span>
@@ -319,12 +312,12 @@ export function RetrievalConfigurator({
         <div className="mt-6 space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="rerank-provider" className="text-sm font-medium text-foreground">
+              <label htmlFor="rerank-provider" className="text-foreground text-sm font-medium">
                 Provider
               </label>
               <select
                 id="rerank-provider"
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 value={rerankCfg.provider ?? 'cohere'}
                 onChange={(e) => {
                   const p = e.target.value as RerankerProvider;
@@ -337,7 +330,7 @@ export function RetrievalConfigurator({
               </select>
             </div>
             <div>
-              <label htmlFor="rerank-topn" className="text-sm font-medium text-foreground">
+              <label htmlFor="rerank-topn" className="text-foreground text-sm font-medium">
                 Top-N after rerank
               </label>
               <input
@@ -349,14 +342,14 @@ export function RetrievalConfigurator({
                 onChange={(e) =>
                   patchReranking({ topN: Math.min(100, Math.max(1, Number(e.target.value) || 1)) })
                 }
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               />
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label htmlFor="rerank-minrel" className="text-sm font-medium text-foreground">
+              <label htmlFor="rerank-minrel" className="text-foreground text-sm font-medium">
                 Min relevance score (Cohere only, optional)
               </label>
               <input
@@ -364,7 +357,9 @@ export function RetrievalConfigurator({
                 type="text"
                 inputMode="decimal"
                 placeholder="empty = no filter"
-                value={rerankCfg.minRelevanceScore == null ? '' : String(rerankCfg.minRelevanceScore)}
+                value={
+                  rerankCfg.minRelevanceScore == null ? '' : String(rerankCfg.minRelevanceScore)
+                }
                 onChange={(e) => {
                   const v = e.target.value.trim();
                   if (v === '') {
@@ -375,11 +370,11 @@ export function RetrievalConfigurator({
                   if (!Number.isFinite(n)) return;
                   patchReranking({ minRelevanceScore: Math.min(1, Math.max(0, n)) });
                 }}
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               />
             </div>
             <div>
-              <label htmlFor="rerank-div" className="text-sm font-medium text-foreground">
+              <label htmlFor="rerank-div" className="text-foreground text-sm font-medium">
                 Diversity (max word Jaccard, optional)
               </label>
               <input
@@ -387,7 +382,11 @@ export function RetrievalConfigurator({
                 type="text"
                 inputMode="decimal"
                 placeholder="empty = off"
-                value={rerankCfg.diversityMaxSimilarity == null ? '' : String(rerankCfg.diversityMaxSimilarity)}
+                value={
+                  rerankCfg.diversityMaxSimilarity == null
+                    ? ''
+                    : String(rerankCfg.diversityMaxSimilarity)
+                }
                 onChange={(e) => {
                   const v = e.target.value.trim();
                   if (v === '') {
@@ -398,9 +397,9 @@ export function RetrievalConfigurator({
                   if (!Number.isFinite(n)) return;
                   patchReranking({ diversityMaxSimilarity: Math.min(1, Math.max(0, n)) });
                 }}
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               />
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="text-muted-foreground mt-1 text-xs">
                 Skip chunks too similar to already-kept text (e.g. 0.85). Applied after ordering.
               </p>
             </div>
@@ -408,7 +407,7 @@ export function RetrievalConfigurator({
 
           {rerankCfg.provider === 'custom' ? (
             <div>
-              <label htmlFor="rerank-custom-model" className="text-sm font-medium text-foreground">
+              <label htmlFor="rerank-custom-model" className="text-foreground text-sm font-medium">
                 Custom model id or Hugging Face repo id
               </label>
               <input
@@ -417,33 +416,31 @@ export function RetrievalConfigurator({
                 autoComplete="off"
                 value={rerankCfg.model ?? ''}
                 onChange={(e) => patchReranking({ model: e.target.value })}
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm shadow-sm outline-none focus-visible:ring-2"
                 placeholder="my-org/reranker"
               />
             </div>
           ) : (
             <div>
-              <label htmlFor="rerank-model" className="text-sm font-medium text-foreground">
+              <label htmlFor="rerank-model" className="text-foreground text-sm font-medium">
                 Model
               </label>
               <select
                 id="rerank-model"
-                className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
-                value={
-                  (() => {
-                    const list =
-                      rerankCfg.provider === 'cohere'
-                        ? rerankByProvider.cohere
-                        : rerankCfg.provider === 'huggingface'
-                          ? rerankByProvider.huggingface
-                          : allRerankers;
-                    const fallback = list[0]?.id ?? 'cohere-rerank-v3';
-                    if (rerankCfg.model && list.some((m) => m.id === rerankCfg.model)) {
-                      return rerankCfg.model;
-                    }
-                    return fallback;
-                  })()
-                }
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm shadow-sm outline-none focus-visible:ring-2"
+                value={(() => {
+                  const list =
+                    rerankCfg.provider === 'cohere'
+                      ? rerankByProvider.cohere
+                      : rerankCfg.provider === 'huggingface'
+                        ? rerankByProvider.huggingface
+                        : allRerankers;
+                  const fallback = list[0]?.id ?? 'cohere-rerank-v3';
+                  if (rerankCfg.model && list.some((m) => m.id === rerankCfg.model)) {
+                    return rerankCfg.model;
+                  }
+                  return fallback;
+                })()}
                 onChange={(e) => selectRerankerModel(e.target.value)}
               >
                 {(rerankCfg.provider === 'cohere'
@@ -457,16 +454,18 @@ export function RetrievalConfigurator({
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Choose <strong className="font-medium text-foreground">Custom</strong> above to enter a free-form model id.
+              <p className="text-muted-foreground mt-1 text-xs">
+                Choose <strong className="text-foreground font-medium">Custom</strong> above to
+                enter a free-form model id.
               </p>
             </div>
           )}
 
-          <div className="rounded-lg border border-border bg-muted/15 p-3 text-xs text-muted-foreground">
+          <div className="border-border bg-muted/15 text-muted-foreground rounded-lg border p-3 text-xs">
             <p>
-              <strong className="font-medium text-foreground">Tip:</strong> Set top-N ≤ retrieval top-k unless you
-              expand the candidate pool in code (rerankers usually receive the retrieved set).
+              <strong className="text-foreground font-medium">Tip:</strong> Set top-N ≤ retrieval
+              top-k unless you expand the candidate pool in code (rerankers usually receive the
+              retrieved set).
             </p>
           </div>
         </div>
@@ -475,7 +474,7 @@ export function RetrievalConfigurator({
       {!rerankValidation.success ? (
         <div
           role="alert"
-          className="mt-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive mt-4 rounded-lg border px-4 py-3 text-sm"
         >
           <ul className="list-inside list-disc text-xs">
             {rerankValidation.error.issues.slice(0, 6).map((issue) => (
@@ -488,9 +487,11 @@ export function RetrievalConfigurator({
   );
 
   const retrievalSummary = (
-    <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Current retrieval</p>
-      <p className="mt-1 text-foreground">
+    <div className="border-border bg-muted/20 rounded-lg border px-4 py-3 text-sm">
+      <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+        Current retrieval
+      </p>
+      <p className="text-foreground mt-1">
         <span className="font-mono">{cfg.strategy}</span>
         <span className="text-muted-foreground"> · </span>
         top-{cfg.topK}
@@ -510,7 +511,7 @@ export function RetrievalConfigurator({
       {variant === 'rerank-focus' ? (
         <Link
           href="/designer/retrieval"
-          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline dark:text-primary-400"
+          className="text-primary-600 dark:text-primary-400 mt-2 inline-flex items-center gap-1 text-xs font-medium hover:underline"
         >
           Edit retrieval parameters <ArrowRight className="h-3 w-3" aria-hidden />
         </Link>
@@ -522,9 +523,12 @@ export function RetrievalConfigurator({
     <div className={cn('space-y-8', className)}>
       {variant === 'rerank-focus' ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Tune reranking for your pipeline draft. Retrieval parameters are shared with the{' '}
-            <Link href="/designer/retrieval" className="font-medium text-primary-600 hover:underline dark:text-primary-400">
+            <Link
+              href="/designer/retrieval"
+              className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+            >
               Retrieval
             </Link>{' '}
             stage.
@@ -535,16 +539,17 @@ export function RetrievalConfigurator({
       ) : (
         <>
           <section
-            className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+            className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
             aria-labelledby="ret-filter-heading"
           >
-            <h2 id="ret-filter-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="ret-filter-heading" className="text-foreground text-lg font-semibold">
               Discover strategies
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Browse <code className="rounded bg-muted px-1">data/retrieval-strategies.json</code>. Choosing a card
-              updates <strong className="font-medium text-foreground">draft.stages.retrieval</strong> with catalog-safe
-              defaults.
+            <p className="text-muted-foreground mt-1 text-sm">
+              Browse <code className="bg-muted rounded px-1">data/retrieval-strategies.json</code>.
+              Choosing a card updates{' '}
+              <strong className="text-foreground font-medium">draft.stages.retrieval</strong> with
+              catalog-safe defaults.
             </p>
 
             <div className="mt-4">
@@ -552,14 +557,17 @@ export function RetrievalConfigurator({
                 Search strategies
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+                <Search
+                  className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+                  aria-hidden
+                />
                 <input
                   id="ret-search"
                   type="search"
                   placeholder="Search by name, id, description…"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring w-full rounded-md border py-2 pl-9 pr-3 text-sm shadow-sm outline-none focus-visible:ring-2"
                 />
               </div>
             </div>
@@ -568,13 +576,13 @@ export function RetrievalConfigurator({
               <div>
                 <label
                   htmlFor="ret-complexity"
-                  className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+                  className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
                 >
                   Implementation complexity
                 </label>
                 <select
                   id="ret-complexity"
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   value={complexityFilter}
                   onChange={(e) => setComplexityFilter(e.target.value)}
                 >
@@ -586,19 +594,24 @@ export function RetrievalConfigurator({
               </div>
             </div>
 
-            <p className="mt-3 text-xs text-muted-foreground" aria-live="polite">
+            <p className="text-muted-foreground mt-3 text-xs" aria-live="polite">
               Showing {filteredStrategies.length} of {strategies.length} strategies
               {filteredStrategies.length === 0 ? ' — relax filters or clear search.' : '.'}
               {pinnedSelectionId ? (
                 <>
                   {' '}
-                  Your current strategy is pinned at the top because it does not match the active filters.
+                  Your current strategy is pinned at the top because it does not match the active
+                  filters.
                 </>
               ) : null}
             </p>
           </section>
 
-          <div role="radiogroup" aria-label="Retrieval strategy" className="grid gap-4 sm:grid-cols-2">
+          <div
+            role="radiogroup"
+            aria-label="Retrieval strategy"
+            className="grid gap-4 sm:grid-cols-2"
+          >
             {displayStrategies.map((s) => {
               const selected = cfg.strategy === s.id;
               return (
@@ -610,17 +623,19 @@ export function RetrievalConfigurator({
                   onClick={() => applyStrategy(s.id as RetrievalStrategy)}
                   className={cn(
                     'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                     selected
-                      ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                      : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
+                      ? 'border-primary-600 bg-primary-600/[0.06] ring-primary-600 dark:bg-primary-500/10 ring-2'
+                      : 'bg-card hover:border-primary-400/60 hover:bg-accent/40 border-neutral-200 dark:border-neutral-700',
                   )}
                 >
                   <div className="flex items-start gap-3">
                     <span
                       className={cn(
-                        'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
-                        selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                        'bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border',
+                        selected
+                          ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                          : 'border-muted',
                       )}
                       aria-hidden
                     >
@@ -628,7 +643,7 @@ export function RetrievalConfigurator({
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-foreground">{s.name}</span>
+                        <span className="text-foreground font-semibold">{s.name}</span>
                         {s.id === pinnedSelectionId ? (
                           <span className="rounded-md border border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-100">
                             Current · outside filters
@@ -637,20 +652,22 @@ export function RetrievalConfigurator({
                         <span
                           className={cn(
                             'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                            complexityBadgeStyles(s.implementationComplexity)
+                            complexityBadgeStyles(s.implementationComplexity),
                           )}
                         >
                           {s.implementationComplexity}
                         </span>
                       </div>
-                      <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{s.description}</p>
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                        {s.description}
+                      </p>
                     </div>
                     <span
                       className={cn(
                         'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border',
                         selected
                           ? 'border-primary-600 bg-primary-600 text-primary-foreground'
-                          : 'border-muted bg-muted/50 text-transparent'
+                          : 'border-muted bg-muted/50 text-transparent',
                       )}
                       aria-hidden
                     >
@@ -664,16 +681,18 @@ export function RetrievalConfigurator({
 
           {selectedMeta ? (
             <section
-              className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+              className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
               aria-labelledby="ret-about-heading"
             >
-              <h2 id="ret-about-heading" className="text-lg font-semibold text-foreground">
+              <h2 id="ret-about-heading" className="text-foreground text-lg font-semibold">
                 About this strategy
               </h2>
               <div className="mt-4 grid gap-6 sm:grid-cols-2">
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Best for</h3>
-                  <ul className="mt-2 list-inside list-disc text-sm text-foreground">
+                  <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                    Best for
+                  </h3>
+                  <ul className="text-foreground mt-2 list-inside list-disc text-sm">
                     {selectedMeta.bestFor.map((x) => (
                       <li key={x}>{x}</li>
                     ))}
@@ -681,16 +700,20 @@ export function RetrievalConfigurator({
                 </div>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Strengths</h3>
-                    <ul className="mt-2 list-inside list-disc text-muted-foreground">
+                    <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                      Strengths
+                    </h3>
+                    <ul className="text-muted-foreground mt-2 list-inside list-disc">
                       {selectedMeta.pros.slice(0, 4).map((x) => (
                         <li key={x}>{x}</li>
                       ))}
                     </ul>
                   </div>
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Trade-offs</h3>
-                    <ul className="mt-2 list-inside list-disc text-muted-foreground">
+                    <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                      Trade-offs
+                    </h3>
+                    <ul className="text-muted-foreground mt-2 list-inside list-disc">
                       {selectedMeta.cons.slice(0, 3).map((x) => (
                         <li key={x}>{x}</li>
                       ))}
@@ -702,20 +725,21 @@ export function RetrievalConfigurator({
           ) : null}
 
           <section
-            className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+            className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
             aria-labelledby="ret-params-heading"
           >
-            <h2 id="ret-params-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="ret-params-heading" className="text-foreground text-lg font-semibold">
               Core parameters
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Values must satisfy <strong className="font-medium text-foreground">RetrievalConfigSchema</strong> for API
+            <p className="text-muted-foreground mt-1 text-sm">
+              Values must satisfy{' '}
+              <strong className="text-foreground font-medium">RetrievalConfigSchema</strong> for API
               export and validation.
             </p>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="ret-topk" className="text-sm font-medium text-foreground">
+                <label htmlFor="ret-topk" className="text-foreground text-sm font-medium">
                   Top-K
                 </label>
                 <input
@@ -725,13 +749,15 @@ export function RetrievalConfigurator({
                   max={100}
                   value={cfg.topK}
                   onChange={(e) =>
-                    patchRetrieval({ topK: Math.min(100, Math.max(1, Number(e.target.value) || 1)) })
+                    patchRetrieval({
+                      topK: Math.min(100, Math.max(1, Number(e.target.value) || 1)),
+                    })
                   }
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 />
               </div>
               <div>
-                <label htmlFor="ret-threshold" className="text-sm font-medium text-foreground">
+                <label htmlFor="ret-threshold" className="text-foreground text-sm font-medium">
                   Score threshold (0–1, optional)
                 </label>
                 <input
@@ -750,23 +776,26 @@ export function RetrievalConfigurator({
                     if (!Number.isFinite(n)) return;
                     patchRetrieval({ scoreThreshold: Math.min(1, Math.max(0, n)) });
                   }}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                 />
               </div>
             </div>
 
             {cfg.strategy === 'hybrid' ? (
-              <div className="mt-6 rounded-lg border border-dashed border-border bg-muted/10 p-4">
-                <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+              <div className="border-border bg-muted/10 mt-6 rounded-lg border border-dashed p-4">
+                <div className="text-foreground flex items-center gap-2 text-sm font-medium">
                   <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden />
                   Hybrid blend (dense vs sparse)
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  α = 1 is pure dense vector search; α = 0 is pure BM25-style sparse retrieval (when your stack
-                  supports both).
+                <p className="text-muted-foreground mt-1 text-xs">
+                  α = 1 is pure dense vector search; α = 0 is pure BM25-style sparse retrieval (when
+                  your stack supports both).
                 </p>
                 <div className="mt-3">
-                  <label htmlFor="ret-alpha" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <label
+                    htmlFor="ret-alpha"
+                    className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+                  >
                     Alpha (α)
                   </label>
                   <input
@@ -784,19 +813,25 @@ export function RetrievalConfigurator({
                         },
                       })
                     }
-                    className="mt-2 w-full accent-primary-600"
+                    className="accent-primary-600 mt-2 w-full"
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Current: <span className="font-mono text-foreground">{(cfg.hybridSearch?.alpha ?? 0.5).toFixed(2)}</span>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Current:{' '}
+                    <span className="text-foreground font-mono">
+                      {(cfg.hybridSearch?.alpha ?? 0.5).toFixed(2)}
+                    </span>
                   </p>
                 </div>
                 <div className="mt-4">
-                  <label htmlFor="ret-hybrid-fusion" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <label
+                    htmlFor="ret-hybrid-fusion"
+                    className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+                  >
                     Fusion mode
                   </label>
                   <select
                     id="ret-hybrid-fusion"
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                     value={cfg.hybridSearch?.fusion ?? 'rrf'}
                     onChange={(e) =>
                       patchRetrieval({
@@ -817,7 +852,7 @@ export function RetrievalConfigurator({
             {cfg.strategy === 'parent-child' ? (
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="ret-child" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-child" className="text-foreground text-sm font-medium">
                     Child chunk size (indexed)
                   </label>
                   <input
@@ -829,16 +864,19 @@ export function RetrievalConfigurator({
                     onChange={(e) =>
                       patchRetrieval({
                         parentChildConfig: {
-                          childChunkSize: Math.min(4096, Math.max(64, Number(e.target.value) || 256)),
+                          childChunkSize: Math.min(
+                            4096,
+                            Math.max(64, Number(e.target.value) || 256),
+                          ),
                           parentChunkSize: cfg.parentChildConfig?.parentChunkSize ?? 1024,
                         },
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   />
                 </div>
                 <div>
-                  <label htmlFor="ret-parent" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-parent" className="text-foreground text-sm font-medium">
                     Parent chunk size (returned)
                   </label>
                   <input
@@ -851,11 +889,14 @@ export function RetrievalConfigurator({
                       patchRetrieval({
                         parentChildConfig: {
                           childChunkSize: cfg.parentChildConfig?.childChunkSize ?? 256,
-                          parentChunkSize: Math.min(4096, Math.max(512, Number(e.target.value) || 1024)),
+                          parentChunkSize: Math.min(
+                            4096,
+                            Math.max(512, Number(e.target.value) || 1024),
+                          ),
                         },
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   />
                 </div>
               </div>
@@ -864,7 +905,7 @@ export function RetrievalConfigurator({
             {cfg.strategy === 'multi-query' ? (
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="ret-nvar" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-nvar" className="text-foreground text-sm font-medium">
                     Query variants (2–10)
                   </label>
                   <input
@@ -881,11 +922,11 @@ export function RetrievalConfigurator({
                         },
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   />
                 </div>
                 <div>
-                  <label htmlFor="ret-llm" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-llm" className="text-foreground text-sm font-medium">
                     Variant LLM model id
                   </label>
                   <input
@@ -901,7 +942,7 @@ export function RetrievalConfigurator({
                         },
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 font-mono text-sm shadow-sm outline-none focus-visible:ring-2"
                     placeholder="gpt-4o-mini"
                   />
                 </div>
@@ -911,7 +952,7 @@ export function RetrievalConfigurator({
             {cfg.strategy === 'mmr' ? (
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="ret-mmr-fetch" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-mmr-fetch" className="text-foreground text-sm font-medium">
                     Fetch-K (candidate pool)
                   </label>
                   <input
@@ -925,12 +966,12 @@ export function RetrievalConfigurator({
                         mmrFetchK: Math.min(200, Math.max(5, Number(e.target.value) || 20)),
                       })
                     }
-                    className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">Must be ≥ top-K.</p>
+                  <p className="text-muted-foreground mt-1 text-xs">Must be ≥ top-K.</p>
                 </div>
                 <div>
-                  <label htmlFor="ret-mmr-lambda" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-mmr-lambda" className="text-foreground text-sm font-medium">
                     λ relevance vs diversity
                   </label>
                   <input
@@ -945,10 +986,13 @@ export function RetrievalConfigurator({
                         mmrLambdaMult: Number(e.target.value),
                       })
                     }
-                    className="mt-2 w-full accent-primary-600"
+                    className="accent-primary-600 mt-2 w-full"
                   />
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Current λ: <span className="font-mono text-foreground">{(cfg.mmrLambdaMult ?? 0.5).toFixed(2)}</span>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Current λ:{' '}
+                    <span className="text-foreground font-mono">
+                      {(cfg.mmrLambdaMult ?? 0.5).toFixed(2)}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -957,10 +1001,10 @@ export function RetrievalConfigurator({
             {cfg.strategy === 'ensemble' ? (
               <div className="mt-6 space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Member strategies</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Each member runs in parallel; results are fused with RRF. Hybrid requires a sparse corpus at query
-                    time.
+                  <p className="text-foreground text-sm font-medium">Member strategies</p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Each member runs in parallel; results are fused with RRF. Hybrid requires a
+                    sparse corpus at query time.
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {ENSEMBLE_MEMBERS.map((m) => {
@@ -980,7 +1024,7 @@ export function RetrievalConfigurator({
                             'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
                             active
                               ? 'border-primary-600 bg-primary-50 text-primary-900 dark:bg-primary-950/40 dark:text-primary-100'
-                              : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50'
+                              : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50',
                           )}
                         >
                           {m.label}
@@ -990,7 +1034,7 @@ export function RetrievalConfigurator({
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="ret-rrf-k" className="text-sm font-medium text-foreground">
+                  <label htmlFor="ret-rrf-k" className="text-foreground text-sm font-medium">
                     RRF smoothing k
                   </label>
                   <input
@@ -1004,7 +1048,7 @@ export function RetrievalConfigurator({
                         ensembleRrfK: Math.min(120, Math.max(1, Number(e.target.value) || 60)),
                       })
                     }
-                    className="mt-1 w-full max-w-xs rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                    className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full max-w-xs rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                   />
                 </div>
               </div>
@@ -1012,48 +1056,51 @@ export function RetrievalConfigurator({
           </section>
 
           <section
-            className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+            className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
             aria-labelledby="ret-meta-filters-heading"
           >
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 id="ret-meta-filters-heading" className="text-lg font-semibold text-foreground">
+                <h2 id="ret-meta-filters-heading" className="text-foreground text-lg font-semibold">
                   Metadata filters
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Restrict retrieval by chunk metadata. Use comma-separated values for <code className="rounded bg-muted px-1">in</code> /{' '}
-                  <code className="rounded bg-muted px-1">nin</code>.
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Restrict retrieval by chunk metadata. Use comma-separated values for{' '}
+                  <code className="bg-muted rounded px-1">in</code> /{' '}
+                  <code className="bg-muted rounded px-1">nin</code>.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={addFilter}
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm hover:bg-accent"
+                className="border-input bg-background hover:bg-accent rounded-md border px-3 py-2 text-sm font-medium shadow-sm"
               >
                 Add filter
               </button>
             </div>
 
             {filters.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">No filters — all indexed chunks are eligible.</p>
+              <p className="text-muted-foreground mt-4 text-sm">
+                No filters — all indexed chunks are eligible.
+              </p>
             ) : (
               <div className="mt-4 space-y-3">
                 {filters.map((f, i) => (
                   <div
                     key={`filter-${i}-${f.key}`}
-                    className="grid gap-2 rounded-lg border border-border bg-muted/10 p-3 sm:grid-cols-12 sm:items-end"
+                    className="border-border bg-muted/10 grid gap-2 rounded-lg border p-3 sm:grid-cols-12 sm:items-end"
                   >
                     <div className="sm:col-span-3">
-                      <label className="text-xs font-medium text-muted-foreground">Key</label>
+                      <label className="text-muted-foreground text-xs font-medium">Key</label>
                       <input
                         type="text"
                         value={f.key}
                         onChange={(e) => updateFilterRow(i, { key: e.target.value })}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                        className="border-input bg-background mt-1 w-full rounded-md border px-2 py-1.5 text-sm"
                       />
                     </div>
                     <div className="sm:col-span-3">
-                      <label className="text-xs font-medium text-muted-foreground">Operator</label>
+                      <label className="text-muted-foreground text-xs font-medium">Operator</label>
                       <select
                         value={f.operator}
                         onChange={(e) => {
@@ -1063,7 +1110,7 @@ export function RetrievalConfigurator({
                             value: op === 'in' || op === 'nin' ? [] : f.value,
                           });
                         }}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm"
+                        className="border-input bg-background mt-1 w-full rounded-md border px-2 py-1.5 text-sm"
                       >
                         {OPERATORS.map((op) => (
                           <option key={op} value={op}>
@@ -1073,14 +1120,16 @@ export function RetrievalConfigurator({
                       </select>
                     </div>
                     <div className="sm:col-span-5">
-                      <label className="text-xs font-medium text-muted-foreground">Value</label>
+                      <label className="text-muted-foreground text-xs font-medium">Value</label>
                       <input
                         type="text"
                         value={formatFilterValue(f.value)}
                         onChange={(e) =>
-                          updateFilterRow(i, { value: parseFilterValue(f.operator, e.target.value) })
+                          updateFilterRow(i, {
+                            value: parseFilterValue(f.operator, e.target.value),
+                          })
                         }
-                        className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1.5 font-mono text-sm"
+                        className="border-input bg-background mt-1 w-full rounded-md border px-2 py-1.5 font-mono text-sm"
                         placeholder={f.operator === 'in' || f.operator === 'nin' ? 'a, b, c' : ''}
                       />
                     </div>
@@ -1088,7 +1137,7 @@ export function RetrievalConfigurator({
                       <button
                         type="button"
                         onClick={() => removeFilter(i)}
-                        className="text-xs font-medium text-destructive hover:underline"
+                        className="text-destructive text-xs font-medium hover:underline"
                         aria-label={`Remove filter ${i + 1}`}
                       >
                         Remove
@@ -1103,7 +1152,7 @@ export function RetrievalConfigurator({
           {!retrievalValidation.success ? (
             <div
               role="alert"
-              className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+              className="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm"
             >
               <p className="font-medium">Retrieval configuration needs adjustment</p>
               <ul className="mt-2 list-inside list-disc text-xs">
@@ -1113,22 +1162,33 @@ export function RetrievalConfigurator({
               </ul>
             </div>
           ) : (
-            <p className="flex items-start gap-2 text-xs text-muted-foreground" aria-live="polite">
+            <p className="text-muted-foreground flex items-start gap-2 text-xs" aria-live="polite">
               <Filter className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
               <span>
                 Retrieval settings are valid and stored on your pipeline draft. Vector stage:{' '}
-                <strong className="font-medium text-foreground">{draft.stages.vectorStore?.provider ?? '—'}</strong> · index{' '}
-                <strong className="font-mono text-foreground">{draft.stages.vectorStore?.indexName ?? '—'}</strong>
+                <strong className="text-foreground font-medium">
+                  {draft.stages.vectorStore?.provider ?? '—'}
+                </strong>{' '}
+                · index{' '}
+                <strong className="text-foreground font-mono">
+                  {draft.stages.vectorStore?.indexName ?? '—'}
+                </strong>
               </span>
             </p>
           )}
 
           {rerankingSection}
 
-          <p className="flex items-start gap-2 text-xs text-muted-foreground">
+          <p className="text-muted-foreground flex items-start gap-2 text-xs">
             <Layers className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
             <span>
-              Project home: <Link href={ROUTES.home} className="font-medium text-primary-600 hover:underline dark:text-primary-400">back</Link>
+              Project home:{' '}
+              <Link
+                href={ROUTES.home}
+                className="text-primary-600 dark:text-primary-400 font-medium hover:underline"
+              >
+                back
+              </Link>
             </span>
           </p>
         </>

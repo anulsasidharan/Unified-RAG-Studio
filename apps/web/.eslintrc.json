@@ -1,5 +1,11 @@
 {
   "root": true,
-  "extends": ["next/core-web-vitals"],
-  "ignorePatterns": ["node_modules/", ".next/", "coverage/"]
+  "extends": ["next/core-web-vitals", "prettier"],
+  "rules": {
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-unused-vars": ["error", { "args": "none", "varsIgnorePattern": "^_" }],
+    "react/self-closing-comp": "warn",
+    "prefer-const": "error"
+  },
+  "ignorePatterns": ["node_modules/", ".next/", "coverage/", "playwright-report/", "*.config.js"]
 }

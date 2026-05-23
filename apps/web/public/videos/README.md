@@ -1,14 +1,14 @@
 # Landing page product videos
 
-| File | Role |
-|------|------|
-| `product-tour-main.mp4` | **Pipeline Premiere** — full tour (~3:10, 1920×1080, H.264 + AAC). Regenerate with `npm run record:product-tour` (Playwright records `product-tour-demo.html` + TTS). For marketing, you can still swap in a live OBS screen capture at the same paths. |
-| `product-tour-teaser.mp4` | First **30 s** excerpt of the main file (same pipeline). |
-| `product-tour-chapters.vtt` | WebVTT `chapters` track for the full tour. Re-time after replacing the main MP4. |
-| `product-tour-captions.vtt` | WebVTT `captions` track — full voiceover transcript, accessible subtitles. |
-| `hero-demo-poster.svg` | Poster image shown before playback (branded dark theme, stage rail preview, play button). |
-| `product-tour-demo.html` | **Animated screen-recording template.** Open in Chrome at 1920×1080, press SPACE or wait 2 s — then screen-record with OBS/Loom/Camtasia to produce the real MP4s. Arrow keys / number keys jump scenes. |
-| `VOICEOVER_TTS_READY.md` | Per-segment voiceover text formatted for ElevenLabs (or any TTS). Import into your audio editor alongside the screen recording. |
+| File                        | Role                                                                                                                                                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `product-tour-main.mp4`     | **Pipeline Premiere** — full tour (~3:10, 1920×1080, H.264 + AAC). Regenerate with `npm run record:product-tour` (Playwright records `product-tour-demo.html` + TTS). For marketing, you can still swap in a live OBS screen capture at the same paths. |
+| `product-tour-teaser.mp4`   | First **30 s** excerpt of the main file (same pipeline).                                                                                                                                                                                                |
+| `product-tour-chapters.vtt` | WebVTT `chapters` track for the full tour. Re-time after replacing the main MP4.                                                                                                                                                                        |
+| `product-tour-captions.vtt` | WebVTT `captions` track — full voiceover transcript, accessible subtitles.                                                                                                                                                                              |
+| `hero-demo-poster.svg`      | Poster image shown before playback (branded dark theme, stage rail preview, play button).                                                                                                                                                               |
+| `product-tour-demo.html`    | **Animated screen-recording template.** Open in Chrome at 1920×1080, press SPACE or wait 2 s — then screen-record with OBS/Loom/Camtasia to produce the real MP4s. Arrow keys / number keys jump scenes.                                                |
+| `VOICEOVER_TTS_READY.md`    | Per-segment voiceover text formatted for ElevenLabs (or any TTS). Import into your audio editor alongside the screen recording.                                                                                                                         |
 
 ---
 

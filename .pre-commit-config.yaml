@@ -1,0 +1,67 @@
+repos:
+  # ─── Python: Ruff lint + format ─────────────────────────────────────────────
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.4
+    hooks:
+      - id: ruff
+        name: ruff (lint)
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^apps/api/
+      - id: ruff-format
+        name: ruff (format)
+        files: ^apps/api/
+
+  # ─── Python: mypy type check ─────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: mypy
+        name: mypy
+        entry: bash -c 'cd apps/api && uv run mypy app --ignore-missing-imports'
+        language: system
+        types: [python]
+        files: ^apps/api/app/
+        pass_filenames: false
+
+  # ─── JS/TS: ESLint ───────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: eslint
+        name: eslint
+        entry: bash -c 'cd apps/web && npx next lint --fix'
+        language: system
+        files: \.(ts|tsx|js|jsx)$
+        pass_filenames: false
+
+  # ─── JS/TS: Prettier ─────────────────────────────────────────────────────────
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: bash -c 'cd apps/web && files=(); for f in "$@"; do files+=("${f#apps/web/}"); done; npx prettier --write "${files[@]}"' --
+        language: system
+        files: ^apps/web/.*\.(ts|tsx|js|jsx|json|css|md)$
+        pass_filenames: true
+
+  # ─── General: trailing whitespace, end-of-file, YAML ─────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: \.md$
+      - id: end-of-file-fixer
+        exclude: \.snap$
+      - id: check-yaml
+        args: [--unsafe]
+      - id: check-json
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+
+  # ─── Secrets detection ───────────────────────────────────────────────────────
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        exclude: package-lock.json

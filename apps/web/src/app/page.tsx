@@ -30,11 +30,21 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-6 text-sm text-neutral-500">
-                <a href="#features" className="hover:text-neutral-900">Features</a>
-                <a href="#how-it-works" className="hover:text-neutral-900">How it works</a>
-                <a href="#pricing" className="hover:text-neutral-900">Pricing</a>
-                <a href="/login" className="hover:text-neutral-900">Log in</a>
-                <a href="/register" className="hover:text-neutral-900">Sign up</a>
+                <a href="#features" className="hover:text-neutral-900">
+                  Features
+                </a>
+                <a href="#how-it-works" className="hover:text-neutral-900">
+                  How it works
+                </a>
+                <a href="#pricing" className="hover:text-neutral-900">
+                  Pricing
+                </a>
+                <a href="/login" className="hover:text-neutral-900">
+                  Log in
+                </a>
+                <a href="/register" className="hover:text-neutral-900">
+                  Sign up
+                </a>
               </div>
               <p className="text-xs text-neutral-400">© 2026 RAG Studio</p>
             </div>

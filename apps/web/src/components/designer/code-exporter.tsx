@@ -9,7 +9,11 @@ import { deployHintCaption, deployHintCommand } from '@/lib/deploy-hints';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
 import { useAuthStore } from '@/stores/auth-store';
-import type { DesignerExportFormat, DesignerExportResponse, PipelineConfiguration } from '@/types/pipeline';
+import type {
+  DesignerExportFormat,
+  DesignerExportResponse,
+  PipelineConfiguration,
+} from '@/types/pipeline';
 
 const DEBOUNCE_MS = 450;
 
@@ -54,10 +58,14 @@ export function CodeExporter({
       setLoading(true);
       setError(null);
       try {
-        const data = await apiClient.post<DesignerExportResponse>('/api/designer/export', {
-          config,
-          format: fmt,
-        }, signal);
+        const data = await apiClient.post<DesignerExportResponse>(
+          '/api/designer/export',
+          {
+            config,
+            format: fmt,
+          },
+          signal,
+        );
         if (!signal.aborted) {
           setResult(data);
           setLastOkAt(Date.now());
@@ -74,7 +82,7 @@ export function CodeExporter({
         if (!signal.aborted) setLoading(false);
       }
     },
-    []
+    [],
   );
 
   useEffect(() => {
@@ -88,8 +96,7 @@ export function CodeExporter({
     const ctrl = new AbortController();
     const formatJustChanged = prevFormat.current !== format;
     prevFormat.current = format;
-    const delay =
-      formatJustChanged ? 0 : firstRun.current ? 0 : DEBOUNCE_MS;
+    const delay = formatJustChanged ? 0 : firstRun.current ? 0 : DEBOUNCE_MS;
     firstRun.current = false;
     const tid = window.setTimeout(() => {
       void fetchExport(draft, format, ctrl.signal);
@@ -148,8 +155,8 @@ export function CodeExporter({
       ref={sectionRef}
       id={id}
       className={cn(
-        'w-full shrink-0 border-t border-neutral-200 bg-neutral-950 py-6 dark:border-neutral-800 scroll-mt-4',
-        className
+        'w-full shrink-0 scroll-mt-4 border-t border-neutral-200 bg-neutral-950 py-6 dark:border-neutral-800',
+        className,
       )}
       aria-labelledby="code-exporter-heading"
     >
@@ -160,7 +167,10 @@ export function CodeExporter({
               <Package className="h-4 w-4 text-neutral-300" aria-hidden />
             </div>
             <div>
-              <h2 id="code-exporter-heading" className="font-display text-sm font-bold text-neutral-100">
+              <h2
+                id="code-exporter-heading"
+                className="font-display text-sm font-bold text-neutral-100"
+              >
                 Code export
               </h2>
               <p className="text-[11px] text-neutral-400">From current draft · auto-updates</p>
@@ -173,7 +183,9 @@ export function CodeExporter({
                 Generating…
               </span>
             ) : lastOkAt ? (
-              <span className="tabular-nums">Updated {new Date(lastOkAt).toLocaleTimeString()}</span>
+              <span className="tabular-nums">
+                Updated {new Date(lastOkAt).toLocaleTimeString()}
+              </span>
             ) : null}
             <button
               type="button"
@@ -205,8 +217,8 @@ export function CodeExporter({
               className={cn(
                 'rounded-lg px-3 py-1.5 text-xs font-medium transition-all',
                 format === opt.id
-                  ? 'bg-gradient-to-r from-primary-600 to-indigo-600 text-white shadow-sm'
-                  : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200'
+                  ? 'from-primary-600 bg-gradient-to-r to-indigo-600 text-white shadow-sm'
+                  : 'text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200',
               )}
             >
               {opt.short}
@@ -286,14 +298,14 @@ export function CodeExporter({
         <div className="mt-4 overflow-hidden rounded-xl border border-neutral-800">
           {loading && !result ? (
             <div className="flex items-center gap-2 bg-neutral-900 p-6 text-sm text-neutral-400">
-              <Loader2 className="h-5 w-5 animate-spin shrink-0" aria-hidden />
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin" aria-hidden />
               Generating {FORMAT_OPTIONS.find((f) => f.id === format)?.label ?? format}…
             </div>
           ) : (
             <pre
               className={cn(
                 'max-h-[min(420px,50vh)] overflow-auto bg-neutral-950 p-4 font-mono text-[11px] leading-relaxed text-neutral-100 transition-opacity',
-                loading && 'opacity-60'
+                loading && 'opacity-60',
               )}
               tabIndex={0}
             >

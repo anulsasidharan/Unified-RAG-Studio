@@ -41,8 +41,10 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: ${{ github.workspace }}
         run: npm ci
+
+      - name: Run Prettier check
+        run: npm run format:check
 
       - name: Run ESLint
         run: npm run lint -- --max-warnings 0
@@ -73,7 +75,6 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        working-directory: ${{ github.workspace }}
         run: npm ci
 
       - name: Run unit tests
@@ -101,27 +102,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.4.x"
+
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: apps/api/requirements-dev.txt
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+        run: uv pip install --system -r requirements.txt -r requirements-dev.txt
 
       - name: Run Ruff linter
-        run: ruff check . --output-format=github
+        run: uv run ruff check . --output-format=github
 
       - name: Run Ruff formatter check
-        run: ruff format --check .
+        run: uv run ruff format --check .
 
       - name: Run mypy type-check
-        run: mypy app/ --ignore-missing-imports --no-error-summary
-        continue-on-error: true   # mypy stubs may be incomplete early on; make non-blocking
+        run: uv run mypy app/ --ignore-missing-imports --no-error-summary
 
   # ──────────────────────────────────────────────────────────────
   # Job 4 · Backend Unit Tests (pytest)
@@ -160,21 +161,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.4.x"
+
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: apps/api/requirements-dev.txt
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+        run: uv pip install --system -r requirements.txt -r requirements-dev.txt
 
       - name: Run pytest (unit tests only)
         run: |
-          pytest tests/ \
+          uv run pytest tests/ \
             --ignore=tests/test_integration \
             --cov=app \
             --cov-report=xml \

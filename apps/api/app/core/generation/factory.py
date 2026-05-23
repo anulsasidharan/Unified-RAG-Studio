@@ -63,7 +63,7 @@ def _openai_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
     if cfg.output_format == "json":
         kw["model_kwargs"] = {"response_format": {"type": "json_object"}}
     logger.debug("generation_chat_model", provider="openai", model=cfg.model)
-    return ChatOpenAI(**kw)
+    return ChatOpenAI(**kw)  # type: ignore[no-any-return]
 
 
 def _anthropic_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
@@ -73,7 +73,7 @@ def _anthropic_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseCha
     kw = _common_kwargs(cfg)
     kw["api_key"] = settings.anthropic_api_key or None
     logger.debug("generation_chat_model", provider="anthropic", model=cfg.model)
-    return ChatAnthropic(**kw)
+    return ChatAnthropic(**kw)  # type: ignore[no-any-return]
 
 
 def _google_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
@@ -89,7 +89,7 @@ def _google_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
     if cfg.top_p is not None:
         kw["top_p"] = cfg.top_p
     logger.debug("generation_chat_model", provider="google", model=cfg.model)
-    return ChatGoogleGenerativeAI(**kw)
+    return ChatGoogleGenerativeAI(**kw)  # type: ignore[no-any-return]
 
 
 def _cohere_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
@@ -104,7 +104,7 @@ def _cohere_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatMo
     kw = _common_kwargs(cfg)
     kw["cohere_api_key"] = settings.cohere_api_key or None
     logger.debug("generation_chat_model", provider="cohere", model=cfg.model)
-    return ChatCohere(**kw)
+    return ChatCohere(**kw)  # type: ignore[no-any-return]
 
 
 def _mistral_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
@@ -117,7 +117,7 @@ def _mistral_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatM
     kw["api_key"] = settings.mistral_api_key or None
     kw["base_url"] = _MISTRAL_BASE_URL
     logger.debug("generation_chat_model", provider="mistral", model=cfg.model)
-    return ChatOpenAI(**kw)
+    return ChatOpenAI(**kw)  # type: ignore[no-any-return]
 
 
 def _openai_compatible_chat(cfg: GenerationRuntimeConfig, settings: Settings) -> BaseChatModel:
@@ -133,4 +133,4 @@ def _openai_compatible_chat(cfg: GenerationRuntimeConfig, settings: Settings) ->
     kw["api_key"] = settings.openai_compatible_api_key
     kw["base_url"] = settings.openai_compatible_base_url.rstrip("/")
     logger.debug("generation_chat_model", provider="openai-compatible", model=cfg.model)
-    return ChatOpenAI(**kw)
+    return ChatOpenAI(**kw)  # type: ignore[no-any-return]

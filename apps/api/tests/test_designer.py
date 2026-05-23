@@ -60,7 +60,7 @@ def _minimal_pipeline_payload(temp_id: str = "temp-config-id") -> dict:
 @pytest.mark.integration
 def test_designer_config_crud(sync_client: TestClient):
     h = {"X-User-ID": USER}
-    pr = sync_client.post("/api/projects/", json={"name": "P1"}, headers=h)
+    pr = sync_client.post("/api/projects", json={"name": "P1"}, headers=h)
     assert pr.status_code == 201
     project_id = pr.json()["id"]
 
@@ -130,7 +130,7 @@ def test_designer_config_wrong_project(sync_client: TestClient):
 def test_designer_config_user_isolation(sync_client: TestClient):
     h1 = {"X-User-ID": USER}
     h2 = {"X-User-ID": OTHER}
-    pid = sync_client.post("/api/projects/", json={"name": "Iso"}, headers=h1).json()["id"]
+    pid = sync_client.post("/api/projects", json={"name": "Iso"}, headers=h1).json()["id"]
     cid = sync_client.post(
         "/api/designer/config",
         json={

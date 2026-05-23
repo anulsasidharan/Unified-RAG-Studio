@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import io
 import re
+from typing import Any
 from urllib.parse import urlparse
 import uuid
 
@@ -70,7 +71,7 @@ class UploadedBlobMeta:
     content_type: str | None
 
 
-def _minio_client(settings: Settings):
+def _minio_client(settings: Settings) -> Any:
     try:
         from minio import Minio
     except ModuleNotFoundError as exc:
@@ -99,7 +100,7 @@ def _minio_client(settings: Settings):
     )
 
 
-def _ensure_bucket(client, bucket: str, settings: Settings) -> None:
+def _ensure_bucket(client: Any, bucket: str, settings: Settings) -> None:
     from minio.error import S3Error
 
     try:

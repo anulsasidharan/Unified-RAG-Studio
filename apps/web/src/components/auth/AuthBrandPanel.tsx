@@ -1,15 +1,15 @@
-import { Bot, LayoutTemplate, Rocket, Check } from 'lucide-react';
+import { Bot, LayoutTemplate, Rocket } from 'lucide-react';
 import { Logo } from '@/components/shared/Logo';
 
 const highlights = [
   { icon: LayoutTemplate, text: '12-stage visual pipeline builder' },
-  { icon: Bot,            text: 'AI agents optimize automatically'   },
-  { icon: Rocket,         text: 'One-click multi-cloud deployment'   },
+  { icon: Bot, text: 'AI agents optimize automatically' },
+  { icon: Rocket, text: 'One-click multi-cloud deployment' },
 ];
 
 export function AuthBrandPanel() {
   return (
-    <div className="relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-neutral-950 via-primary-950 to-purple-950 p-10 lg:flex lg:w-[44%]">
+    <div className="via-primary-950 relative hidden flex-col justify-between overflow-hidden bg-gradient-to-br from-neutral-950 to-purple-950 p-10 lg:flex lg:w-[44%]">
       {/* Animated orbs */}
       <div className="pointer-events-none absolute inset-0">
         <div className="animate-float absolute -left-20 top-10 h-64 w-64 rounded-full bg-blue-600/20 blur-[80px]" />
@@ -18,7 +18,7 @@ export function AuthBrandPanel() {
       </div>
 
       {/* Grid overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-dot-grid opacity-30" />
+      <div className="bg-dot-grid pointer-events-none absolute inset-0 opacity-30" />
 
       {/* Logo */}
       <div className="relative">
@@ -28,7 +28,7 @@ export function AuthBrandPanel() {
       {/* Middle content */}
       <div className="relative space-y-8">
         <div>
-          <h2 className="font-display text-3xl font-bold text-white leading-tight">
+          <h2 className="font-display text-3xl font-bold leading-tight text-white">
             Build production RAG
             <br />
             <span className="gradient-text-animated">your way.</span>

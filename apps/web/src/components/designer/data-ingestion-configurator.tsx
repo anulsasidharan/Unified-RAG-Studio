@@ -1,14 +1,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import {
-  Cloud,
-  Database,
-  FileUp,
-  Globe,
-  Link2,
-  Server,
-} from 'lucide-react';
+import { Cloud, Database, FileUp, Globe, Link2, Server } from 'lucide-react';
 
 import { createDefaultPipelineConfiguration } from '@/lib/default-pipeline';
 import {
@@ -19,7 +12,11 @@ import {
 import { DataIngestionConfigSchema } from '@/lib/validators';
 import { cn } from '@/lib/utils';
 import { useDesignerStore } from '@/stores/designer-store';
-import type { DataIngestionConfig, DataIngestionSourceSlot, DataIngestionSourceType } from '@/types/pipeline';
+import type {
+  DataIngestionConfig,
+  DataIngestionSourceSlot,
+  DataIngestionSourceType,
+} from '@/types/pipeline';
 
 const DEFAULT_INGESTION = createDefaultPipelineConfiguration().stages.dataIngestion!;
 
@@ -73,15 +70,7 @@ const SOURCE_OPTIONS: {
   },
 ];
 
-const FILE_TYPE_OPTIONS = [
-  'pdf',
-  'md',
-  'txt',
-  'html',
-  'docx',
-  'csv',
-  'json',
-] as const;
+const FILE_TYPE_OPTIONS = ['pdf', 'md', 'txt', 'html', 'docx', 'csv', 'json'] as const;
 
 type ConnField = {
   key: string;
@@ -141,7 +130,7 @@ function mergeIngestion(
     preprocessing?: Partial<DataIngestionConfig['preprocessing']>;
     metadata?: Partial<DataIngestionConfig['metadata']>;
     sources?: DataIngestionSourceSlot[];
-  }
+  },
 ): DataIngestionConfig {
   const base = current ?? DEFAULT_INGESTION;
   return {
@@ -177,14 +166,14 @@ export function DataIngestionConfigurator({
     (next: DataIngestionConfig) => {
       updateStages({ dataIngestion: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchIngestion = useCallback(
     (patch: Parameters<typeof mergeIngestion>[1]) => {
       setIngestion(mergeIngestion(draft.stages.dataIngestion, patch));
     },
-    [draft.stages.dataIngestion, setIngestion]
+    [draft.stages.dataIngestion, setIngestion],
   );
 
   const commitSourceSlots = useCallback(
@@ -192,7 +181,7 @@ export function DataIngestionConfigurator({
       const base = draft.stages.dataIngestion ?? DEFAULT_INGESTION;
       setIngestion(buildIngestionConfigWithSources(base, nextSlots));
     },
-    [draft.stages.dataIngestion, setIngestion]
+    [draft.stages.dataIngestion, setIngestion],
   );
 
   const toggleSourceEnabled = useCallback(
@@ -203,7 +192,7 @@ export function DataIngestionConfigurator({
       if (!stillHas) return;
       commitSourceSlots(next);
     },
-    [cfg, commitSourceSlots]
+    [cfg, commitSourceSlots],
   );
 
   const patchSlotConnection = useCallback(
@@ -221,7 +210,7 @@ export function DataIngestionConfigurator({
       });
       commitSourceSlots(next);
     },
-    [cfg, commitSourceSlots]
+    [cfg, commitSourceSlots],
   );
 
   const validation = useMemo(() => DataIngestionConfigSchema.safeParse(cfg), [cfg]);
@@ -270,14 +259,11 @@ export function DataIngestionConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <div className="space-y-2">
-        <p className="text-sm text-muted-foreground">
-          Enable every channel you want to ingest from in parallel. Connection hints are stored per source.
+        <p className="text-muted-foreground text-sm">
+          Enable every channel you want to ingest from in parallel. Connection hints are stored per
+          source.
         </p>
-        <div
-          role="group"
-          aria-label="Ingestion sources"
-          className="grid gap-4 sm:grid-cols-2"
-        >
+        <div role="group" aria-label="Ingestion sources" className="grid gap-4 sm:grid-cols-2">
           {SOURCE_OPTIONS.map((opt) => {
             const Icon = opt.icon;
             const slot = sourceSlots.find((s) => s.sourceType === opt.id);
@@ -291,25 +277,27 @@ export function DataIngestionConfigurator({
                 onClick={() => toggleSourceEnabled(opt.id, !selected)}
                 className={cn(
                   'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                   selected
-                    ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                    : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700'
+                    ? 'border-primary-600 bg-primary-600/[0.06] ring-primary-600 dark:bg-primary-500/10 ring-2'
+                    : 'bg-card hover:border-primary-400/60 hover:bg-accent/40 border-neutral-200 dark:border-neutral-700',
                 )}
               >
                 <div className="flex items-start gap-3">
                   <span
                     className={cn(
-                      'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
-                      selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                      'bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border',
+                      selected
+                        ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                        : 'border-muted',
                     )}
                     aria-hidden
                   >
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <span className="font-semibold text-foreground">{opt.label}</span>
-                    <p className="mt-1 text-sm text-muted-foreground">{opt.description}</p>
+                    <span className="text-foreground font-semibold">{opt.label}</span>
+                    <p className="text-muted-foreground mt-1 text-sm">{opt.description}</p>
                   </div>
                 </div>
               </button>
@@ -319,13 +307,13 @@ export function DataIngestionConfigurator({
       </div>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="ingestion-file-types-heading"
       >
-        <h2 id="ingestion-file-types-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="ingestion-file-types-heading" className="text-foreground text-lg font-semibold">
           Allowed file types
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Extensions included when scanning or validating uploads. At least one type is required.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
@@ -340,7 +328,7 @@ export function DataIngestionConfigurator({
                   'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
                   active
                     ? 'border-primary-600 bg-primary-600/15 text-primary-900 dark:bg-primary-500/20 dark:text-primary-50'
-                    : 'border-border bg-muted/40 text-muted-foreground hover:border-primary-400/50'
+                    : 'border-border bg-muted/40 text-muted-foreground hover:border-primary-400/50',
                 )}
               >
                 .{ext}
@@ -351,25 +339,36 @@ export function DataIngestionConfigurator({
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="ingestion-prep-heading"
       >
-        <h2 id="ingestion-prep-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="ingestion-prep-heading" className="text-foreground text-lg font-semibold">
           Preprocessing
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Normalization runs before chunking; aligns with the backend ingestion service.
         </p>
         <ul className="mt-4 space-y-3">
           {(
             [
               ['stripHtml', 'Strip HTML tags', cfg.preprocessing.stripHtml],
-              ['normalizeWhitespace', 'Normalize whitespace', cfg.preprocessing.normalizeWhitespace],
-              ['extractMetadata', 'Extract document metadata (title, dates, etc.)', cfg.preprocessing.extractMetadata],
+              [
+                'normalizeWhitespace',
+                'Normalize whitespace',
+                cfg.preprocessing.normalizeWhitespace,
+              ],
+              [
+                'extractMetadata',
+                'Extract document metadata (title, dates, etc.)',
+                cfg.preprocessing.extractMetadata,
+              ],
             ] as const
           ).map(([key, label, checked]) => (
-            <li key={key} className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-3 py-2">
-              <span className="text-sm text-foreground">{label}</span>
+            <li
+              key={key}
+              className="border-border bg-muted/20 flex items-center justify-between gap-4 rounded-lg border px-3 py-2"
+            >
+              <span className="text-foreground text-sm">{label}</span>
               <button
                 type="button"
                 role="switch"
@@ -381,13 +380,13 @@ export function DataIngestionConfigurator({
                 }
                 className={cn(
                   'relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-colors',
-                  checked ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted'
+                  checked ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted',
                 )}
               >
                 <span
                   className={cn(
-                    'pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full bg-background shadow transition',
-                    checked ? 'translate-x-5' : 'translate-x-0.5'
+                    'bg-background pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full shadow transition',
+                    checked ? 'translate-x-5' : 'translate-x-0.5',
                   )}
                 />
               </button>
@@ -395,17 +394,17 @@ export function DataIngestionConfigurator({
           ))}
         </ul>
         <div className="mt-6">
-          <label htmlFor="custom-rules" className="text-sm font-medium text-foreground">
+          <label htmlFor="custom-rules" className="text-foreground text-sm font-medium">
             Custom rules (one per line)
           </label>
-          <p id="custom-rules-hint" className="text-xs text-muted-foreground">
+          <p id="custom-rules-hint" className="text-muted-foreground text-xs">
             Optional regex or pipeline hints interpreted by your deployment&apos;s preprocessor.
           </p>
           <textarea
             id="custom-rules"
             aria-describedby="custom-rules-hint"
             rows={4}
-            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+            className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-2 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
             value={customRulesText}
             onChange={(e) => {
               const lines = e.target.value
@@ -424,13 +423,13 @@ export function DataIngestionConfigurator({
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="ingestion-meta-heading"
       >
-        <h2 id="ingestion-meta-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="ingestion-meta-heading" className="text-foreground text-lg font-semibold">
           Chunk / document metadata
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Controls optional fields attached to each chunk for tracing and filtering.
         </p>
         <ul className="mt-4 space-y-3">
@@ -440,8 +439,11 @@ export function DataIngestionConfigurator({
               ['includePageNumber', 'Include page numbers (PDFs)', cfg.metadata.includePageNumber],
             ] as const
           ).map(([key, label, checked]) => (
-            <li key={key} className="flex items-center justify-between gap-4 rounded-lg border border-border bg-muted/20 px-3 py-2">
-              <span className="text-sm text-foreground">{label}</span>
+            <li
+              key={key}
+              className="border-border bg-muted/20 flex items-center justify-between gap-4 rounded-lg border px-3 py-2"
+            >
+              <span className="text-foreground text-sm">{label}</span>
               <button
                 type="button"
                 role="switch"
@@ -453,13 +455,13 @@ export function DataIngestionConfigurator({
                 }
                 className={cn(
                   'relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-colors',
-                  checked ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted'
+                  checked ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted',
                 )}
               >
                 <span
                   className={cn(
-                    'pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full bg-background shadow transition',
-                    checked ? 'translate-x-5' : 'translate-x-0.5'
+                    'bg-background pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full shadow transition',
+                    checked ? 'translate-x-5' : 'translate-x-0.5',
                   )}
                 />
               </button>
@@ -468,8 +470,8 @@ export function DataIngestionConfigurator({
         </ul>
 
         <div className="mt-6">
-          <h3 className="text-sm font-semibold text-foreground">Custom metadata fields</h3>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <h3 className="text-foreground text-sm font-semibold">Custom metadata fields</h3>
+          <p className="text-muted-foreground mt-1 text-xs">
             Static key/value pairs merged onto every document (for example tenant or product IDs).
           </p>
           <ul className="mt-3 space-y-2">
@@ -481,7 +483,7 @@ export function DataIngestionConfigurator({
                     type="text"
                     aria-label={`Custom metadata key ${idx + 1}`}
                     placeholder="Key"
-                    className="min-w-[120px] flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="border-input bg-background min-w-[120px] flex-1 rounded-md border px-3 py-2 text-sm"
                     value={row[0]}
                     onChange={(e) => {
                       const next = [...metaEntries] as [string, string][];
@@ -493,7 +495,7 @@ export function DataIngestionConfigurator({
                     type="text"
                     aria-label={`Custom metadata value ${idx + 1}`}
                     placeholder="Value"
-                    className="min-w-[120px] flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    className="border-input bg-background min-w-[120px] flex-1 rounded-md border px-3 py-2 text-sm"
                     value={row[1]}
                     onChange={(e) => {
                       const next = [...metaEntries] as [string, string][];
@@ -503,7 +505,7 @@ export function DataIngestionConfigurator({
                   />
                   <button
                     type="button"
-                    className="rounded-md border border-border px-2 py-2 text-xs text-muted-foreground hover:bg-muted"
+                    className="border-border text-muted-foreground hover:bg-muted rounded-md border px-2 py-2 text-xs"
                     onClick={() => {
                       const next = (metaEntries as [string, string][]).filter((_, i) => i !== idx);
                       updateMetaEntries(next.length ? next : [['', '']]);
@@ -517,7 +519,7 @@ export function DataIngestionConfigurator({
           </ul>
           <button
             type="button"
-            className="mt-2 text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+            className="text-primary-600 dark:text-primary-400 mt-2 text-sm font-medium hover:underline"
             onClick={() => {
               updateMetaEntries([...(metaEntries as [string, string][]), ['', '']]);
             }}
@@ -528,19 +530,20 @@ export function DataIngestionConfigurator({
       </section>
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="ingestion-conn-heading"
       >
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <h2 id="ingestion-conn-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="ingestion-conn-heading" className="text-foreground text-lg font-semibold">
               Connection hints
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               One block per enabled source. Non-secret placeholders are saved under each slot&apos;s{' '}
-              <code className="rounded bg-muted px-1 text-xs">connectionConfig</code>. Primary source (
-              <span className="font-medium text-foreground">{cfg.sourceType}</span>) stays first in the enabled list for
-              exports that still expect a single <code className="rounded bg-muted px-1 text-xs">sourceType</code>.
+              <code className="bg-muted rounded px-1 text-xs">connectionConfig</code>. Primary
+              source (<span className="text-foreground font-medium">{cfg.sourceType}</span>) stays
+              first in the enabled list for exports that still expect a single{' '}
+              <code className="bg-muted rounded px-1 text-xs">sourceType</code>.
             </p>
           </div>
           <span className="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-100">
@@ -554,14 +557,20 @@ export function DataIngestionConfigurator({
             return (
               <div
                 key={stype}
-                className="rounded-lg border border-border bg-muted/10 p-4 dark:bg-muted/5"
+                className="border-border bg-muted/10 dark:bg-muted/5 rounded-lg border p-4"
                 aria-label={`Connection hints for ${label}`}
               >
-                <h3 className="text-sm font-semibold text-foreground">{label}</h3>
+                <h3 className="text-foreground text-sm font-semibold">{label}</h3>
                 <div className="mt-4 grid gap-4 sm:grid-cols-2">
                   {CONNECTION_FIELDS[stype].map((field) => (
-                    <div key={field.key} className={cn(field.key === 'seedUrls' && 'sm:col-span-2')}>
-                      <label htmlFor={`conn-${stype}-${field.key}`} className="text-sm font-medium text-foreground">
+                    <div
+                      key={field.key}
+                      className={cn(field.key === 'seedUrls' && 'sm:col-span-2')}
+                    >
+                      <label
+                        htmlFor={`conn-${stype}-${field.key}`}
+                        className="text-foreground text-sm font-medium"
+                      >
                         {field.label}
                       </label>
                       <input
@@ -569,7 +578,7 @@ export function DataIngestionConfigurator({
                         type={field.type ?? 'text'}
                         autoComplete="off"
                         placeholder={field.placeholder}
-                        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                        className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
                         value={connValueFor(stype, field.key)}
                         onChange={(e) => patchSlotConnection(stype, field.key, e.target.value)}
                       />
@@ -585,7 +594,7 @@ export function DataIngestionConfigurator({
       {!validation.success ? (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm"
         >
           <p className="font-medium">Configuration needs adjustment</p>
           <ul className="mt-2 list-inside list-disc text-xs">
@@ -595,7 +604,7 @@ export function DataIngestionConfigurator({
           </ul>
         </div>
       ) : (
-        <p className="text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground text-xs" aria-live="polite">
           Ingestion settings are valid and saved with your pipeline draft (local storage).
         </p>
       )}

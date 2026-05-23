@@ -81,7 +81,7 @@ function VerifyEmailContent() {
           <button
             type="button"
             onClick={() => router.replace('/login')}
-            className="mt-4 inline-flex w-full items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700"
+            className="bg-primary-600 hover:bg-primary-700 mt-4 inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white"
           >
             Go to login
           </button>
@@ -93,12 +93,12 @@ function VerifyEmailContent() {
             <input
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              className="rounded-md border border-neutral-300 bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-600"
+              className="bg-background focus:ring-primary-600 rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:ring-2"
             />
           </label>
 
           {error ? (
-            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p className="border-destructive/40 bg-destructive/10 text-destructive rounded-md border px-3 py-2 text-sm">
               {error}
             </p>
           ) : null}
@@ -107,7 +107,7 @@ function VerifyEmailContent() {
             type="button"
             onClick={() => void onVerify()}
             disabled={loading || !token.trim()}
-            className="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-700 disabled:opacity-50"
+            className="bg-primary-600 hover:bg-primary-700 inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
           >
             {loading ? 'Verifying…' : 'Verify'}
           </button>
@@ -124,4 +124,3 @@ export default function VerifyEmailPage() {
     </Suspense>
   );
 }
-

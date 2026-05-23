@@ -180,7 +180,7 @@ def test_evaluate_mocked_ragas():
         )
     ]
     with patch("ragas.evaluate", return_value=mock):
-        eng = EvaluationEngine()
+        eng = EvaluationEngine(llm=object(), embeddings=object())
         out = eng.evaluate(ex, with_failure_analysis=True)
     assert out.metrics.faithfulness == 0.85
     assert out.failure_analysis is not None

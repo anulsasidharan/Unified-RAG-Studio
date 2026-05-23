@@ -47,7 +47,7 @@ export function SecuritySettings() {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mb-4 flex items-center gap-2">
-        <Shield className="h-5 w-5 text-primary-500" />
+        <Shield className="text-primary-500 h-5 w-5" />
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">Security</h3>
       </div>
 
@@ -73,7 +73,7 @@ export function SecuritySettings() {
               value={currentPwd}
               onChange={(e) => setCurrentPwd(e.target.value)}
               placeholder="Current password"
-              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 pr-11 text-sm outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 pr-11 text-sm outline-none transition-all focus:bg-white focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             />
             <button
               type="button"
@@ -90,7 +90,7 @@ export function SecuritySettings() {
               value={newPwd}
               onChange={(e) => setNewPwd(e.target.value)}
               placeholder="New password (min 6 characters)"
-              className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 pr-11 text-sm outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+              className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 pr-11 text-sm outline-none transition-all focus:bg-white focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
             />
             <button
               type="button"
@@ -106,11 +106,11 @@ export function SecuritySettings() {
             value={confirmPwd}
             onChange={(e) => setConfirmPwd(e.target.value)}
             placeholder="Confirm new password"
-            className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none transition-all focus:border-primary-500 focus:bg-white focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
+            className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm outline-none transition-all focus:bg-white focus:ring-2 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100"
           />
 
           {error ? (
-            <div className="rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+            <div className="border-destructive/20 bg-destructive/8 text-destructive rounded-xl border px-4 py-3 text-sm">
               {error}
             </div>
           ) : null}
@@ -119,13 +119,16 @@ export function SecuritySettings() {
             <button
               onClick={handleChangePassword}
               disabled={saving || !currentPwd || !newPwd || !confirmPwd}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-primary-700 hover:to-indigo-700 disabled:opacity-40"
+              className="from-primary-600 hover:from-primary-700 flex items-center gap-2 rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 disabled:opacity-40"
             >
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
               Update password
             </button>
             <button
-              onClick={() => { setOpen(false); setError(null); }}
+              onClick={() => {
+                setOpen(false);
+                setError(null);
+              }}
               className="rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-200"
             >
               Cancel

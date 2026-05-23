@@ -22,7 +22,9 @@ export default function AdminPlansPage() {
     }
   }, []);
 
-  useEffect(() => { void fetchPlans(); }, [fetchPlans]);
+  useEffect(() => {
+    void fetchPlans();
+  }, [fetchPlans]);
 
   if (loading && plans.length === 0) {
     return (

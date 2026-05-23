@@ -20,7 +20,9 @@ function MetricCard({
 }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-      <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${accent}`}>
+      <div
+        className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${accent}`}
+      >
         <Icon className="h-5 w-5" />
       </div>
       <p className="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{value}</p>

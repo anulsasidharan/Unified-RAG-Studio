@@ -87,8 +87,8 @@ export function EditableProjectName({
           onKeyDown={onInputKeyDown}
           maxLength={MAX_NAME_LEN + 32}
           className={cn(
-            'min-w-0 flex-1 rounded-md border border-neutral-300 bg-background px-2 py-1 text-sm text-neutral-900 outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring dark:border-neutral-600 dark:text-neutral-100',
-            variant === 'list' && 'text-base font-medium'
+            'bg-background ring-offset-background focus-visible:ring-ring min-w-0 flex-1 rounded-md border border-neutral-300 px-2 py-1 text-sm text-neutral-900 outline-none focus-visible:ring-2 dark:border-neutral-600 dark:text-neutral-100',
+            variant === 'list' && 'text-base font-medium',
           )}
           aria-label="Project name"
         />
@@ -112,8 +112,7 @@ export function EditableProjectName({
         className={cn(
           'flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left transition-colors hover:bg-transparent',
           !showLabel && 'md:justify-center md:px-0',
-          isActive &&
-            'font-medium text-primary-900 dark:text-primary-100'
+          isActive && 'text-primary-900 dark:text-primary-100 font-medium',
         )}
       >
         {leading}
@@ -136,7 +135,7 @@ export function EditableProjectName({
             e.stopPropagation();
             setEditing(true);
           }}
-          className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-accent hover:text-neutral-900 dark:hover:text-neutral-100"
+          className="hover:bg-accent inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100"
           title="Rename project"
           aria-label={`Rename project ${name}`}
         >

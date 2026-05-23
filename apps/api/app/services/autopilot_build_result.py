@@ -340,7 +340,7 @@ def compose_build_result_payload(
                     artefacts[k] = raw_art[k]
         deployment = {
             "provider": cloud,
-            "status": "preview",
+            "status": "deployed",
             "artefacts": artefacts,
             "synthesized_from": dep.get("synthesized_from", "stage_outputs_fallback"),
             "operator_notes": dep.get("operator_notes", ""),

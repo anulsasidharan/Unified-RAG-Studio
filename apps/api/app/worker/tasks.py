@@ -91,7 +91,7 @@ def _stages_from_graph(stage_outputs: dict[str, Any] | None) -> dict[str, Any]:
 
 
 @celery_app.task(bind=True, name="jobs.run_pipeline_build")
-def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
+def run_pipeline_build(self: Any, build_id: str) -> dict[str, Any]:
     """Run the P6-8 LangGraph orchestrator and persist trace, stages,
     and progress onto the build row."""
     try:
@@ -164,8 +164,9 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
         return {"build_id": build_id, "status": "failed", "error": str(exc)}
 
     traces: list[dict[str, Any]] = list(final.get("agent_trace") or [])
-    stage_outputs = (
-        final.get("stage_outputs") if isinstance(final.get("stage_outputs"), dict) else {}
+    _stage_outputs_raw = final.get("stage_outputs")
+    stage_outputs: dict[str, Any] = (
+        _stage_outputs_raw if isinstance(_stage_outputs_raw, dict) else {}
     )
     progress_vals = [t["progress"] for t in traces if isinstance(t.get("progress"), int)]
     last_progress = max(progress_vals) if progress_vals else 0
@@ -265,7 +266,7 @@ def run_pipeline_build(self, build_id: str) -> dict[str, Any]:
 
 @celery_app.task(bind=True, name="jobs.run_evaluation")
 def run_evaluation(
-    self,
+    self: Any,
     evaluation_run_id: str,
     examples: list[dict[str, Any]],
     *,
@@ -361,7 +362,7 @@ def run_evaluation(
 
 
 @celery_app.task(bind=True, name="jobs.run_deployment")
-def run_deployment(self, deployment_id: str) -> dict[str, Any]:
+def run_deployment(self: Any, deployment_id: str) -> dict[str, Any]:
     """Marks deployment as progressing then stub-deployed.
 
     Terraform/K8s generation lands in Phase 6/12.

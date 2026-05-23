@@ -159,7 +159,7 @@ export default function AutopilotHistoryPage() {
         </label>
         <select
           id={filterId}
-          className="w-full min-w-[200px] max-w-sm rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900"
+          className="focus:border-primary-500 focus:ring-primary-500/20 w-full min-w-[200px] max-w-sm rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm shadow-sm focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900"
           value={projectFilter}
           onChange={(e) => {
             setPage(1);
@@ -176,7 +176,7 @@ export default function AutopilotHistoryPage() {
       </div>
 
       {error ? (
-        <div className="mb-6 rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+        <div className="border-destructive/20 bg-destructive/8 text-destructive mb-6 rounded-xl border px-4 py-3 text-sm">
           {error}
         </div>
       ) : null}
@@ -192,13 +192,15 @@ export default function AutopilotHistoryPage() {
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800">
               <Clock className="h-7 w-7 text-neutral-400 dark:text-neutral-500" aria-hidden />
             </div>
-            <p className="mt-4 font-display font-semibold text-neutral-900 dark:text-neutral-100">No builds yet</p>
+            <p className="font-display mt-4 font-semibold text-neutral-900 dark:text-neutral-100">
+              No builds yet
+            </p>
             <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
               Run the wizard to create your first Autopilot build
             </p>
             <Link
               href={ROUTES.autopilotNew}
-              className="mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:from-primary-700 hover:to-indigo-700"
+              className="from-primary-600 hover:from-primary-700 mt-5 inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r to-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700"
             >
               Start your first build
             </Link>
@@ -208,10 +210,18 @@ export default function AutopilotHistoryPage() {
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="border-b border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900">
                 <tr>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Build ID</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Project</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Status</th>
-                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">Stage</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    Build ID
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    Project
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
+                    Stage
+                  </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                     Updated
                   </th>
@@ -222,27 +232,47 @@ export default function AutopilotHistoryPage() {
                 {data.items.map((row) => {
                   const sc = statusConfig(row.status);
                   return (
-                    <tr key={row.buildId} className="bg-white transition-colors hover:bg-neutral-50/50 dark:bg-neutral-950 dark:hover:bg-neutral-900/40">
+                    <tr
+                      key={row.buildId}
+                      className="bg-white transition-colors hover:bg-neutral-50/50 dark:bg-neutral-950 dark:hover:bg-neutral-900/40"
+                    >
                       <td className="px-4 py-3.5 font-mono text-xs text-neutral-600 dark:text-neutral-400">
                         {row.buildId.slice(0, 8)}…
                       </td>
-                      <td className="max-w-[180px] truncate px-4 py-3.5 text-sm font-medium text-neutral-800 dark:text-neutral-200" title={row.projectName}>
+                      <td
+                        className="max-w-[180px] truncate px-4 py-3.5 text-sm font-medium text-neutral-800 dark:text-neutral-200"
+                        title={row.projectName}
+                      >
                         {row.projectName}
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={cn('inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize', sc.cls)}>
-                          <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot, sc.pulse && 'animate-pulse')} aria-hidden />
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize',
+                            sc.cls,
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'h-1.5 w-1.5 rounded-full',
+                              sc.dot,
+                              sc.pulse && 'animate-pulse',
+                            )}
+                            aria-hidden
+                          />
                           {row.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-sm text-neutral-500 dark:text-neutral-400">{row.currentStage}</td>
+                      <td className="px-4 py-3.5 text-sm text-neutral-500 dark:text-neutral-400">
+                        {row.currentStage}
+                      </td>
                       <td className="px-4 py-3.5 text-right text-xs text-neutral-400 dark:text-neutral-500">
                         {new Date(row.updatedAt).toLocaleString()}
                       </td>
                       <td className="px-4 py-3.5 text-right">
                         <Link
                           href={`${ROUTES.autopilotNew}?build=${encodeURIComponent(row.buildId)}&project=${encodeURIComponent(row.projectId)}`}
-                          className="inline-flex items-center rounded-lg border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-semibold text-primary-700 transition-all hover:border-primary-300 hover:bg-primary-100 dark:border-primary-800/50 dark:bg-primary-950/30 dark:text-primary-400"
+                          className="border-primary-200 bg-primary-50 text-primary-700 hover:border-primary-300 hover:bg-primary-100 dark:border-primary-800/50 dark:bg-primary-950/30 dark:text-primary-400 inline-flex items-center rounded-lg border px-3 py-1 text-xs font-semibold transition-all"
                         >
                           Open
                         </Link>
@@ -259,8 +289,14 @@ export default function AutopilotHistoryPage() {
       {data && data.pages > 1 ? (
         <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm text-neutral-500 dark:text-neutral-400">
-            Page <span className="font-semibold text-neutral-700 dark:text-neutral-300">{data.page}</span> of{' '}
-            <span className="font-semibold text-neutral-700 dark:text-neutral-300">{data.pages}</span>
+            Page{' '}
+            <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+              {data.page}
+            </span>{' '}
+            of{' '}
+            <span className="font-semibold text-neutral-700 dark:text-neutral-300">
+              {data.pages}
+            </span>
             <span className="ml-1 text-neutral-400">({data.total} total)</span>
           </span>
           <div className="flex gap-2">
@@ -276,7 +312,7 @@ export default function AutopilotHistoryPage() {
               type="button"
               disabled={page >= data.pages || loading}
               onClick={() => setPage((p) => p + 1)}
-              className="rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:from-primary-700 hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="from-primary-600 hover:from-primary-700 rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>
@@ -286,7 +322,7 @@ export default function AutopilotHistoryPage() {
 
       <Link
         href={ROUTES.autopilot}
-        className="mt-8 inline-block text-sm font-medium text-neutral-500 transition-colors hover:text-primary-600 dark:text-neutral-400 dark:hover:text-primary-400"
+        className="hover:text-primary-600 dark:hover:text-primary-400 mt-8 inline-block text-sm font-medium text-neutral-500 transition-colors dark:text-neutral-400"
       >
         ← Autopilot overview
       </Link>

@@ -54,9 +54,7 @@ export function chunkingDefaultsFromCatalog(strategy: ChunkingStrategy): Partial
 
   const d = meta.defaultConfig as unknown as Record<string, unknown>;
   let chunkSize =
-    typeof d.chunkSize === 'number' && Number.isFinite(d.chunkSize)
-      ? Math.round(d.chunkSize)
-      : 512;
+    typeof d.chunkSize === 'number' && Number.isFinite(d.chunkSize) ? Math.round(d.chunkSize) : 512;
   if (chunkSize < MIN_CHUNK) {
     chunkSize = MIN_CHUNK;
   }

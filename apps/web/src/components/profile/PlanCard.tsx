@@ -14,8 +14,7 @@ type Props = {
 
 function UsageBar({ label, used, limit }: { label: string; used: number; limit: number }) {
   const pct = limit <= 0 ? 0 : Math.min(100, Math.round((used / limit) * 100));
-  const color =
-    pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-primary-500';
+  const color = pct >= 90 ? 'bg-red-500' : pct >= 70 ? 'bg-amber-500' : 'bg-primary-500';
 
   return (
     <div className="space-y-1">
@@ -37,9 +36,7 @@ export function PlanCard({ currentTier, plans, usage, onUpgraded }: Props) {
   const [upgrading, setUpgrading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const currentPlan = plans.find(
-    (p) => p.name.toLowerCase() === currentTier.toLowerCase()
-  );
+  const currentPlan = plans.find((p) => p.name.toLowerCase() === currentTier.toLowerCase());
 
   const handleUpgrade = async (plan: SubscriptionPlan) => {
     if (plan.name.toLowerCase() === currentTier.toLowerCase()) return;
@@ -61,11 +58,11 @@ export function PlanCard({ currentTier, plans, usage, onUpgraded }: Props) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
       <div className="mb-5 flex items-center gap-2">
-        <Zap className="h-5 w-5 text-primary-500" />
+        <Zap className="text-primary-500 h-5 w-5" />
         <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
           Current Plan
         </h3>
-        <span className="ml-auto rounded-full bg-primary-50 px-2.5 py-0.5 text-xs font-semibold text-primary-700 capitalize">
+        <span className="bg-primary-50 text-primary-700 ml-auto rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize">
           {currentTier}
         </span>
       </div>
@@ -111,9 +108,7 @@ export function PlanCard({ currentTier, plans, usage, onUpgraded }: Props) {
                     <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-100">
                       {plan.name}
                     </p>
-                    {isCurrent ? (
-                      <CheckCircle2 className="h-4 w-4 text-primary-500" />
-                    ) : null}
+                    {isCurrent ? <CheckCircle2 className="text-primary-500 h-4 w-4" /> : null}
                   </div>
                   <p className="mt-1 text-lg font-bold text-neutral-900 dark:text-neutral-100">
                     {plan.price_monthly === 0 ? 'Free' : `$${plan.price_monthly}/mo`}
@@ -122,7 +117,7 @@ export function PlanCard({ currentTier, plans, usage, onUpgraded }: Props) {
                     <button
                       onClick={() => handleUpgrade(plan)}
                       disabled={upgrading !== null}
-                      className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-primary-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:from-primary-700 hover:to-indigo-700 disabled:opacity-50"
+                      className="from-primary-600 hover:from-primary-700 mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition-all hover:to-indigo-700 disabled:opacity-50"
                     >
                       {upgrading === plan.id ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
@@ -142,7 +137,7 @@ export function PlanCard({ currentTier, plans, usage, onUpgraded }: Props) {
       ) : null}
 
       {error ? (
-        <div className="mt-3 rounded-xl border border-destructive/20 bg-destructive/8 px-4 py-3 text-sm text-destructive">
+        <div className="border-destructive/20 bg-destructive/8 text-destructive mt-3 rounded-xl border px-4 py-3 text-sm">
           {error}
         </div>
       ) : null}

@@ -28,7 +28,7 @@ export function DesignerToAutopilotHandoff({
         'Next you will choose a backend project, upload corpus files, adjust targets if needed, then start the build.',
         '',
         'Continue to Autopilot?',
-      ].join('\n')
+      ].join('\n'),
     );
     if (!ok) return;
     setBusy(true);
@@ -43,8 +43,8 @@ export function DesignerToAutopilotHandoff({
   return (
     <div
       className={cn(
-        'rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50/90 to-background p-5 shadow-sm dark:border-violet-800/60 dark:from-violet-950/40',
-        className
+        'to-background rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50/90 p-5 shadow-sm dark:border-violet-800/60 dark:from-violet-950/40',
+        className,
       )}
     >
       <div className="flex flex-wrap items-start gap-3">
@@ -52,13 +52,16 @@ export function DesignerToAutopilotHandoff({
           <Zap className="h-5 w-5" aria-hidden />
         </div>
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-semibold text-foreground">Optimize with Autopilot</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Send this pipeline draft to Autopilot as a starting point. Agents can benchmark alternatives and tune
-            retrieval while respecting your cloud choice and targets.
+          <h2 className="text-foreground text-base font-semibold">Optimize with Autopilot</h2>
+          <p className="text-muted-foreground mt-1 text-sm">
+            Send this pipeline draft to Autopilot as a starting point. Agents can benchmark
+            alternatives and tune retrieval while respecting your cloud choice and targets.
           </p>
-          <ul className="mt-3 list-inside list-disc text-sm text-muted-foreground">
-            <li>Your draft stays saved in this browser; Autopilot stores a copy as <span className="font-medium">baseline config</span> for the next build.</li>
+          <ul className="text-muted-foreground mt-3 list-inside list-disc text-sm">
+            <li>
+              Your draft stays saved in this browser; Autopilot stores a copy as{' '}
+              <span className="font-medium">baseline config</span> for the next build.
+            </li>
             <li>You still upload documents and start the build from the Autopilot wizard.</li>
           </ul>
         </div>
@@ -74,7 +77,7 @@ export function DesignerToAutopilotHandoff({
         </button>
         <Link
           href={ROUTES.autopilot}
-          className="inline-flex items-center justify-center rounded-md border border-neutral-200 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted dark:border-neutral-600"
+          className="bg-background text-foreground hover:bg-muted inline-flex items-center justify-center rounded-md border border-neutral-200 px-4 py-2.5 text-sm font-medium shadow-sm transition-colors dark:border-neutral-600"
         >
           Autopilot overview
         </Link>

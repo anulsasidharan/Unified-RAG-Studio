@@ -41,9 +41,7 @@ function resolveFfmpeg() {
     execFileSync('ffmpeg', ['-version'], { stdio: 'pipe' });
     return 'ffmpeg';
   } catch {
-    console.error(
-      'No ffmpeg: install ffmpeg-static failed or add ffmpeg to PATH.',
-    );
+    console.error('No ffmpeg: install ffmpeg-static failed or add ffmpeg to PATH.');
     process.exit(1);
   }
 }
@@ -141,9 +139,7 @@ async function main() {
   } else {
     console.log('SKIP_RECORD=1 — expecting', silentIntermediate);
     if (!fs.existsSync(silentIntermediate)) {
-      console.error(
-        'Missing silent intermediate — run record without SKIP_RECORD first.',
-      );
+      console.error('Missing silent intermediate — run record without SKIP_RECORD first.');
       process.exit(1);
     }
   }

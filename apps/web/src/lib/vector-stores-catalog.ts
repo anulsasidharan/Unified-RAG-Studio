@@ -85,15 +85,14 @@ export function schemaMetricsForStore(meta: VectorStoreCatalogRow): SimilarityMe
  */
 export function vectorStorePatchFromCatalog(
   storeId: string,
-  current: VectorStoreConfig
+  current: VectorStoreConfig,
 ): Partial<VectorStoreConfig> | undefined {
   const meta = getVectorStoreMeta(storeId);
   if (!meta || !isVectorStoreProvider(meta.id)) return undefined;
 
   const allowed = schemaMetricsForStore(meta);
   const prevMetric = current.configuration.metric;
-  const metric =
-    prevMetric && allowed.includes(prevMetric) ? prevMetric : allowed[0] ?? 'cosine';
+  const metric = prevMetric && allowed.includes(prevMetric) ? prevMetric : (allowed[0] ?? 'cosine');
 
   return {
     provider: meta.id,

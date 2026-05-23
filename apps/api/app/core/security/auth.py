@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from typing import cast
 import uuid
 
 from jose import JWTError, jwt
@@ -46,7 +47,7 @@ def create_access_token(
         "jti": jti,
         "exp": expire,
     }
-    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
+    return cast(str, jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM))
 
 
 def decode_access_token(settings: Settings, token: str) -> AuthPrincipal:
@@ -92,8 +93,8 @@ def decode_access_token(settings: Settings, token: str) -> AuthPrincipal:
 
 
 def hash_password(plain_password: str) -> str:
-    return pwd_context.hash(plain_password)
+    return cast(str, pwd_context.hash(plain_password))
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return cast(bool, pwd_context.verify(plain_password, hashed_password))

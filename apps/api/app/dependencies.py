@@ -6,7 +6,7 @@ where the client itself is thread/async safe).
 """
 
 from collections.abc import AsyncGenerator
-from typing import Annotated
+from typing import Annotated, Any
 import uuid
 
 from fastapi import Depends, HTTPException, status
@@ -22,7 +22,7 @@ from app.core.security.auth import AuthPrincipal, decode_access_token
 # ─── Database ────────────────────────────────────────────────────────────────
 
 
-def _make_engine(settings: Settings):
+def _make_engine(settings: Settings) -> Any:
     """Create SQLAlchemy async engine from settings."""
     url = settings.database_url
     if url.startswith("sqlite"):

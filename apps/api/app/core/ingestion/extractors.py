@@ -5,10 +5,14 @@ produce a metadata dict. These dicts are merged into Document.metadata
 by IngestionService after loading and preprocessing.
 """
 
+import io
 from pathlib import Path
 import re
 from typing import Any
 
+from bs4 import BeautifulSoup
+import docx
+from pypdf import PdfReader
 import structlog
 
 logger = structlog.get_logger(__name__)
@@ -30,15 +34,11 @@ def _safe_str(value: Any) -> str | None:
 
 def extract_pdf_metadata(source: "str | bytes") -> dict[str, Any]:
     """Extract PDF document information: title, author, creation date, page count."""
-    import io
-
-    from pypdf import PdfReader
-
     try:
         reader = (
             PdfReader(io.BytesIO(source)) if isinstance(source, bytes) else PdfReader(str(source))
         )
-        info = reader.metadata or {}
+        info: Any = reader.metadata or {}
         return {
             k: v
             for k, v in {
@@ -57,10 +57,6 @@ def extract_pdf_metadata(source: "str | bytes") -> dict[str, Any]:
 
 def extract_docx_metadata(source: "str | bytes") -> dict[str, Any]:
     """Extract DOCX core properties: title, author, description, dates."""
-    import io
-
-    import docx  # python-docx
-
     try:
         doc = (
             docx.Document(io.BytesIO(source))
@@ -91,8 +87,6 @@ def extract_docx_metadata(source: "str | bytes") -> dict[str, Any]:
 
 def extract_html_metadata(html_content: str) -> dict[str, Any]:
     """Extract metadata from HTML <head> tags: title, og:*, description, author."""
-    from bs4 import BeautifulSoup
-
     try:
         soup = BeautifulSoup(html_content, "html.parser")
         meta: dict[str, Any] = {}

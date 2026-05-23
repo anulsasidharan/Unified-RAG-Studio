@@ -78,7 +78,7 @@ def build_embedding_candidates(
     max_n = max(1, min(max_n, 8))
 
     rows = [m for m in catalog if not m.get("deprecated")]
-    by_tier = {str(m.get("tier") or "balanced"): [] for m in rows}
+    by_tier: dict[str, list[dict[str, Any]]] = {str(m.get("tier") or "balanced"): [] for m in rows}
     for m in rows:
         by_tier.setdefault(str(m.get("tier") or "balanced"), []).append(m)
 

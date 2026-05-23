@@ -29,7 +29,9 @@ export default function AdminUsersPage() {
     }
   }, [page, search]);
 
-  useEffect(() => { void fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    void fetchUsers();
+  }, [fetchUsers]);
 
   if (loading && !data) {
     return (

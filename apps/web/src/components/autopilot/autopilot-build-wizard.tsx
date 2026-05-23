@@ -24,8 +24,8 @@ export function AutopilotBuildWizard() {
         New Autopilot build
       </h1>
       <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-        Upload corpus files, set requirements, then start a build. Progress streams over SSE with polling
-        fallback.
+        Upload corpus files, set requirements, then start a build. Progress streams over SSE with
+        polling fallback.
       </p>
 
       <AutopilotDesignerBaselineBanner className="mt-6" />
@@ -44,7 +44,7 @@ export function AutopilotBuildWizard() {
 
       <Link
         href={ROUTES.autopilot}
-        className="mt-8 inline-block text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+        className="text-primary-600 dark:text-primary-400 mt-8 inline-block text-sm font-medium hover:underline"
       >
         ← Autopilot overview
       </Link>

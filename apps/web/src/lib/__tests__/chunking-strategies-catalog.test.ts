@@ -7,9 +7,9 @@ import {
 } from '@/lib/chunking-strategies-catalog';
 
 describe('chunking-strategies-catalog', () => {
-  it('lists seven strategies from data/chunking-strategies.json', () => {
+  it('lists strategies from data/chunking-strategies.json', () => {
     const list = listChunkingStrategies();
-    expect(list).toHaveLength(7);
+    expect(list).toHaveLength(8);
     expect(list.map((s) => s.id)).toContain('recursive-character');
   });
 

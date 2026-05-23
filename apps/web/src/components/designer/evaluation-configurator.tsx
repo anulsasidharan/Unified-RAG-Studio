@@ -11,7 +11,10 @@ import type { EvaluationConfig, EvaluationMetricName } from '@/types/pipeline';
 
 const DEFAULT_EVAL = createDefaultPipelineConfiguration().stages.evaluation!;
 
-function mergeEvaluation(current: EvaluationConfig | undefined, patch: Partial<EvaluationConfig>): EvaluationConfig {
+function mergeEvaluation(
+  current: EvaluationConfig | undefined,
+  patch: Partial<EvaluationConfig>,
+): EvaluationConfig {
   const base = current ?? DEFAULT_EVAL;
   return {
     ...base,
@@ -26,13 +29,24 @@ const METRICS: { id: EvaluationMetricName; label: string; hint: string }[] = [
   { id: 'context_precision', label: 'Context precision', hint: 'Retrieved chunks are on-topic' },
   { id: 'context_recall', label: 'Context recall', hint: 'Retrieval covers needed evidence' },
   { id: 'latency', label: 'Latency', hint: 'End-to-end response time' },
-  { id: 'groundedness', label: 'Groundedness', hint: 'Narrative grounding vs retrieval (RAGAS-style)' },
+  {
+    id: 'groundedness',
+    label: 'Groundedness',
+    hint: 'Narrative grounding vs retrieval (RAGAS-style)',
+  },
   { id: 'safety', label: 'Safety', hint: 'Policy / toxicity signals when your harness emits them' },
   { id: 'human_evaluation', label: 'Human evaluation', hint: 'Requires a labeled review workflow' },
-  { id: 'retrieval_ndcg', label: 'Retrieval NDCG', hint: 'Needs graded relevance labels per query' },
+  {
+    id: 'retrieval_ndcg',
+    label: 'Retrieval NDCG',
+    hint: 'Needs graded relevance labels per query',
+  },
 ];
 
-function toggleMetric(list: EvaluationMetricName[] | undefined, id: EvaluationMetricName): EvaluationMetricName[] {
+function toggleMetric(
+  list: EvaluationMetricName[] | undefined,
+  id: EvaluationMetricName,
+): EvaluationMetricName[] {
   const cur = list ?? [];
   if (cur.includes(id)) return cur.filter((m) => m !== id);
   return [...cur, id];
@@ -52,14 +66,14 @@ export function EvaluationConfigurator({
     (next: EvaluationConfig) => {
       updateStages({ evaluation: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchEvaluation = useCallback(
     (patch: Partial<EvaluationConfig>) => {
       setEvaluation(mergeEvaluation(draft.stages.evaluation, patch));
     },
-    [draft.stages.evaluation, setEvaluation]
+    [draft.stages.evaluation, setEvaluation],
   );
 
   const validation = useMemo(() => EvaluationConfigSchema.safeParse(cfg), [cfg]);
@@ -69,19 +83,22 @@ export function EvaluationConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="eval-main-heading"
       >
         <div className="flex items-start gap-3">
-          <BarChart3 className="mt-0.5 h-5 w-5 shrink-0 text-primary-600 dark:text-primary-400" aria-hidden />
+          <BarChart3
+            className="text-primary-600 dark:text-primary-400 mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden
+          />
           <div className="min-w-0 flex-1">
-            <h2 id="eval-main-heading" className="text-lg font-semibold text-foreground">
+            <h2 id="eval-main-heading" className="text-foreground text-lg font-semibold">
               Evaluation
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               Configure offline or scheduled quality checks (e.g. RAGAS-style metrics). Updates{' '}
-              <strong className="font-medium text-foreground">draft.stages.evaluation</strong> for the evaluation engine
-              and exports.
+              <strong className="text-foreground font-medium">draft.stages.evaluation</strong> for
+              the evaluation engine and exports.
             </p>
           </div>
         </div>
@@ -92,7 +109,7 @@ export function EvaluationConfigurator({
               type="checkbox"
               checked={cfg.enabled}
               onChange={(e) => patchEvaluation({ enabled: e.target.checked })}
-              className="h-4 w-4 rounded border-input"
+              className="border-input h-4 w-4 rounded"
             />
             Enable pipeline evaluation
           </label>
@@ -101,12 +118,14 @@ export function EvaluationConfigurator({
         {cfg.enabled ? (
           <div className="mt-8 space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Metrics</h3>
-              <p className="mt-1 text-xs text-muted-foreground">Select one or more metrics to compute on the test set.</p>
+              <h3 className="text-foreground text-sm font-semibold">Metrics</h3>
+              <p className="text-muted-foreground mt-1 text-xs">
+                Select one or more metrics to compute on the test set.
+              </p>
               <ul className="mt-3 space-y-2">
                 {METRICS.map((m) => (
                   <li key={m.id}>
-                    <label className="flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2 hover:bg-muted/50">
+                    <label className="hover:bg-muted/50 flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2">
                       <input
                         type="checkbox"
                         checked={selected.has(m.id)}
@@ -115,11 +134,11 @@ export function EvaluationConfigurator({
                             metrics: toggleMetric(cfg.metrics, m.id),
                           })
                         }
-                        className="mt-1 h-4 w-4 rounded border-input"
+                        className="border-input mt-1 h-4 w-4 rounded"
                       />
                       <span>
-                        <span className="font-medium text-foreground">{m.label}</span>
-                        <span className="mt-0.5 block text-xs text-muted-foreground">{m.hint}</span>
+                        <span className="text-foreground font-medium">{m.label}</span>
+                        <span className="text-muted-foreground mt-0.5 block text-xs">{m.hint}</span>
                       </span>
                     </label>
                   </li>
@@ -129,7 +148,10 @@ export function EvaluationConfigurator({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="eval-test-size" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <label
+                  htmlFor="eval-test-size"
+                  className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+                >
                   Synthetic / held-out test set size
                 </label>
                 <input
@@ -138,13 +160,15 @@ export function EvaluationConfigurator({
                   min={10}
                   max={1000}
                   step={10}
-                  className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="border-input bg-background mt-1 w-full rounded-md border px-3 py-2 text-sm"
                   value={cfg.testSetSize ?? DEFAULT_EVAL.testSetSize ?? 50}
                   onChange={(e) => patchEvaluation({ testSetSize: Number(e.target.value) })}
                 />
               </div>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Schedule</span>
+                <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                  Schedule
+                </span>
                 <div className="mt-2 flex flex-col gap-2">
                   <label className="flex cursor-pointer items-center gap-2 text-sm">
                     <input
@@ -172,12 +196,12 @@ export function EvaluationConfigurator({
       </section>
 
       {!validation.success ? (
-        <p className="text-sm text-destructive" role="alert">
+        <p className="text-destructive text-sm" role="alert">
           Invalid evaluation configuration — check metric list and test set size (10–1000).
         </p>
       ) : (
-        <p className="text-sm text-muted-foreground">
-          Validated with <code className="rounded bg-muted px-1">EvaluationConfigSchema</code>.
+        <p className="text-muted-foreground text-sm">
+          Validated with <code className="bg-muted rounded px-1">EvaluationConfigSchema</code>.
         </p>
       )}
     </div>

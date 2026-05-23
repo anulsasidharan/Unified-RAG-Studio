@@ -7,7 +7,6 @@ import {
   VectorStoreConfigSchema,
   PipelineConfigurationSchema,
   BuildRequirementsSchema,
-  PipelineStagesSchema,
   RerankingConfigSchema,
 } from '../validators';
 import { minimalConfig, fullConfig } from '../generators/__tests__/fixtures';
@@ -54,8 +53,13 @@ describe('ChunkingConfigSchema', () => {
 
   it('accepts all valid strategy values', () => {
     const strategies = [
-      'fixed-size', 'recursive-character', 'semantic',
-      'markdown-header', 'sentence-based', 'paragraph-based', 'code-aware',
+      'fixed-size',
+      'recursive-character',
+      'semantic',
+      'markdown-header',
+      'sentence-based',
+      'paragraph-based',
+      'code-aware',
     ] as const;
     for (const strategy of strategies) {
       const result = ChunkingConfigSchema.safeParse({ strategy, chunkSize: 512, chunkOverlap: 50 });

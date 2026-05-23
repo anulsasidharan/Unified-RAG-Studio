@@ -2,6 +2,7 @@
 
 from collections.abc import Generator
 from contextlib import contextmanager
+from typing import Any
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -12,7 +13,7 @@ _engine = None
 _SessionLocal: sessionmaker[Session] | None = None
 
 
-def get_sync_engine():
+def get_sync_engine() -> Any:
     """Lazily create a singleton sync engine (one per worker process)."""
     global _engine, _SessionLocal
     if _engine is None:

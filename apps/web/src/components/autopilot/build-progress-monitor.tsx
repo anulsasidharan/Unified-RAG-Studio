@@ -84,7 +84,7 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
 
   const sortedBuilds = useMemo(
     () => Object.values(builds).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)),
-    [builds]
+    [builds],
   );
 
   const displayBuild = liveBuild ?? (activeBuildId ? builds[activeBuildId] : undefined);
@@ -121,7 +121,7 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
       });
       const res = await apiClient.post<StartBuildResponse, Record<string, unknown>>(
         '/api/autopilot/build',
-        body
+        body,
       );
       const now = new Date().toISOString();
       const seed: AutopilotBuild = {
@@ -138,8 +138,13 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
         stages: Object.fromEntries(
           [...AUTOPILOT_STAGE_ORDER].map((k) => [
             k,
-            { status: 'pending' as const, startedAt: undefined, completedAt: undefined, message: undefined },
-          ])
+            {
+              status: 'pending' as const,
+              startedAt: undefined,
+              completedAt: undefined,
+              message: undefined,
+            },
+          ]),
         ),
         messages: [],
         createdAt: now,
@@ -151,13 +156,7 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
     } finally {
       setStarting(false);
     }
-  }, [
-    baseConfig,
-    requirements,
-    selectedBackendProjectId,
-    uploadedDocuments,
-    upsertBuild,
-  ]);
+  }, [baseConfig, requirements, selectedBackendProjectId, uploadedDocuments, upsertBuild]);
 
   const cancelBuild = useCallback(async () => {
     if (!activeBuildId) return;
@@ -166,9 +165,11 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
     try {
       await apiClient.post<unknown, Record<string, unknown>>(
         `/api/autopilot/build/${encodeURIComponent(activeBuildId)}/cancel`,
-        {}
+        {},
       );
-      const raw = await apiClient.get<unknown>(`/api/autopilot/build/${encodeURIComponent(activeBuildId)}`);
+      const raw = await apiClient.get<unknown>(
+        `/api/autopilot/build/${encodeURIComponent(activeBuildId)}`,
+      );
       const parsed = parseBuildStatusPayload(raw);
       if (parsed) {
         const prev = useAutopilotStore.getState().builds[parsed.id];
@@ -190,7 +191,7 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
     <section
       className={cn(
         'rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950',
-        className
+        className,
       )}
     >
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -223,7 +224,10 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
 
       {sortedBuilds.length > 0 ? (
         <div className="mt-6">
-          <label htmlFor={`${uid}-watch`} className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+          <label
+            htmlFor={`${uid}-watch`}
+            className="text-sm font-medium text-neutral-800 dark:text-neutral-200"
+          >
             Active build
           </label>
           <select
@@ -247,9 +251,13 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
           type="button"
           disabled={starting}
           onClick={() => void startBuild()}
-          className="inline-flex items-center gap-2 rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-primary-500 dark:hover:bg-primary-400"
+          className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {starting ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Play className="h-4 w-4" aria-hidden />}
+          {starting ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Play className="h-4 w-4" aria-hidden />
+          )}
           Start build
         </button>
         <button
@@ -258,7 +266,11 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
           onClick={() => void cancelBuild()}
           className="inline-flex items-center gap-2 rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
         >
-          {cancelling ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Ban className="h-4 w-4" aria-hidden />}
+          {cancelling ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Ban className="h-4 w-4" aria-hidden />
+          )}
           Cancel
         </button>
         <button
@@ -268,22 +280,23 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
             useAutopilotStore.getState().resetSession();
             setActionError(null);
           }}
-          className="inline-flex items-center rounded-md border border-neutral-200 px-3 py-2 text-sm text-muted-foreground hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:hover:text-neutral-100"
+          className="text-muted-foreground inline-flex items-center rounded-md border border-neutral-200 px-3 py-2 text-sm hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:hover:text-neutral-100"
         >
           Clear session
         </button>
       </div>
 
       {actionError ? (
-        <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+        <p className="border-destructive/40 bg-destructive/5 text-destructive mt-4 rounded-md border px-3 py-2 text-sm">
           {actionError}
         </p>
       ) : null}
 
       {!displayBuild && !activeBuildId ? (
-        <p className="mt-6 text-sm text-muted-foreground">
-          Start a build to open an SSE connection (or choose an existing build above). Requirements must pass{' '}
-          <strong>Validate</strong> on the form above; this panel runs the same Zod rules before POST.
+        <p className="text-muted-foreground mt-6 text-sm">
+          Start a build to open an SSE connection (or choose an existing build above). Requirements
+          must pass <strong>Validate</strong> on the form above; this panel runs the same Zod rules
+          before POST.
         </p>
       ) : null}
 
@@ -294,13 +307,16 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
               <span
                 className={cn(
                   'rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wide',
-                  statusBadgeClass(displayBuild.status)
+                  statusBadgeClass(displayBuild.status),
                 )}
               >
                 {displayBuild.status}
               </span>
-              <span className="text-sm text-muted-foreground">
-                Iteration <span className="tabular-nums font-medium text-neutral-800 dark:text-neutral-200">{displayBuild.iteration}</span>
+              <span className="text-muted-foreground text-sm">
+                Iteration{' '}
+                <span className="font-medium tabular-nums text-neutral-800 dark:text-neutral-200">
+                  {displayBuild.iteration}
+                </span>
               </span>
             </div>
             <p className="text-sm text-neutral-700 dark:text-neutral-300">
@@ -312,15 +328,15 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
           </div>
 
           <div>
-            <div className="mb-1 flex justify-between text-xs text-muted-foreground">
+            <div className="text-muted-foreground mb-1 flex justify-between text-xs">
               <span>Progress</span>
-              <span className="tabular-nums font-medium text-neutral-800 dark:text-neutral-200">
+              <span className="font-medium tabular-nums text-neutral-800 dark:text-neutral-200">
                 {displayBuild.progress}%
               </span>
             </div>
             <div className="h-2.5 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
               <div
-                className="h-full rounded-full bg-primary-600 transition-[width] duration-500 ease-out dark:bg-primary-500"
+                className="bg-primary-600 dark:bg-primary-500 h-full rounded-full transition-[width] duration-500 ease-out"
                 style={{ width: `${displayBuild.progress}%` }}
               />
             </div>
@@ -333,18 +349,23 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
                 const st = displayBuild.stages[key];
                 return (
                   <li key={key} className="flex items-start gap-3 text-sm">
-                    <span className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', stageDotClass(st))} aria-hidden />
+                    <span
+                      className={cn('mt-1.5 h-2 w-2 shrink-0 rounded-full', stageDotClass(st))}
+                      aria-hidden
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-neutral-900 dark:text-neutral-50">
                         {AUTOPILOT_STAGE_LABELS[key] ?? key}
                         {st?.status ? (
-                          <span className="ml-2 text-xs font-normal uppercase text-muted-foreground">
+                          <span className="text-muted-foreground ml-2 text-xs font-normal uppercase">
                             {st.status}
                           </span>
                         ) : null}
                       </p>
                       {st?.message ? (
-                        <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{st.message}</p>
+                        <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
+                          {st.message}
+                        </p>
                       ) : null}
                     </div>
                   </li>
@@ -354,14 +375,13 @@ export function BuildProgressMonitor({ className }: Readonly<{ className?: strin
           </div>
 
           {displayBuild.error ? (
-            <p className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            <p className="border-destructive/40 bg-destructive/5 text-destructive rounded-md border px-3 py-2 text-sm">
               {displayBuild.error}
             </p>
           ) : null}
-
         </div>
       ) : activeBuildId ? (
-        <p className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-6 flex items-center gap-2 text-sm">
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
           Connecting to build stream…
         </p>

@@ -7,6 +7,7 @@ ParagraphChunker — splits on double-newline paragraph breaks
 import re
 
 from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import structlog
 
 from .strategies import Chunk, ChunkingConfig, TextChunker
@@ -81,8 +82,6 @@ class ParagraphChunker(TextChunker):
             final_paras: list[str] = []
             for para in paragraphs:
                 if len(para) > config.chunk_size * 2:
-                    from langchain_text_splitters import RecursiveCharacterTextSplitter
-
                     splitter = RecursiveCharacterTextSplitter(
                         chunk_size=config.chunk_size,
                         chunk_overlap=config.chunk_overlap,

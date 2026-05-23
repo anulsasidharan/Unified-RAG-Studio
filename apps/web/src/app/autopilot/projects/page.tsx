@@ -56,8 +56,8 @@ export default function AutopilotProjectsPage() {
         Projects for Autopilot
       </h1>
       <p className="mt-2 text-neutral-600 dark:text-neutral-400">
-        Uploads and builds are associated with a backend project. Choose the active project before opening the
-        new-build wizard.
+        Uploads and builds are associated with a backend project. Choose the active project before
+        opening the new-build wizard.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-3">
@@ -77,28 +77,31 @@ export default function AutopilotProjectsPage() {
         </Link>
         <Link
           href={ROUTES.autopilotNew}
-          className="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400"
+          className="bg-primary-600 hover:bg-primary-700 dark:bg-primary-500 dark:hover:bg-primary-400 inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm"
         >
           Continue to new build
         </Link>
       </div>
 
       {error ? (
-        <p className="mt-4 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+        <p className="border-destructive/40 bg-destructive/10 text-destructive mt-4 rounded-md border px-3 py-2 text-sm">
           {error}
         </p>
       ) : null}
 
       {loading ? (
-        <div className="mt-10 flex items-center gap-2 text-muted-foreground">
+        <div className="text-muted-foreground mt-10 flex items-center gap-2">
           <Loader2 className="h-5 w-5 animate-spin" aria-hidden />
           Loading projects…
         </div>
       ) : items.length === 0 ? (
         <div className="mt-8 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-neutral-800 dark:bg-neutral-950">
-          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">No backend projects</h2>
+          <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-50">
+            No backend projects
+          </h2>
           <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
-            Create a project via the Templates flow or the shared Projects API, then return here to select it.
+            Create a project via the Templates flow or the shared Projects API, then return here to
+            select it.
           </p>
           <Link
             href={ROUTES.projects}
@@ -119,9 +122,9 @@ export default function AutopilotProjectsPage() {
                 <div className="min-w-0">
                   <p className="font-medium text-neutral-900 dark:text-neutral-50">{p.name}</p>
                   {p.description ? (
-                    <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
+                    <p className="text-muted-foreground mt-1 text-sm">{p.description}</p>
                   ) : null}
-                  <p className="mt-1 font-mono text-xs text-muted-foreground">{p.id}</p>
+                  <p className="text-muted-foreground mt-1 font-mono text-xs">{p.id}</p>
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <button
@@ -129,7 +132,7 @@ export default function AutopilotProjectsPage() {
                     onClick={() => setSelectedId(p.id)}
                     className={
                       active
-                        ? 'rounded-md bg-primary-600 px-4 py-2 text-sm font-semibold text-white shadow-sm dark:bg-primary-500'
+                        ? 'bg-primary-600 dark:bg-primary-500 rounded-md px-4 py-2 text-sm font-semibold text-white shadow-sm'
                         : 'rounded-md border border-neutral-300 bg-white px-4 py-2 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-50 dark:border-neutral-600 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800'
                     }
                   >
@@ -144,7 +147,7 @@ export default function AutopilotProjectsPage() {
 
       <Link
         href={ROUTES.autopilot}
-        className="mt-10 inline-block text-sm font-medium text-primary-600 hover:underline dark:text-primary-400"
+        className="text-primary-600 dark:text-primary-400 mt-10 inline-block text-sm font-medium hover:underline"
       >
         ← Autopilot overview
       </Link>

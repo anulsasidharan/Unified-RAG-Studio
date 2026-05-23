@@ -194,7 +194,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       const pname = pipelineName.trim() || applyTarget.name;
       const applied = await apiClient.post<ApplyTemplateResponse>(
         `/api/templates/${encodeURIComponent(applyTarget.id)}/apply`,
-        { projectId, name: pname }
+        { projectId, name: pname },
       );
 
       const designerSnapshot: DesignerProjectSnapshot = {
@@ -251,7 +251,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-600 to-indigo-600 shadow-sm shadow-primary-200">
+            <div className="from-primary-600 shadow-primary-200 flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br to-indigo-600 shadow-sm">
               <LayoutTemplate className="h-5 w-5 text-white" aria-hidden />
             </div>
             <h1 className="font-display text-3xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
@@ -265,7 +265,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
         </div>
         <Link
           href={ROUTES.designer}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition-all hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
+          className="hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-medium text-neutral-700 shadow-sm transition-all dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-300"
         >
           Blank pipeline
         </Link>
@@ -282,7 +282,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, use case, or tag…"
-            className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-neutral-700 dark:bg-neutral-900"
+            className="focus:border-primary-500 focus:ring-primary-500/20 w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 dark:border-neutral-700 dark:bg-neutral-900"
           />
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -298,8 +298,8 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
               className={cn(
                 'rounded-full border px-3 py-1.5 text-xs font-semibold transition-all',
                 complexity === c
-                  ? 'border-primary-600 bg-gradient-to-r from-primary-600 to-indigo-600 text-white shadow-sm'
-                  : 'border-neutral-200 bg-white text-neutral-500 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400'
+                  ? 'border-primary-600 from-primary-600 bg-gradient-to-r to-indigo-600 text-white shadow-sm'
+                  : 'hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 border-neutral-200 bg-white text-neutral-500 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400',
               )}
             >
               {c === 'all' ? 'All' : c}
@@ -309,51 +309,66 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       </div>
 
       {loading ? (
-        <div className="mt-16 flex justify-center text-muted-foreground">
+        <div className="text-muted-foreground mt-16 flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" aria-label="Loading" />
         </div>
       ) : loadError ? (
         <div
-          className="mt-10 rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive mt-10 rounded-lg border p-4 text-sm"
           role="alert"
         >
           <p className="font-medium">Could not load templates</p>
           <p className="mt-1 break-words opacity-90">{loadError}</p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Ensure the API is running (e.g. <code className="rounded bg-muted px-1">npm run dev:full</code> from the
-            repo root).
+          <p className="text-muted-foreground mt-2 text-xs">
+            Ensure the API is running (e.g.{' '}
+            <code className="bg-muted rounded px-1">npm run dev:full</code> from the repo root).
           </p>
         </div>
       ) : (
         <ul className="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((t) => (
             <li key={t.id}>
-              <article className="group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all hover:border-primary-200 hover:shadow-md dark:border-neutral-800 dark:bg-neutral-950">
+              <article className="hover:border-primary-200 group flex h-full flex-col rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-neutral-800 dark:bg-neutral-950">
                 {/* Top accent bar by complexity */}
-                <div className={cn(
-                  'h-1 w-full rounded-t-2xl',
-                  t.complexity === 'beginner' ? 'bg-gradient-to-r from-emerald-400 to-teal-500' :
-                  t.complexity === 'intermediate' ? 'bg-gradient-to-r from-amber-400 to-orange-500' :
-                  'bg-gradient-to-r from-violet-500 to-purple-600'
-                )} aria-hidden />
+                <div
+                  className={cn(
+                    'h-1 w-full rounded-t-2xl',
+                    t.complexity === 'beginner'
+                      ? 'bg-gradient-to-r from-emerald-400 to-teal-500'
+                      : t.complexity === 'intermediate'
+                        ? 'bg-gradient-to-r from-amber-400 to-orange-500'
+                        : 'bg-gradient-to-r from-violet-500 to-purple-600',
+                  )}
+                  aria-hidden
+                />
                 <div className="flex flex-1 flex-col p-5">
                   <div className="flex items-start justify-between gap-2">
-                    <h2 className="font-display text-base font-bold text-neutral-900 dark:text-neutral-50 group-hover:text-primary-700 dark:group-hover:text-primary-400 transition-colors">{t.name}</h2>
+                    <h2 className="font-display group-hover:text-primary-700 dark:group-hover:text-primary-400 text-base font-bold text-neutral-900 transition-colors dark:text-neutral-50">
+                      {t.name}
+                    </h2>
                     <span
                       className={cn(
                         'shrink-0 rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-                        complexityBadgeClass(t.complexity)
+                        complexityBadgeClass(t.complexity),
                       )}
                     >
                       {t.complexity}
                     </span>
                   </div>
-                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">{t.description}</p>
+                  <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
+                    {t.description}
+                  </p>
                   <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-neutral-50 px-3 py-2 dark:bg-neutral-900">
-                    <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">Use case</span>
-                    <span className="text-xs text-neutral-700 dark:text-neutral-300">{t.useCase}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-neutral-400">
+                      Use case
+                    </span>
+                    <span className="text-xs text-neutral-700 dark:text-neutral-300">
+                      {t.useCase}
+                    </span>
                   </div>
-                  <p className="mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400">{t.estimatedMonthlyCost}</p>
+                  <p className="text-primary-600 dark:text-primary-400 mt-2 text-xs font-semibold">
+                    {t.estimatedMonthlyCost}
+                  </p>
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {(t.tags ?? []).slice(0, 5).map((tag) => (
                       <span
@@ -380,7 +395,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
                     <button
                       type="button"
                       onClick={() => openApply(t)}
-                      className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 active:scale-[0.98]"
+                      className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r to-indigo-600 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 active:scale-[0.98]"
                     >
                       <Sparkles className="h-3.5 w-3.5" aria-hidden />
                       Use template
@@ -404,37 +419,39 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
       )}
 
       {!loading && !loadError && filtered.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-muted-foreground">No templates match your filters.</p>
+        <p className="text-muted-foreground mt-10 text-center text-sm">
+          No templates match your filters.
+        </p>
       ) : null}
 
       <Dialog.Root open={dialogOpen} onOpenChange={closeDialog}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50 data-[state=open]:animate-in data-[state=closed]:animate-out" />
+          <Dialog.Overlay className="data-[state=open]:animate-in data-[state=closed]:animate-out fixed inset-0 z-50 bg-black/50" />
           <Dialog.Content
             className={cn(
               'fixed left-1/2 top-1/2 z-50 w-[min(100%,28rem)] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-2xl',
-              'focus:outline-none dark:border-neutral-700 dark:bg-neutral-950'
+              'focus:outline-none dark:border-neutral-700 dark:bg-neutral-950',
             )}
           >
             <div className="flex items-start justify-between gap-2">
-              <Dialog.Title className="text-lg font-semibold text-foreground">
+              <Dialog.Title className="text-foreground text-lg font-semibold">
                 Apply “{applyTarget?.name}”
               </Dialog.Title>
               <Dialog.Close
                 type="button"
-                className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="text-muted-foreground hover:bg-muted hover:text-foreground rounded-md p-1"
                 aria-label="Close"
               >
                 <X className="h-5 w-5" />
               </Dialog.Close>
             </div>
-            <Dialog.Description className="mt-2 text-sm text-muted-foreground">
+            <Dialog.Description className="text-muted-foreground mt-2 text-sm">
               Creates a saved pipeline configuration on the server and loads it into Designer.
             </Dialog.Description>
 
             <div className="mt-6 space-y-4">
               <fieldset className="space-y-2">
-                <legend className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <legend className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
                   Project
                 </legend>
                 <div className="flex gap-3">
@@ -450,7 +467,7 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
                   <label
                     className={cn(
                       'flex items-center gap-2 text-sm',
-                      apiProjects.length === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                      apiProjects.length === 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                     )}
                   >
                     <input
@@ -467,34 +484,40 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
 
               {projectMode === 'new' ? (
                 <div>
-                  <label htmlFor="new-proj-name" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="new-proj-name"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Project name
                   </label>
                   <input
                     id="new-proj-name"
                     value={newProjectName}
                     onChange={(e) => setNewProjectName(e.target.value)}
-                    className="mt-1 w-full rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm dark:border-neutral-700"
+                    className="bg-background mt-1 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700"
                   />
                 </div>
               ) : (
                 <div>
-                  <label htmlFor="existing-proj" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="existing-proj"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Server project
                   </label>
                   {projectsLoading ? (
-                    <p className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+                    <p className="text-muted-foreground mt-2 flex items-center gap-2 text-sm">
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                       Loading projects…
                     </p>
                   ) : projectsError ? (
-                    <p className="mt-2 text-sm text-destructive">{projectsError}</p>
+                    <p className="text-destructive mt-2 text-sm">{projectsError}</p>
                   ) : (
                     <select
                       id="existing-proj"
                       value={selectedProjectId}
                       onChange={(e) => setSelectedProjectId(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm dark:border-neutral-700"
+                      className="bg-background mt-1 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700"
                     >
                       {apiProjects.map((p) => (
                         <option key={p.id} value={p.id}>
@@ -507,20 +530,23 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
               )}
 
               <div>
-                <label htmlFor="pipeline-name" className="text-xs font-medium text-muted-foreground">
+                <label
+                  htmlFor="pipeline-name"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   Saved pipeline name
                 </label>
                 <input
                   id="pipeline-name"
                   value={pipelineName}
                   onChange={(e) => setPipelineName(e.target.value)}
-                  className="mt-1 w-full rounded-md border border-neutral-200 bg-background px-3 py-2 text-sm dark:border-neutral-700"
+                  className="bg-background mt-1 w-full rounded-md border border-neutral-200 px-3 py-2 text-sm dark:border-neutral-700"
                 />
               </div>
             </div>
 
             {applyError ? (
-              <p className="mt-4 text-sm text-destructive" role="alert">
+              <p className="text-destructive mt-4 text-sm" role="alert">
                 {applyError}
               </p>
             ) : null}
@@ -538,11 +564,10 @@ export function TemplateGallery({ className }: Readonly<{ className?: string }>)
                 type="button"
                 disabled={
                   applyLoading ||
-                  (projectMode === 'existing' &&
-                    (projectsLoading || !selectedProjectId))
+                  (projectMode === 'existing' && (projectsLoading || !selectedProjectId))
                 }
                 onClick={() => void handleApply()}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-primary-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm shadow-primary-200/60 transition-all hover:from-primary-700 hover:to-indigo-700 disabled:opacity-50"
+                className="from-primary-600 shadow-primary-200/60 hover:from-primary-700 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:to-indigo-700 disabled:opacity-50"
               >
                 {applyLoading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
                 Apply & open Designer

@@ -19,7 +19,7 @@ const DEFAULT_EMBEDDING = createDefaultPipelineConfiguration().stages.embedding;
 
 function mergeEmbedding(
   current: EmbeddingConfig | undefined,
-  patch: Partial<EmbeddingConfig>
+  patch: Partial<EmbeddingConfig>,
 ): EmbeddingConfig {
   const base = current ?? DEFAULT_EMBEDDING;
   return { ...base, ...patch };
@@ -70,14 +70,14 @@ export function EmbeddingConfigurator({
     (next: EmbeddingConfig) => {
       updateStages({ embedding: next });
     },
-    [updateStages]
+    [updateStages],
   );
 
   const patchEmbedding = useCallback(
     (patch: Partial<EmbeddingConfig>) => {
       setEmbedding(mergeEmbedding(draft.stages.embedding, patch));
     },
-    [draft.stages.embedding, setEmbedding]
+    [draft.stages.embedding, setEmbedding],
   );
 
   const validation = useMemo(() => EmbeddingConfigSchema.safeParse(cfg), [cfg]);
@@ -108,13 +108,7 @@ export function EmbeddingConfigurator({
       if (openSourceFilter === 'yes' && !m.openSource) return false;
       if (openSourceFilter === 'no' && m.openSource) return false;
       if (!q) return true;
-      const hay = [
-        m.id,
-        m.name,
-        m.description,
-        ...(m.bestFor ?? []),
-        ...(m.languageSupport ?? []),
-      ]
+      const hay = [m.id, m.name, m.description, ...(m.bestFor ?? []), ...(m.languageSupport ?? [])]
         .join(' ')
         .toLowerCase();
       return hay.includes(q);
@@ -163,16 +157,17 @@ export function EmbeddingConfigurator({
   return (
     <div className={cn('space-y-8', className)}>
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="emb-filter-heading"
       >
-        <h2 id="emb-filter-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="emb-filter-heading" className="text-foreground text-lg font-semibold">
           Discover & filter
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Search and narrow models from <code className="rounded bg-muted px-1">data/models/embeddings.json</code>. Your
-          choice updates <strong className="font-medium text-foreground">draft.stages.embedding</strong> for exports and
-          APIs.
+        <p className="text-muted-foreground mt-1 text-sm">
+          Search and narrow models from{' '}
+          <code className="bg-muted rounded px-1">data/models/embeddings.json</code>. Your choice
+          updates <strong className="text-foreground font-medium">draft.stages.embedding</strong>{' '}
+          for exports and APIs.
         </p>
 
         <div className="mt-4">
@@ -180,26 +175,32 @@ export function EmbeddingConfigurator({
             Search embedding models
           </label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+            <Search
+              className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2"
+              aria-hidden
+            />
             <input
               id="emb-search"
               type="search"
               placeholder="Search by name, id, description, languages…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full rounded-md border border-input bg-background py-2 pl-9 pr-3 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring w-full rounded-md border py-2 pl-9 pr-3 text-sm shadow-sm outline-none focus-visible:ring-2"
             />
           </div>
         </div>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div>
-            <label htmlFor="emb-filter-provider" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="emb-filter-provider"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Provider
             </label>
             <select
               id="emb-filter-provider"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={providerFilter}
               onChange={(e) => setProviderFilter(e.target.value)}
             >
@@ -212,12 +213,15 @@ export function EmbeddingConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="emb-filter-tier" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="emb-filter-tier"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Tier
             </label>
             <select
               id="emb-filter-tier"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
             >
@@ -228,12 +232,15 @@ export function EmbeddingConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="emb-filter-quality" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="emb-filter-quality"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Quality
             </label>
             <select
               id="emb-filter-quality"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={qualityFilter}
               onChange={(e) => setQualityFilter(e.target.value)}
             >
@@ -244,12 +251,15 @@ export function EmbeddingConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="emb-filter-speed" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="emb-filter-speed"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Speed
             </label>
             <select
               id="emb-filter-speed"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={speedFilter}
               onChange={(e) => setSpeedFilter(e.target.value)}
             >
@@ -261,12 +271,15 @@ export function EmbeddingConfigurator({
             </select>
           </div>
           <div>
-            <label htmlFor="emb-filter-oss" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <label
+              htmlFor="emb-filter-oss"
+              className="text-muted-foreground text-xs font-semibold uppercase tracking-wide"
+            >
               Open source
             </label>
             <select
               id="emb-filter-oss"
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
               value={openSourceFilter}
               onChange={(e) => setOpenSourceFilter(e.target.value)}
             >
@@ -283,21 +296,23 @@ export function EmbeddingConfigurator({
               onClick={() => setHideDeprecated((v) => !v)}
               className={cn(
                 'flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-sm transition-colors',
-                hideDeprecated ? 'border-primary-200 bg-primary-50/50 dark:border-primary-900 dark:bg-primary-950/30' : 'border-border bg-muted/30'
+                hideDeprecated
+                  ? 'border-primary-200 bg-primary-50/50 dark:border-primary-900 dark:bg-primary-950/30'
+                  : 'border-border bg-muted/30',
               )}
             >
               <span>Hide deprecated models</span>
               <span
                 className={cn(
                   'relative inline-flex h-6 w-11 shrink-0 rounded-full border transition-colors',
-                  hideDeprecated ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted'
+                  hideDeprecated ? 'border-primary-600 bg-primary-600' : 'border-muted bg-muted',
                 )}
                 aria-hidden
               >
                 <span
                   className={cn(
-                    'pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full bg-background shadow transition',
-                    hideDeprecated ? 'translate-x-5' : 'translate-x-0.5'
+                    'bg-background pointer-events-none inline-block h-5 w-5 translate-y-0 rounded-full shadow transition',
+                    hideDeprecated ? 'translate-x-5' : 'translate-x-0.5',
                   )}
                 />
               </span>
@@ -305,23 +320,20 @@ export function EmbeddingConfigurator({
           </div>
         </div>
 
-        <p className="mt-3 text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground mt-3 text-xs" aria-live="polite">
           Showing {filteredModels.length} of {allModels.length} models
           {filteredModels.length === 0 ? ' — relax filters or clear search.' : '.'}
           {pinnedSelectionId ? (
             <>
               {' '}
-              Your current selection is pinned at the top because it does not match the active filters.
+              Your current selection is pinned at the top because it does not match the active
+              filters.
             </>
           ) : null}
         </p>
       </section>
 
-      <div
-        role="radiogroup"
-        aria-label="Embedding model"
-        className="grid gap-4 sm:grid-cols-2"
-      >
+      <div role="radiogroup" aria-label="Embedding model" className="grid gap-4 sm:grid-cols-2">
         {displayModels.map((m) => {
           const selected = cfg.model === m.id;
           return (
@@ -333,18 +345,20 @@ export function EmbeddingConfigurator({
               onClick={() => selectModel(m)}
               className={cn(
                 'flex flex-col rounded-xl border p-4 text-left shadow-sm transition-all',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                'focus-visible:ring-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                 selected
-                  ? 'border-primary-600 bg-primary-600/[0.06] ring-2 ring-primary-600 dark:bg-primary-500/10'
-                  : 'border-neutral-200 bg-card hover:border-primary-400/60 hover:bg-accent/40 dark:border-neutral-700',
-                m.deprecated && !selected ? 'opacity-80' : ''
+                  ? 'border-primary-600 bg-primary-600/[0.06] ring-primary-600 dark:bg-primary-500/10 ring-2'
+                  : 'bg-card hover:border-primary-400/60 hover:bg-accent/40 border-neutral-200 dark:border-neutral-700',
+                m.deprecated && !selected ? 'opacity-80' : '',
               )}
             >
               <div className="flex items-start gap-3">
                 <span
                   className={cn(
-                    'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border bg-background',
-                    selected ? 'border-primary-600 text-primary-700 dark:text-primary-200' : 'border-muted'
+                    'bg-background flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border',
+                    selected
+                      ? 'border-primary-600 text-primary-700 dark:text-primary-200'
+                      : 'border-muted',
                   )}
                   aria-hidden
                 >
@@ -352,7 +366,7 @@ export function EmbeddingConfigurator({
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-foreground">{m.name}</span>
+                    <span className="text-foreground font-semibold">{m.name}</span>
                     {m.id === pinnedSelectionId ? (
                       <span className="rounded-md border border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-900 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-100">
                         Current · outside filters
@@ -366,7 +380,7 @@ export function EmbeddingConfigurator({
                     <span
                       className={cn(
                         'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                        tierBadgeStyles(m.tier)
+                        tierBadgeStyles(m.tier),
                       )}
                     >
                       {m.tier}
@@ -374,14 +388,14 @@ export function EmbeddingConfigurator({
                     <span
                       className={cn(
                         'rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-                        qualityBadgeStyles(m.quality)
+                        qualityBadgeStyles(m.quality),
                       )}
                     >
                       {m.quality}
                     </span>
                   </div>
-                  <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{m.description}</p>
-                  <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">{m.description}</p>
+                  <div className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
                     <span className="tabular-nums">{m.dimensions} dims</span>
                     <span>·</span>
                     <span>{PROVIDER_LABEL[m.provider] ?? m.provider}</span>
@@ -400,7 +414,7 @@ export function EmbeddingConfigurator({
                     'flex h-8 w-8 shrink-0 items-center justify-center rounded-full border',
                     selected
                       ? 'border-primary-600 bg-primary-600 text-primary-foreground'
-                      : 'border-muted bg-muted/50 text-transparent'
+                      : 'border-muted bg-muted/50 text-transparent',
                   )}
                   aria-hidden
                 >
@@ -414,33 +428,35 @@ export function EmbeddingConfigurator({
 
       {selectedMeta ? (
         <section
-          className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+          className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
           aria-labelledby="emb-detail-heading"
         >
-          <h2 id="emb-detail-heading" className="text-lg font-semibold text-foreground">
+          <h2 id="emb-detail-heading" className="text-foreground text-lg font-semibold">
             About this model
           </h2>
           <div className="mt-4 grid gap-6 sm:grid-cols-2">
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Best for</h3>
-              <ul className="mt-2 list-inside list-disc text-sm text-foreground">
+              <h3 className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                Best for
+              </h3>
+              <ul className="text-foreground mt-2 list-inside list-disc text-sm">
                 {selectedMeta.bestFor.map((x) => (
                   <li key={x}>{x}</li>
                 ))}
               </ul>
             </div>
             <div className="space-y-3 text-sm">
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">MTEB score</span>
-                <span className="tabular-nums font-medium">{selectedMeta.mtebScore}</span>
+                <span className="font-medium tabular-nums">{selectedMeta.mtebScore}</span>
               </div>
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Cost / 1M tokens (USD)</span>
-                <span className="tabular-nums font-medium">{selectedMeta.costPer1MTokens}</span>
+                <span className="font-medium tabular-nums">{selectedMeta.costPer1MTokens}</span>
               </div>
-              <div className="flex justify-between gap-2 border-b border-border pb-2">
+              <div className="border-border flex justify-between gap-2 border-b pb-2">
                 <span className="text-muted-foreground">Max input tokens</span>
-                <span className="tabular-nums font-medium">{selectedMeta.maxTokens}</span>
+                <span className="font-medium tabular-nums">{selectedMeta.maxTokens}</span>
               </div>
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground">Languages</span>
@@ -451,15 +467,22 @@ export function EmbeddingConfigurator({
               {selectedMeta.modelCard ? (
                 <div className="flex justify-between gap-2 pt-1">
                   <span className="text-muted-foreground">Model card / HF id</span>
-                  <span className="max-w-[60%] truncate text-right font-mono text-xs" title={selectedMeta.modelCard}>
+                  <span
+                    className="max-w-[60%] truncate text-right font-mono text-xs"
+                    title={selectedMeta.modelCard}
+                  >
                     {selectedMeta.modelCard}
                   </span>
                 </div>
               ) : null}
               {selectedMeta.inputTypes?.length ? (
                 <div className="pt-1">
-                  <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Input types</span>
-                  <p className="mt-1 text-xs text-foreground">{selectedMeta.inputTypes.join(', ')}</p>
+                  <span className="text-muted-foreground text-xs font-semibold uppercase tracking-wide">
+                    Input types
+                  </span>
+                  <p className="text-foreground mt-1 text-xs">
+                    {selectedMeta.inputTypes.join(', ')}
+                  </p>
                 </div>
               ) : null}
             </div>
@@ -468,22 +491,23 @@ export function EmbeddingConfigurator({
       ) : null}
 
       <section
-        className="rounded-xl border border-neutral-200 bg-card p-5 shadow-sm dark:border-neutral-700"
+        className="bg-card rounded-xl border border-neutral-200 p-5 shadow-sm dark:border-neutral-700"
         aria-labelledby="emb-params-heading"
       >
-        <h2 id="emb-params-heading" className="text-lg font-semibold text-foreground">
+        <h2 id="emb-params-heading" className="text-foreground text-lg font-semibold">
           Inference parameters
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Batch size is bounded by <strong className="font-medium text-foreground">EmbeddingConfigSchema</strong> (1–2048).
+        <p className="text-muted-foreground mt-1 text-sm">
+          Batch size is bounded by{' '}
+          <strong className="text-foreground font-medium">EmbeddingConfigSchema</strong> (1–2048).
           Dimensions and provider come from the catalog entry for the selected model id.
         </p>
         <div className="mt-6 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <label htmlFor="emb-batch" className="text-sm font-medium text-foreground">
+            <label htmlFor="emb-batch" className="text-foreground text-sm font-medium">
               Batch size
             </label>
-            <span className="tabular-nums text-sm text-muted-foreground">{batchSize}</span>
+            <span className="text-muted-foreground text-sm tabular-nums">{batchSize}</span>
           </div>
           <input
             id="emb-batch"
@@ -493,28 +517,28 @@ export function EmbeddingConfigurator({
             step={1}
             value={Math.min(batchMax, Math.max(batchMin, batchSize))}
             onChange={(e) => patchEmbedding({ batchSize: Number(e.target.value) })}
-            className="h-2 w-full cursor-pointer accent-primary-600"
+            className="accent-primary-600 h-2 w-full cursor-pointer"
           />
         </div>
 
-        <div className="mt-6 space-y-4 rounded-lg border border-border bg-muted/15 px-3 py-4">
+        <div className="border-border bg-muted/15 mt-6 space-y-4 rounded-lg border px-3 py-4">
           <label className="flex cursor-pointer items-start gap-3 text-sm">
             <input
               type="checkbox"
               checked={Boolean(cfg.cacheEmbeddings)}
               onChange={(e) => patchEmbedding({ cacheEmbeddings: e.target.checked })}
-              className="mt-1 rounded border-input"
+              className="border-input mt-1 rounded"
             />
             <span>
-              <span className="font-medium text-foreground">Cache embeddings</span>
-              <span className="mt-0.5 block text-xs text-muted-foreground">
-                When enabled, the API embedding layer reuses Redis or in-memory vectors for identical text + model
-                fingerprints.
+              <span className="text-foreground font-medium">Cache embeddings</span>
+              <span className="text-muted-foreground mt-0.5 block text-xs">
+                When enabled, the API embedding layer reuses Redis or in-memory vectors for
+                identical text + model fingerprints.
               </span>
             </span>
           </label>
           <div>
-            <label htmlFor="emb-version" className="text-sm font-medium text-foreground">
+            <label htmlFor="emb-version" className="text-foreground text-sm font-medium">
               Embedding version tag (optional)
             </label>
             <input
@@ -525,33 +549,37 @@ export function EmbeddingConfigurator({
               value={cfg.embeddingVersion ?? ''}
               onChange={(e) =>
                 patchEmbedding({
-                  embeddingVersion: e.target.value.trim() === '' ? undefined : e.target.value.trim(),
+                  embeddingVersion:
+                    e.target.value.trim() === '' ? undefined : e.target.value.trim(),
                 })
               }
-              className="mt-1 w-full max-w-md rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+              className="border-input bg-background ring-offset-background focus-visible:ring-ring mt-1 w-full max-w-md rounded-md border px-3 py-2 text-sm shadow-sm outline-none focus-visible:ring-2"
             />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Stored on chunk metadata at index time when your worker uses the shared embedding service.
+            <p className="text-muted-foreground mt-1 text-xs">
+              Stored on chunk metadata at index time when your worker uses the shared embedding
+              service.
             </p>
           </div>
         </div>
 
         <dl className="mt-6 grid gap-2 text-sm sm:grid-cols-2">
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Model id</dt>
-            <dd className="mt-1 font-mono text-xs text-foreground">{cfg.model}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">Model id</dt>
+            <dd className="text-foreground mt-1 font-mono text-xs">{cfg.model}</dd>
           </div>
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Provider</dt>
-            <dd className="mt-1 text-foreground">{PROVIDER_LABEL[cfg.provider] ?? cfg.provider}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">Provider</dt>
+            <dd className="text-foreground mt-1">{PROVIDER_LABEL[cfg.provider] ?? cfg.provider}</dd>
           </div>
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Dimensions</dt>
-            <dd className="mt-1 tabular-nums text-foreground">{cfg.dimensions}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">Dimensions</dt>
+            <dd className="text-foreground mt-1 tabular-nums">{cfg.dimensions}</dd>
           </div>
-          <div className="rounded-lg border border-border bg-muted/20 px-3 py-2">
-            <dt className="text-xs uppercase tracking-wide text-muted-foreground">Max tokens (catalog)</dt>
-            <dd className="mt-1 tabular-nums text-foreground">{cfg.maxTokens ?? '—'}</dd>
+          <div className="border-border bg-muted/20 rounded-lg border px-3 py-2">
+            <dt className="text-muted-foreground text-xs uppercase tracking-wide">
+              Max tokens (catalog)
+            </dt>
+            <dd className="text-foreground mt-1 tabular-nums">{cfg.maxTokens ?? '—'}</dd>
           </div>
         </dl>
       </section>
@@ -559,7 +587,7 @@ export function EmbeddingConfigurator({
       {!validation.success ? (
         <div
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          className="border-destructive/40 bg-destructive/10 text-destructive rounded-lg border px-4 py-3 text-sm"
         >
           <p className="font-medium">Configuration needs adjustment</p>
           <ul className="mt-2 list-inside list-disc text-xs">
@@ -569,11 +597,13 @@ export function EmbeddingConfigurator({
           </ul>
         </div>
       ) : (
-        <p className="flex items-start gap-2 text-xs text-muted-foreground" aria-live="polite">
+        <p className="text-muted-foreground flex items-start gap-2 text-xs" aria-live="polite">
           <Layers className="mt-0.5 h-4 w-4 shrink-0 opacity-70" aria-hidden />
           <span>
-            Embedding settings are valid and saved with your pipeline draft (local storage). Vector index dimensionality must
-            match <strong className="font-medium text-foreground">{cfg.dimensions}</strong> when you provision the store.
+            Embedding settings are valid and saved with your pipeline draft (local storage). Vector
+            index dimensionality must match{' '}
+            <strong className="text-foreground font-medium">{cfg.dimensions}</strong> when you
+            provision the store.
           </span>
         </p>
       )}

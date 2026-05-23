@@ -71,7 +71,7 @@ async def task_status(task_id: str) -> TaskStatusResponse:
     res = AsyncResult(task_id, app=celery_app)
     payload: dict | list | str | float | bool | None = None
     if res.successful():
-        payload = res.result  # type: ignore[assignment]
+        payload = res.result
     elif res.failed():
         err = res.result
         payload = {"error": repr(err) if err is not None else "failure"}

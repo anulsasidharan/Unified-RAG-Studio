@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pprint import pformat
+from typing import Any
 
 from app.schemas.pipeline import (
     ChunkingStrategy,
@@ -360,7 +361,7 @@ def _build_config(config: PipelineConfigurationSchema) -> str:
     return "\n".join(lines)
 
 
-def _build_embedding_init(emb, cls: str) -> str:
+def _build_embedding_init(emb: Any, cls: str) -> str:
     p = _ev(emb.provider)
     if p == "openai":
         return f'{cls}(\n    model="{emb.model}"\n)'
@@ -371,7 +372,7 @@ def _build_embedding_init(emb, cls: str) -> str:
     return f'{cls}(model="{emb.model}")'
 
 
-def _build_llm_init(gen, cls: str) -> str:
+def _build_llm_init(gen: Any, cls: str) -> str:
     p = _ev(gen.provider)
     base = (
         f'model="{gen.model}",\n    temperature={gen.temperature},\n    max_tokens={gen.max_tokens}'

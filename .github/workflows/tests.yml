@@ -101,24 +101,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.4.x"
+
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: apps/api/requirements-dev.txt
 
       - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install -r requirements.txt -r requirements-dev.txt
+        run: uv pip install --system -r requirements.txt -r requirements-dev.txt
 
       - name: Run Alembic migrations
-        run: alembic upgrade head
+        run: uv run alembic upgrade head
 
       - name: Run integration tests
         run: |
-          pytest tests/test_integration/ \
+          uv run pytest tests/test_integration/ \
             --cov=app \
             --cov-report=xml \
             --cov-report=term-missing \
@@ -161,6 +162,16 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: npm ci
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "0.4.x"
+
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Install Playwright browsers
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
@@ -189,11 +200,11 @@ jobs:
           ANTHROPIC_API_KEY: "sk-ant-test-placeholder"
           SECRET_KEY: "ci-e2e-test-secret"
           APP_ENV: "test"
+        working-directory: apps/api
         run: |
-          cd apps/api
-          pip install -r requirements.txt
-          alembic upgrade head
-          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          uv pip install --system -r requirements.txt
+          uv run alembic upgrade head
+          uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           echo "API_PID=$!" >> $GITHUB_ENV
           # Wait for API to be ready
           npx wait-on http://localhost:8000/health --timeout 30000

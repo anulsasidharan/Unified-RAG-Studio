@@ -105,9 +105,7 @@ export const fullConfig: PipelineConfiguration = {
     routing: {
       enabled: true,
       defaultModel: 'gpt-4o-mini',
-      rules: [
-        { condition: 'keyword', keywords: ['detailed', 'explain'], targetModel: 'gpt-4o' },
-      ],
+      rules: [{ condition: 'keyword', keywords: ['detailed', 'explain'], targetModel: 'gpt-4o' }],
     },
     memory: {
       type: 'conversation-buffer',

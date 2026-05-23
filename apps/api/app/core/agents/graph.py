@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
@@ -736,7 +736,7 @@ def _document_analyst_node(state: AutopilotGraphState) -> dict[str, Any]:
     }
 
 
-def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None):
+def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None) -> Any:
     """Compile Autopilot orchestrator graph: specialists, ``orchestration_gate``, optional retry loop, deployment."""  # noqa: E501
 
     graph = StateGraph(AutopilotGraphState)
@@ -771,7 +771,7 @@ def compile_autopilot_bootstrap_graph(*, checkpointer: MemorySaver | None = None
     return compiled
 
 
-def compile_autopilot_orchestrator_graph(*, checkpointer: MemorySaver | None = None):
+def compile_autopilot_orchestrator_graph(*, checkpointer: MemorySaver | None = None) -> Any:
     """P6-8: same graph as bootstrap — linear specialists + evaluation gate + optional retry loop."""  # noqa: E501
 
     return compile_autopilot_bootstrap_graph(checkpointer=checkpointer)
@@ -809,7 +809,7 @@ def invoke_autopilot_bootstrap(
         result = app.invoke(state, config=cfg)
     else:
         result = app.invoke(state, config={"recursion_limit": recursion_limit})
-    return result  # type: ignore[return-value]
+    return cast(AutopilotGraphState, result)
 
 
 def invoke_autopilot_orchestrator(

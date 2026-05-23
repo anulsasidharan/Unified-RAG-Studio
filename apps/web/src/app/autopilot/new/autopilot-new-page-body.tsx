@@ -12,11 +12,11 @@ const AutopilotBuildWizard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <p className="text-sm text-muted-foreground" aria-busy="true">
+      <p className="text-muted-foreground text-sm" aria-busy="true">
         Loading build wizard…
       </p>
     ),
-  }
+  },
 );
 import { apiClient } from '@/lib/api-client';
 import { mergeBuildFromServer, parseBuildStatusPayload } from '@/lib/autopilot-build-status';
@@ -49,7 +49,7 @@ export function AutopilotNewPageBody() {
     void (async () => {
       try {
         const raw = await apiClient.get<unknown>(
-          `/api/autopilot/build/${encodeURIComponent(buildParam)}`
+          `/api/autopilot/build/${encodeURIComponent(buildParam)}`,
         );
         if (cancelled) return;
         const parsed = parseBuildStatusPayload(raw);

@@ -45,7 +45,7 @@ def _resolver_paths(settings: Settings) -> list[Path]:
 @lru_cache(maxsize=8)
 def _load_json(path_str: str) -> dict[str, object]:
     with Path(path_str).open(encoding="utf-8") as fh:
-        return json.load(fh)
+        return json.load(fh)  # type: ignore[no-any-return]
 
 
 def load_pricing(settings: Settings | None = None) -> dict[str, object]:

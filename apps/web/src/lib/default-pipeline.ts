@@ -46,7 +46,10 @@ export function createDefaultGuardrailsConfig(): GuardrailsConfig {
   };
 }
 
-function mergeGuardrailsConfig(base: GuardrailsConfig, patch: Partial<GuardrailsConfig>): GuardrailsConfig {
+function mergeGuardrailsConfig(
+  base: GuardrailsConfig,
+  patch: Partial<GuardrailsConfig>,
+): GuardrailsConfig {
   return {
     input: patch.input ? { ...base.input, ...patch.input } : base.input,
     retrieval: patch.retrieval ? { ...base.retrieval, ...patch.retrieval } : base.retrieval,
@@ -132,7 +135,7 @@ export function createDefaultHumanInTheLoopConfig(): HumanInTheLoopConfig {
  * Creates a full default {@link PipelineConfiguration} for Designer drafts and Autopilot baselines.
  */
 export function createDefaultPipelineConfiguration(
-  overrides?: Partial<PipelineConfiguration>
+  overrides?: Partial<PipelineConfiguration>,
 ): PipelineConfiguration {
   const now = new Date().toISOString();
   const base: PipelineConfiguration = {

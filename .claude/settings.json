@@ -1,5 +1,22 @@
 {
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'f=\"$CLAUDE_TOOL_RESULT_FILE_PATH\"; if echo \"$f\" | grep -qE \"apps/api/.*\\.py$\"; then cd apps/api && uv run ruff check --fix \"$f\" 2>&1 && uv run ruff format \"$f\" 2>&1; fi'"
+          },
+          {
+            "type": "command",
+            "command": "bash -c 'f=\"$CLAUDE_TOOL_RESULT_FILE_PATH\"; if echo \"$f\" | grep -qE \"apps/web/.*\\.(ts|tsx|js|jsx)$\"; then cd apps/web && npx prettier --write \"$f\" 2>&1; fi'"
+          }
+        ]
+      }
+    ]
   }
 }

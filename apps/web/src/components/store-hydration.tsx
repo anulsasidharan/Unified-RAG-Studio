@@ -15,7 +15,9 @@ function migrateLegacyDesignerDraftOnce(): void {
   try {
     const raw = localStorage.getItem(LEGACY_DESIGNER_STORAGE_KEY);
     if (!raw) return;
-    const parsed = JSON.parse(raw) as { state?: { draft?: unknown; diagramMaxVisitedStageIndex?: unknown } };
+    const parsed = JSON.parse(raw) as {
+      state?: { draft?: unknown; diagramMaxVisitedStageIndex?: unknown };
+    };
     const draft = parsed?.state?.draft;
     if (!draft || typeof draft !== 'object') {
       localStorage.removeItem(LEGACY_DESIGNER_STORAGE_KEY);

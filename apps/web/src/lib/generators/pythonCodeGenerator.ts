@@ -47,7 +47,8 @@ const VECTORSTORE_IMPORTS: Record<string, string> = {
   chroma: 'from langchain_chroma import Chroma',
   faiss: 'from langchain_community.vectorstores import FAISS',
   opensearch: 'from langchain_community.vectorstores import OpenSearchVectorSearch',
-  'vertex-ai-vector-search': 'from langchain_google_vertexai.vectorstores import VectorSearchVectorStore',
+  'vertex-ai-vector-search':
+    'from langchain_google_vertexai.vectorstores import VectorSearchVectorStore',
   'azure-ai-search': 'from langchain_community.vectorstores import AzureSearch',
   pgvector: 'from langchain_postgres import PGVector',
 };
@@ -101,9 +102,13 @@ function buildImports(stages: PipelineStages): string {
     lines.push('# Reranking');
     if (stages.reranking.provider === 'cohere') {
       lines.push('from langchain_cohere import CohereRerank');
-      lines.push('from langchain.retrievers.contextual_compression import ContextualCompressionRetriever');
+      lines.push(
+        'from langchain.retrievers.contextual_compression import ContextualCompressionRetriever',
+      );
     } else {
-      lines.push('from langchain.retrievers.contextual_compression import ContextualCompressionRetriever');
+      lines.push(
+        'from langchain.retrievers.contextual_compression import ContextualCompressionRetriever',
+      );
       lines.push('from langchain.retrievers.document_compressors import CrossEncoderReranker');
       lines.push('from langchain_community.cross_encoders import HuggingFaceCrossEncoder');
     }
@@ -157,25 +162,37 @@ function buildPipelineExtras(config: PipelineConfiguration): string[] {
         mode: cc.mode,
         minScore: cc.minScore ?? null,
         maxTokenBudget: cc.maxTokenBudget ?? null,
-      })}`
+      })}`,
     );
   }
   if (config.observability) {
-    out.push('', '# ─── Observability ───────────────────────────────────────────────────────', `OBSERVABILITY = ${JSON.stringify(config.observability)}`);
+    out.push(
+      '',
+      '# ─── Observability ───────────────────────────────────────────────────────',
+      `OBSERVABILITY = ${JSON.stringify(config.observability)}`,
+    );
   }
   if (config.agentTools) {
-    out.push('', '# ─── Agent tools ───────────────────────────────────────────────────────────', `AGENT_TOOLS = ${JSON.stringify(config.agentTools)}`);
+    out.push(
+      '',
+      '# ─── Agent tools ───────────────────────────────────────────────────────────',
+      `AGENT_TOOLS = ${JSON.stringify(config.agentTools)}`,
+    );
   }
   if (config.adaptivePolicies?.length) {
     out.push(
       '',
       '# ─── Adaptive policies ─────────────────────────────────────────────────────',
-      `ADAPTIVE_POLICIES = ${JSON.stringify(config.adaptivePolicies)}`
+      `ADAPTIVE_POLICIES = ${JSON.stringify(config.adaptivePolicies)}`,
     );
   }
   const fs = config.stages.generation.fewShotMessages;
   if (fs?.length) {
-    out.push('', '# ─── Few-shot messages ───────────────────────────────────────────────────', `FEW_SHOT_MESSAGES = ${JSON.stringify(fs)}`);
+    out.push(
+      '',
+      '# ─── Few-shot messages ───────────────────────────────────────────────────',
+      `FEW_SHOT_MESSAGES = ${JSON.stringify(fs)}`,
+    );
   }
   if (config.stages.generation.persona?.trim()) {
     out.push('', `PERSONA_HINT = ${JSON.stringify(config.stages.generation.persona)}`);
@@ -263,7 +280,9 @@ function buildTextSplitter(stages: PipelineStages): string[] {
         'text_splitter = RecursiveCharacterTextSplitter(',
         `    chunk_size=${chunkSize},`,
         `    chunk_overlap=${chunkOverlap},`,
-        separators ? `    separators=${JSON.stringify(separators)},` : '    separators=["\\n\\n", "\\n", " ", ""],',
+        separators
+          ? `    separators=${JSON.stringify(separators)},`
+          : '    separators=["\\n\\n", "\\n", " ", ""],',
         ')',
       ];
     case 'fixed-size':
@@ -311,7 +330,9 @@ function buildTextSplitter(stages: PipelineStages): string[] {
         'text_splitter = RecursiveCharacterTextSplitter(',
         `    chunk_size=${chunkSize},`,
         `    chunk_overlap=${chunkOverlap},`,
-        separators ? `    separators=${JSON.stringify(separators)},` : '    separators=["\\n\\n", "\\n", " ", ""],',
+        separators
+          ? `    separators=${JSON.stringify(separators)},`
+          : '    separators=["\\n\\n", "\\n", " ", ""],',
         ')',
       ];
     default:
@@ -407,7 +428,7 @@ function buildRetriever(stages: PipelineStages): string {
         'base_retriever = vector_store.as_retriever(',
         '    search_type="mmr",',
         `    search_kwargs={"k": ${retrieval.topK}, "fetch_k": ${fetchK}, "lambda_mult": ${lam}},`,
-        ')'
+        ')',
       );
       break;
     }
@@ -425,7 +446,7 @@ function buildRetriever(stages: PipelineStages): string {
         fusion === 'weighted'
           ? `# Weighted blend α=${retrieval.hybridSearch?.alpha ?? 0.5} (dense vs sparse)`
           : '# RRF merge recommended when both rankings are available',
-        `# retriever = EnsembleRetriever(retrievers=[bm25, base_retriever], weights=[${1 - (retrieval.hybridSearch?.alpha ?? 0.5)}, ${retrieval.hybridSearch?.alpha ?? 0.5}])`
+        `# retriever = EnsembleRetriever(retrievers=[bm25, base_retriever], weights=[${1 - (retrieval.hybridSearch?.alpha ?? 0.5)}, ${retrieval.hybridSearch?.alpha ?? 0.5}])`,
       );
       break;
     }
@@ -450,7 +471,7 @@ function buildRetriever(stages: PipelineStages): string {
         `        search_kwargs={"k": ${retrieval.topK}}`,
         '    ),',
         '    llm=llm,',
-        ')'
+        ')',
       );
       break;
     default:
@@ -458,7 +479,7 @@ function buildRetriever(stages: PipelineStages): string {
         'base_retriever = vector_store.as_retriever(',
         `    search_type="${searchType}",`,
         `    search_kwargs={"k": ${retrieval.topK}},`,
-        ')'
+        ')',
       );
   }
 
@@ -466,15 +487,21 @@ function buildRetriever(stages: PipelineStages): string {
     lines.push('');
     lines.push('# Reranking with contextual compression');
     if (reranking.minRelevanceScore != null) {
-      lines.push(`# Post-filter: min_relevance_score=${reranking.minRelevanceScore} (Cohere scores)`);
+      lines.push(
+        `# Post-filter: min_relevance_score=${reranking.minRelevanceScore} (Cohere scores)`,
+      );
     }
     if (reranking.diversityMaxSimilarity != null) {
-      lines.push(`# Near-duplicate skip: diversity_max_similarity=${reranking.diversityMaxSimilarity}`);
+      lines.push(
+        `# Near-duplicate skip: diversity_max_similarity=${reranking.diversityMaxSimilarity}`,
+      );
     }
     if (reranking.provider === 'cohere') {
       lines.push(`compressor = CohereRerank(top_n=${reranking.topN ?? 5})`);
     } else {
-      lines.push(`model = HuggingFaceCrossEncoder(model_name="${reranking.model ?? 'cross-encoder/ms-marco-MiniLM-L-6-v2'}")`);
+      lines.push(
+        `model = HuggingFaceCrossEncoder(model_name="${reranking.model ?? 'cross-encoder/ms-marco-MiniLM-L-6-v2'}")`,
+      );
       lines.push(`compressor = CrossEncoderReranker(model=model, top_n=${reranking.topN ?? 5})`);
     }
     lines.push('retriever = ContextualCompressionRetriever(');
@@ -497,8 +524,8 @@ function buildPromptAndChain(stages: PipelineStages): string {
     stages.generation.outputFormat === 'json'
       ? 'Return your answer as valid JSON.'
       : stages.generation.outputFormat === 'markdown'
-      ? 'Format your answer using Markdown.'
-      : '';
+        ? 'Format your answer using Markdown.'
+        : '';
 
   const lines: string[] = [
     '# ─── Prompt ─────────────────────────────────────────────────────────────────',
@@ -508,7 +535,7 @@ function buildPromptAndChain(stages: PipelineStages): string {
     '',
     'Context:',
     '{context}',
-    (formatInstruction ? formatInstruction + '\n"""),' : '"""),'),
+    formatInstruction ? formatInstruction + '\n"""),' : '"""),',
     '    ("human", "{question}"),',
     '])',
     '',
